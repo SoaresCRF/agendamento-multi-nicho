@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import * as service from './public.service'
+import { createPublicBooking } from '../bookings/bookings.service'
 
 export const publicRouter = Router()
 
@@ -23,5 +24,21 @@ publicRouter.get('/:slug/service-types/:id/slots', async (req, res, next) => {
     const { date } = dateQuerySchema.parse(req.query)
     const slots = await service.getSlotsForDate(req.params.slug, req.params.id, date)
     res.json({ slots: slots.map((s) => s.toISOString()) })
+  } catch (err) { next(err) }
+})
+
+const createBookingSchema = z.object({
+  serviceTypeId: z.string().min(1),
+  startsAt: z.string().datetime(),
+  clientName: z.string().min(1),
+  clientEmail: z.string().email(),
+  formResponses: z.record(z.unknown()).optional(),
+})
+
+publicRouter.post('/:slug/bookings', async (req, res, next) => {
+  try {
+    const input = createBookingSchema.parse(req.body)
+    const booking = await createPublicBooking(req.params.slug, input)
+    res.status(201).json({ id: booking.id, startsAt: booking.startsAt, endsAt: booking.endsAt, status: booking.status })
   } catch (err) { next(err) }
 })
