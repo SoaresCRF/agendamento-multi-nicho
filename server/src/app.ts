@@ -9,6 +9,7 @@ import { serviceTypesRouter } from './modules/service-types/service-types.routes
 import { availabilityRouter } from './modules/availability/availability.routes'
 import { serviceTypeRulesRouter } from './modules/availability/rules.routes'
 import { blockedSlotsRouter } from './modules/blocked-slots/blocked-slots.routes'
+import { publicRouter } from './modules/public/public.routes'
 
 export function createApp() {
   const app = express()
@@ -24,6 +25,7 @@ export function createApp() {
   app.use('/api/availability', availabilityRouter)
   app.use('/api/service-types/:id/availability-rules', serviceTypeRulesRouter)
   app.use('/api/blocked-slots', blockedSlotsRouter)
+  app.use('/api/public', publicRouter)
 
   app.use(errorHandler)
   return app
