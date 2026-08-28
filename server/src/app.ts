@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/errorHandler'
 import { authRouter } from './modules/auth/auth.routes'
 import { usersRouter } from './modules/users/users.routes'
 import { serviceTypesRouter } from './modules/service-types/service-types.routes'
+import { availabilityRouter } from './modules/availability/availability.routes'
 
 export function createApp() {
   const app = express()
@@ -18,6 +19,7 @@ export function createApp() {
   app.use('/api/auth', authRouter)
   app.use('/api', usersRouter)
   app.use('/api/service-types', serviceTypesRouter)
+  app.use('/api/availability', availabilityRouter)
 
   app.use(errorHandler)
   return app
