@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  slug         String   @unique
+  timezone     String
+  niche        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  serviceTypes  ServiceType[]
+  availability  Availability[]
+  blockedSlots  BlockedSlot[]
+  bookings      Booking[]
+  refreshTokens RefreshToken[]
+}
+
+model ServiceType {
+  id                 String   @id @default(cuid())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name               String
+  durationMinutes    Int
+  description        String?
+  requiresCustomForm Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  customFields      CustomFormField[]
+  availabilityRules ServiceTypeAvailabilityRule[]
+  bookings          Booking[]
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  SELECT
+  TEXTAREA
+}
+
+model CustomFormField {
+  id            String      @id @default(cuid())
+  serviceTypeId String
+  serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
+  label         String
+  fieldType     FieldType
+  required      Boolean
+  order         Int
+  options       Json?
+}
+
+model Availability {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dayOfWeek Int
+  startTime String
+  endTime   String
+}
+
+model ServiceTypeAvailabilityRule {
+  id            String      @id @default(cuid())
+  serviceTypeId String
+  serviceType   ServiceType @relation(fields: [serviceTypeId], references: [id], onDelete: Cascade)
+  dayOfWeek     Int
+  startTime     String
+  endTime       String
+}
+
+enum BookingStatus {
+  CONFIRMED
+  CANCELLED
+}
+
+model Booking {
+  id            String        @id @default(cuid())
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceTypeId String
+  serviceType   ServiceType   @relation(fields: [serviceTypeId], references: [id], onDelete: Restrict)
+  clientName    String
+  clientEmail   String
+  startsAt      DateTime
+  endsAt        DateTime
+  status        BookingStatus @default(CONFIRMED)
+  formResponses Json?
+  createdAt     DateTime      @default(now())
+
+  @@index([userId, startsAt])
+}
+
+model BlockedSlot {
+  id       String  @id @default(cuid())
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startsAt DateTime
+  endsAt   DateTime
+  reason   String?
+
+  @@index([userId, startsAt])
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+}
