@@ -5,6 +5,7 @@ import { env } from './lib/env'
 import { errorHandler } from './middleware/errorHandler'
 import { authRouter } from './modules/auth/auth.routes'
 import { usersRouter } from './modules/users/users.routes'
+import { serviceTypesRouter } from './modules/service-types/service-types.routes'
 
 export function createApp() {
   const app = express()
@@ -16,6 +17,7 @@ export function createApp() {
 
   app.use('/api/auth', authRouter)
   app.use('/api', usersRouter)
+  app.use('/api/service-types', serviceTypesRouter)
 
   app.use(errorHandler)
   return app
