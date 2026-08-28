@@ -3,6 +3,7 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import { env } from './lib/env'
 import { errorHandler } from './middleware/errorHandler'
+import { authRouter } from './modules/auth/auth.routes'
 
 export function createApp() {
   const app = express()
@@ -12,8 +13,7 @@ export function createApp() {
 
   app.get('/health', (_req, res) => res.json({ ok: true }))
 
-  // Later tasks mount feature routers here, e.g.:
-  // app.use('/api/auth', authRouter)
+  app.use('/api/auth', authRouter)
 
   app.use(errorHandler)
   return app
