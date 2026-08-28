@@ -1,0 +1,9 @@
+{
+  "name": "agendamento-multi-nicho",
+  "private": true,
+  "workspaces": ["server"],
+  "scripts": {
+    "dev:server": "npm run dev --workspace server",
+    "test:server": "npm run test --workspace server"
+  }
+}
