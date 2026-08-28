@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { registerSchema, loginSchema } from './auth.schemas'
-import { registerUser, loginUser } from './auth.service'
+import { registerUser, loginUser, refreshSession, logoutUser } from './auth.service'
 
 export const authRouter = Router()
 
@@ -29,6 +29,32 @@ authRouter.post('/login', async (req, res, next) => {
     const result = await loginUser(email, password)
     res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions)
     res.json({ user: result.user, accessToken: result.accessToken })
+  } catch (err) {
+    next(err)
+  }
+})
+
+authRouter.post('/refresh', async (req, res, next) => {
+  try {
+    const token = req.cookies[REFRESH_COOKIE]
+    if (!token) {
+      res.status(401).json({ error: 'Sessão inválida, faça login novamente' })
+      return
+    }
+    const result = await refreshSession(token)
+    res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions)
+    res.json({ user: result.user, accessToken: result.accessToken })
+  } catch (err) {
+    next(err)
+  }
+})
+
+authRouter.post('/logout', async (req, res, next) => {
+  try {
+    const token = req.cookies[REFRESH_COOKIE]
+    if (token) await logoutUser(token)
+    res.clearCookie(REFRESH_COOKIE)
+    res.status(204).send()
   } catch (err) {
     next(err)
   }

@@ -44,3 +44,20 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   }
   return issueTokens(user.id, { id: user.id, name: user.name, email: user.email, slug: user.slug })
 }
+
+export async function refreshSession(refreshToken: string): Promise<AuthResult> {
+  const tokenHash = hashToken(refreshToken)
+  const record = await prisma.refreshToken.findUnique({ where: { tokenHash }, include: { user: true } })
+  if (!record || record.revokedAt || record.expiresAt < new Date()) {
+    throw new AppError(401, 'Sessão inválida, faça login novamente')
+  }
+  await prisma.refreshToken.update({ where: { id: record.id }, data: { revokedAt: new Date() } })
+  return issueTokens(record.userId, {
+    id: record.user.id, name: record.user.name, email: record.user.email, slug: record.user.slug,
+  })
+}
+
+export async function logoutUser(refreshToken: string): Promise<void> {
+  const tokenHash = hashToken(refreshToken)
+  await prisma.refreshToken.updateMany({ where: { tokenHash, revokedAt: null }, data: { revokedAt: new Date() } })
+}

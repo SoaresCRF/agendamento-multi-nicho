@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { randomUUID } from 'node:crypto'
 import { env } from './env'
 
 export interface AccessTokenPayload {
@@ -8,7 +9,7 @@ export interface AccessTokenPayload {
 const ACCESS_TOKEN_TTL = '15m'
 
 export function signAccessToken(payload: AccessTokenPayload): string {
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL })
+  return jwt.sign({ ...payload, jti: randomUUID() }, env.JWT_SECRET, { expiresIn: ACCESS_TOKEN_TTL })
 }
 
 export function verifyAccessToken(token: string): AccessTokenPayload | null {
