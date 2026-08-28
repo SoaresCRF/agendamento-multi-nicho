@@ -2,8 +2,10 @@ import { Router } from 'express'
 import { z } from 'zod'
 import * as service from './public.service'
 import { createPublicBooking } from '../bookings/bookings.service'
+import { strictLimiter, publicReadLimiter } from '../../middleware/rateLimit'
 
 export const publicRouter = Router()
+publicRouter.use(publicReadLimiter)
 
 publicRouter.get('/:slug', async (req, res, next) => {
   try {
@@ -35,7 +37,7 @@ const createBookingSchema = z.object({
   formResponses: z.record(z.unknown()).optional(),
 })
 
-publicRouter.post('/:slug/bookings', async (req, res, next) => {
+publicRouter.post('/:slug/bookings', strictLimiter, async (req, res, next) => {
   try {
     const input = createBookingSchema.parse(req.body)
     const booking = await createPublicBooking(req.params.slug, input)
