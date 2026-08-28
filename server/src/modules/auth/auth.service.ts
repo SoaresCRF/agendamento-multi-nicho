@@ -1,5 +1,5 @@
 import { prisma } from '../../lib/prisma'
-import { hashPassword } from '../../lib/password'
+import { hashPassword, verifyPassword } from '../../lib/password'
 import { signAccessToken } from '../../lib/jwt'
 import { generateRefreshToken, hashToken, REFRESH_TOKEN_TTL_MS } from '../../lib/refreshToken'
 import { AppError } from '../../lib/errors'
@@ -35,4 +35,12 @@ export async function issueTokens(userId: string, user: AuthResult['user']): Pro
     data: { userId, tokenHash: hashToken(refreshToken), expiresAt: new Date(Date.now() + REFRESH_TOKEN_TTL_MS) },
   })
   return { user, accessToken: signAccessToken({ userId }), refreshToken }
+}
+
+export async function loginUser(email: string, password: string): Promise<AuthResult> {
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    throw new AppError(401, 'Credenciais inválidas')
+  }
+  return issueTokens(user.id, { id: user.id, name: user.name, email: user.email, slug: user.slug })
 }

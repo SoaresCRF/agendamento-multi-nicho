@@ -1,6 +1,6 @@
 import { Router } from 'express'
-import { registerSchema } from './auth.schemas'
-import { registerUser } from './auth.service'
+import { registerSchema, loginSchema } from './auth.schemas'
+import { registerUser, loginUser } from './auth.service'
 
 export const authRouter = Router()
 
@@ -18,6 +18,17 @@ authRouter.post('/register', async (req, res, next) => {
     const result = await registerUser(input)
     res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions)
     res.status(201).json({ user: result.user, accessToken: result.accessToken })
+  } catch (err) {
+    next(err)
+  }
+})
+
+authRouter.post('/login', async (req, res, next) => {
+  try {
+    const { email, password } = loginSchema.parse(req.body)
+    const result = await loginUser(email, password)
+    res.cookie(REFRESH_COOKIE, result.refreshToken, refreshCookieOptions)
+    res.json({ user: result.user, accessToken: result.accessToken })
   } catch (err) {
     next(err)
   }

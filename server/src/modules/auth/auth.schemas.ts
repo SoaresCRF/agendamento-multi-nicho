@@ -8,3 +8,5 @@ export const registerSchema = z.object({
   timezone: z.string().min(1),
   niche: z.string().optional(),
 })
+
+export const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) })
