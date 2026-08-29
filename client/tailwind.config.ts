@@ -1,0 +1,78 @@
+import type { Config } from 'tailwindcss'
+
+const config: Config = {
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#0075de',
+        'primary-active': '#005bab',
+        'primary-soft': '#e6f2fb',
+        'primary-disabled': '#e5e7eb',
+        'secondary-dark': '#213183',
+        'on-primary': '#ffffff',
+        'on-secondary-dark': '#ffffff',
+        ink: 'rgba(0, 0, 0, 0.92)',
+        body: '#31302e',
+        muted: '#615d59',
+        'muted-soft': '#a39e98',
+        canvas: '#f6f5f4',
+        surface: '#ffffff',
+        'surface-soft': '#f8f9fa',
+        'surface-strong': '#e5e7eb',
+        hairline: '#e6e6e6',
+        'hairline-soft': '#f3f4f6',
+        success: '#10b981',
+        warning: '#f59e0b',
+        error: '#e35d52',
+        'accent-teal': '#2a9d99',
+        'accent-terracotta': '#dd5b00',
+        'accent-lilac': '#d6b6f6',
+      },
+      fontFamily: {
+        display: ['Lora', 'Georgia', 'serif'],
+        sans: ['Inter', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        'display-lg': ['40px', { lineHeight: '1.15', fontWeight: '600' }],
+        'display-md': ['30px', { lineHeight: '1.2', fontWeight: '600' }],
+        'display-sm': ['24px', { lineHeight: '1.25', fontWeight: '600' }],
+        'title-lg': ['20px', { lineHeight: '1.3', letterSpacing: '-0.2px', fontWeight: '600' }],
+        'title-md': ['18px', { lineHeight: '1.4', fontWeight: '600' }],
+        'title-sm': ['16px', { lineHeight: '1.4', fontWeight: '600' }],
+        'body-md': ['16px', { lineHeight: '1.6' }],
+        'body-sm': ['14px', { lineHeight: '1.5' }],
+        caption: ['13px', { lineHeight: '1.4', fontWeight: '500' }],
+        button: ['15px', { lineHeight: '1', fontWeight: '600' }],
+        'nav-link': ['14px', { lineHeight: '1.4', fontWeight: '500' }],
+        code: ['14px', { lineHeight: '1.5' }],
+      },
+      borderRadius: {
+        xs: '4px',
+        sm: '6px',
+        md: '8px',
+        lg: '12px',
+        xl: '16px',
+        pill: '9999px',
+      },
+      spacing: {
+        xxs: '4px',
+        xs: '8px',
+        sm: '12px',
+        md: '16px',
+        lg: '24px',
+        xl: '32px',
+        xxl: '48px',
+        section: '80px',
+      },
+      boxShadow: {
+        soft: '0 1px 2px rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.04), 0 8px 16px rgba(0,0,0,0.04)',
+        elevated: '0 2px 4px rgba(0,0,0,0.06), 0 8px 16px rgba(0,0,0,0.08), 0 24px 48px rgba(0,0,0,0.08)',
+      },
+    },
+  },
+  plugins: [],
+}
+
+export default config
