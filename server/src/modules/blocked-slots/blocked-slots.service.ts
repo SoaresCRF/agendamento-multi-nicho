@@ -1,8 +1,14 @@
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
 
-export function listBlockedSlots(userId: string) {
-  return prisma.blockedSlot.findMany({ where: { userId }, orderBy: { startsAt: 'asc' } })
+export function listBlockedSlots(userId: string, from?: string, to?: string) {
+  return prisma.blockedSlot.findMany({
+    where: {
+      userId,
+      startsAt: { gte: from ? new Date(from) : undefined, lte: to ? new Date(to) : undefined },
+    },
+    orderBy: { startsAt: 'asc' },
+  })
 }
 
 export function createBlockedSlot(userId: string, input: { startsAt: string; endsAt: string; reason?: string }) {

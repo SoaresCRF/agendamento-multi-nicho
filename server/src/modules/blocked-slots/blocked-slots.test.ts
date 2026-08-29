@@ -27,4 +27,23 @@ describe('blocked-slot CRUD', () => {
     const deleteRes = await request(app).delete(`/api/blocked-slots/${createRes.body.id}`).set(auth)
     expect(deleteRes.status).toBe(204)
   })
+
+  it('filters the list by from/to as documented in the spec', async () => {
+    const { accessToken } = await createTestUser()
+    const app = createApp()
+    const auth = { Authorization: `Bearer ${accessToken}` }
+
+    await request(app).post('/api/blocked-slots').set(auth).send({
+      startsAt: '2026-03-01T00:00:00.000Z', endsAt: '2026-03-02T00:00:00.000Z',
+    })
+    await request(app).post('/api/blocked-slots').set(auth).send({
+      startsAt: '2026-12-25T00:00:00.000Z', endsAt: '2026-12-26T00:00:00.000Z',
+    })
+
+    const filteredRes = await request(app).get('/api/blocked-slots')
+      .query({ from: '2026-12-01T00:00:00.000Z', to: '2026-12-31T00:00:00.000Z' })
+      .set(auth)
+    expect(filteredRes.body).toHaveLength(1)
+    expect(filteredRes.body[0].startsAt).toBe('2026-12-25T00:00:00.000Z')
+  })
 })
