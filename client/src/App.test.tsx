@@ -1,10 +1,15 @@
 import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { App } from './App'
 
 describe('App', () => {
-  it('renders the app shell placeholder', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('redirects to /login by default and shows the login placeholder', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 401 })) as unknown as typeof fetch
     render(<App />)
-    expect(screen.getByText('Agendamento')).toBeInTheDocument()
+    expect(await screen.findByText('Login (Task 6)')).toBeInTheDocument()
   })
 })
