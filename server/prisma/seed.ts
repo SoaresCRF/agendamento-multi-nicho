@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { prisma } from '../src/lib/prisma'
 
-const prisma = new PrismaClient()
 const SALT_ROUNDS = 12
 
 async function main() {
