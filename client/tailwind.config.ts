@@ -25,6 +25,8 @@ const config: Config = {
         success: '#10b981',
         warning: '#f59e0b',
         error: '#e35d52',
+        'badge-confirmed-bg': '#e3f6ef',
+        'badge-cancelled-bg': '#fbeae8',
         'accent-teal': '#2a9d99',
         'accent-terracotta': '#dd5b00',
         'accent-lilac': '#d6b6f6',
