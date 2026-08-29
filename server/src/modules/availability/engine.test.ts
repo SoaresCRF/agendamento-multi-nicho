@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { getAvailableSlots } from './engine'
 
 const SP = 'America/Sao_Paulo'
+const NY = 'America/New_York'
 
 describe('getAvailableSlots', () => {
   it('generates slots that fit exactly within a general availability window', () => {
@@ -75,11 +76,9 @@ describe('getAvailableSlots', () => {
     expect(slots[0].toISOString()).toBe('2026-09-07T13:00:00.000Z')
   })
 
-  it('resolves a recurring 09:00 local slot correctly across a DST transition', () => {
+  it('resolves a recurring 09:00 local slot to the same UTC hour in a fixed-offset zone', () => {
     // Brazil abolished DST in 2019 and America/Sao_Paulo has had a fixed -03:00
-    // offset since; this test locks in that a fixed-offset zone is handled
-    // correctly and documents the DST-aware conversion path for zones that do
-    // observe DST (date-fns-tz handles the offset lookup per-date already).
+    // offset since; this locks in that a fixed-offset zone stays stable year-round.
     const winter = getAvailableSlots({
       date: '2026-06-01', timezone: SP, durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
@@ -92,6 +91,29 @@ describe('getAvailableSlots', () => {
     })
     expect(winter[0].getUTCHours()).toBe(12) // 09:00 -03:00
     expect(summer[0].getUTCHours()).toBe(12) // 09:00 -03:00, same fixed offset
+  })
+
+  it('resolves a recurring 09:00 local slot correctly across a real DST transition', () => {
+    // America/New_York actually observes DST. US spring-forward in 2026 is
+    // Sunday 2026-03-08: the Monday before is still EST (UTC-5), the Monday
+    // after is EDT (UTC-4). If getAvailableSlots ever cached a zone's offset
+    // instead of resolving it per-date, this would return the same UTC hour
+    // for both and silently offer slots an hour off from what the professional
+    // configured — exactly the kind of drift the public slot-listing endpoint
+    // and the booking-creation availability check (which both call this same
+    // function) must not disagree on.
+    const beforeSpringForward = getAvailableSlots({
+      date: '2026-03-02', timezone: NY, durationMinutes: 60, // Monday, EST
+      generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
+      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+    })
+    const afterSpringForward = getAvailableSlots({
+      date: '2026-03-09', timezone: NY, durationMinutes: 60, // Monday, EDT
+      generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
+      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+    })
+    expect(beforeSpringForward[0].toISOString()).toBe('2026-03-02T14:00:00.000Z') // 09:00 -05:00
+    expect(afterSpringForward[0].toISOString()).toBe('2026-03-09T13:00:00.000Z') // 09:00 -04:00
   })
 
   it('returns no slots when no rule exists for that weekday', () => {
