@@ -1,11 +1,13 @@
 import { Prisma } from '@prisma/client'
 import { addMinutes } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
 import { logger } from '../../lib/logger'
 import type { Mailer } from '../../lib/email'
 import { nodemailerMailer } from '../../lib/email/nodemailer'
 import { validateFormResponses } from './form-validation'
+import { computeAvailableSlots } from '../public/public.service'
 
 export interface CreateBookingInput {
   serviceTypeId: string
@@ -44,10 +46,13 @@ export async function createPublicBooking(
       )
     : undefined
 
-  const conflict = await prisma.booking.findFirst({
-    where: { userId: user.id, status: 'CONFIRMED', startsAt: { lt: endsAt }, endsAt: { gt: startsAt } },
-  })
-  if (conflict) throw new AppError(409, SLOT_TAKEN_MESSAGE)
+  // Re-derive availability server-side instead of trusting that the requested startsAt
+  // came from the slots this same engine most recently displayed — the client-rendered
+  // picker is not a source of truth (CLAUDE.md §7: client-side checks alone aren't enough).
+  const date = formatInTimeZone(startsAt, user.timezone, 'yyyy-MM-dd')
+  const availableSlots = await computeAvailableSlots(user.id, serviceType, date, user.timezone)
+  const isAvailable = availableSlots.some((slot) => slot.getTime() === startsAt.getTime())
+  if (!isAvailable) throw new AppError(409, SLOT_TAKEN_MESSAGE)
 
   let booking
   try {

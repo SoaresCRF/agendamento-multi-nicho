@@ -9,11 +9,20 @@ function fakeMailer(): { mailer: Mailer; sent: SendMailInput[] } {
   return { mailer: { sendMail: async (input) => { sent.push(input) } }, sent }
 }
 
+// Fixed test instant: 2026-09-10T13:00:00.000Z is a Thursday (dayOfWeek 4) at 10:00
+// local time in America/Sao_Paulo (UTC-3, no DST). Availability rules below use that
+// window so the new server-side availability check (createPublicBooking now re-derives
+// available slots instead of trusting the client) doesn't reject these as out-of-window.
+const THURSDAY = 4
+
 describe('createPublicBooking', () => {
   beforeEach(cleanDatabase)
 
   it('creates a booking, validates the custom form, and emails both parties', async () => {
     const { user } = await createTestUser({ email: 'prof@example.com', slug: 'prof' })
+    await prisma.availability.create({
+      data: { userId: user.id, dayOfWeek: THURSDAY, startTime: '10:00', endTime: '18:00' },
+    })
     const serviceType = await prisma.serviceType.create({
       data: {
         userId: user.id, name: 'Primeira consulta', durationMinutes: 60, requiresCustomForm: true,
@@ -38,6 +47,9 @@ describe('createPublicBooking', () => {
 
   it('rejects a booking missing a required custom field', async () => {
     const { user } = await createTestUser({ email: 'prof2@example.com', slug: 'prof2' })
+    await prisma.availability.create({
+      data: { userId: user.id, dayOfWeek: THURSDAY, startTime: '10:00', endTime: '18:00' },
+    })
     const serviceType = await prisma.serviceType.create({
       data: {
         userId: user.id, name: 'Consulta', durationMinutes: 60, requiresCustomForm: true,
@@ -54,6 +66,9 @@ describe('createPublicBooking', () => {
 
   it('returns 409-mapped error when the slot is already booked', async () => {
     const { user } = await createTestUser({ email: 'prof3@example.com', slug: 'prof3' })
+    await prisma.availability.create({
+      data: { userId: user.id, dayOfWeek: THURSDAY, startTime: '10:00', endTime: '18:00' },
+    })
     const serviceType = await prisma.serviceType.create({
       data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
     })
@@ -63,6 +78,43 @@ describe('createPublicBooking', () => {
     await createPublicBooking('prof3', { serviceTypeId: serviceType.id, startsAt, clientName: 'A', clientEmail: 'a@example.com' }, mailer)
     await expect(
       createPublicBooking('prof3', { serviceTypeId: serviceType.id, startsAt, clientName: 'B', clientEmail: 'b@example.com' }, mailer)
+    ).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('rejects a booking outside the professional\'s configured availability window', async () => {
+    const { user } = await createTestUser({ email: 'prof4@example.com', slug: 'prof4' })
+    // No Availability rule created at all — every slot should be rejected.
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
+    const { mailer } = fakeMailer()
+
+    await expect(
+      createPublicBooking('prof4', {
+        serviceTypeId: serviceType.id, startsAt: '2026-09-10T13:00:00.000Z',
+        clientName: 'A', clientEmail: 'a@example.com',
+      }, mailer)
+    ).rejects.toMatchObject({ statusCode: 409 })
+  })
+
+  it('rejects a booking that falls inside a blocked slot', async () => {
+    const { user } = await createTestUser({ email: 'prof5@example.com', slug: 'prof5' })
+    await prisma.availability.create({
+      data: { userId: user.id, dayOfWeek: THURSDAY, startTime: '10:00', endTime: '18:00' },
+    })
+    await prisma.blockedSlot.create({
+      data: { userId: user.id, startsAt: new Date('2026-09-10T13:00:00.000Z'), endsAt: new Date('2026-09-10T14:00:00.000Z') },
+    })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
+    const { mailer } = fakeMailer()
+
+    await expect(
+      createPublicBooking('prof5', {
+        serviceTypeId: serviceType.id, startsAt: '2026-09-10T13:00:00.000Z',
+        clientName: 'A', clientEmail: 'a@example.com',
+      }, mailer)
     ).rejects.toMatchObject({ statusCode: 409 })
   })
 })
