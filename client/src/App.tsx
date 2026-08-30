@@ -11,6 +11,7 @@ import { ServiceTypesListPage } from './pages/panel/service-types/ServiceTypesLi
 import { ServiceTypeFormPage } from './pages/panel/service-types/ServiceTypeFormPage'
 import { AvailabilityPage } from './pages/panel/availability/AvailabilityPage'
 import { BlockedSlotsPage } from './pages/panel/blocked-slots/BlockedSlotsPage'
+import { AgendaPage } from './pages/panel/agenda/AgendaPage'
 
 export function App() {
   return (
@@ -30,6 +31,7 @@ export function App() {
                 }
               >
                 <Route index element={<Navigate to="/painel/agenda" replace />} />
+                <Route path="agenda" element={<AgendaPage />} />
                 <Route path="tipos-de-servico" element={<ServiceTypesListPage />} />
                 <Route path="tipos-de-servico/novo" element={<ServiceTypeFormPage />} />
                 <Route path="tipos-de-servico/:id" element={<ServiceTypeFormPage />} />
