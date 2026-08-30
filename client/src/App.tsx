@@ -4,6 +4,8 @@ import { queryClient } from './lib/query-client'
 import { AuthProvider } from './lib/auth-context'
 import { ToastProvider } from './components/toast/ToastProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { LoginPage } from './pages/auth/LoginPage'
+import { RegisterPage } from './pages/auth/RegisterPage'
 
 export function App() {
   return (
@@ -12,8 +14,8 @@ export function App() {
         <AuthProvider>
           <BrowserRouter>
             <Routes>
-              <Route path="/login" element={<div>Login (Task 6)</div>} />
-              <Route path="/registro" element={<div>Registro (Task 6)</div>} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/registro" element={<RegisterPage />} />
               <Route
                 path="/painel/*"
                 element={

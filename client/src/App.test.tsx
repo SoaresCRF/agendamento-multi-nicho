@@ -10,6 +10,6 @@ describe('App', () => {
   it('redirects to /login by default and shows the login placeholder', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 401 })) as unknown as typeof fetch
     render(<App />)
-    expect(await screen.findByText('Login (Task 6)')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
   })
 })
