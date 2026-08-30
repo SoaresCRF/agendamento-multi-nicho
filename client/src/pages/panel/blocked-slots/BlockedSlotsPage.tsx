@@ -1,13 +1,15 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useQuery } from '@tanstack/react-query'
 import { useBlockedSlots, useCreateBlockedSlot, useDeleteBlockedSlot } from './useBlockedSlots'
 import { Card } from '../../../components/Card'
 import { Input } from '../../../components/Input'
 import { Button } from '../../../components/Button'
 import { EmptyState } from '../../../components/EmptyState'
 import { useToast } from '../../../components/toast/useToast'
-import { ApiError } from '../../../lib/api'
+import { api, ApiError } from '../../../lib/api'
+import type { MeResponse } from '../../../lib/types'
 import { formatInTimeZone } from 'date-fns-tz'
 
 const blockedSlotSchema = z
@@ -25,6 +27,10 @@ type BlockedSlotFormValues = z.infer<typeof blockedSlotSchema>
 
 export function BlockedSlotsPage() {
   const { data: blockedSlots } = useBlockedSlots()
+  const { data: profile } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => api.get<MeResponse>('/api/me'),
+  })
   const createBlockedSlot = useCreateBlockedSlot()
   const deleteBlockedSlot = useDeleteBlockedSlot()
   const { show } = useToast()
@@ -75,8 +81,8 @@ export function BlockedSlotsPage() {
             <Card key={b.id} className="flex items-center justify-between">
               <div>
                 <p className="font-sans text-body-md text-ink">
-                  {formatInTimeZone(new Date(b.startsAt), 'UTC', "dd/MM/yyyy HH:mm")} —{' '}
-                  {formatInTimeZone(new Date(b.endsAt), 'UTC', "dd/MM/yyyy HH:mm")}
+                  {formatInTimeZone(new Date(b.startsAt), profile?.timezone ?? 'UTC', "dd/MM/yyyy HH:mm")} —{' '}
+                  {formatInTimeZone(new Date(b.endsAt), profile?.timezone ?? 'UTC', "dd/MM/yyyy HH:mm")}
                 </p>
                 {b.reason && <p className="font-sans text-body-sm text-muted">{b.reason}</p>}
               </div>
