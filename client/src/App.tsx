@@ -7,6 +7,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { PanelLayout } from './pages/panel/PanelLayout'
+import { ServiceTypesListPage } from './pages/panel/service-types/ServiceTypesListPage'
 
 export function App() {
   return (
@@ -26,6 +27,7 @@ export function App() {
                 }
               >
                 <Route index element={<Navigate to="/painel/agenda" replace />} />
+                <Route path="tipos-de-servico" element={<ServiceTypesListPage />} />
               </Route>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/:slug" element={<div>Página pública (Task 14+)</div>} />
