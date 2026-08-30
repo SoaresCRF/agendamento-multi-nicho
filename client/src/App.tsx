@@ -8,6 +8,7 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { PanelLayout } from './pages/panel/PanelLayout'
 import { ServiceTypesListPage } from './pages/panel/service-types/ServiceTypesListPage'
+import { ServiceTypeFormPage } from './pages/panel/service-types/ServiceTypeFormPage'
 
 export function App() {
   return (
@@ -28,6 +29,8 @@ export function App() {
               >
                 <Route index element={<Navigate to="/painel/agenda" replace />} />
                 <Route path="tipos-de-servico" element={<ServiceTypesListPage />} />
+                <Route path="tipos-de-servico/novo" element={<ServiceTypeFormPage />} />
+                <Route path="tipos-de-servico/:id" element={<ServiceTypeFormPage />} />
               </Route>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/:slug" element={<div>Página pública (Task 14+)</div>} />
