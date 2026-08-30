@@ -6,6 +6,7 @@ import { ToastProvider } from './components/toast/ToastProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
+import { PanelLayout } from './pages/panel/PanelLayout'
 
 export function App() {
   return (
@@ -17,13 +18,15 @@ export function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/registro" element={<RegisterPage />} />
               <Route
-                path="/painel/*"
+                path="/painel"
                 element={
                   <ProtectedRoute>
-                    <div>Painel (Task 7+)</div>
+                    <PanelLayout />
                   </ProtectedRoute>
                 }
-              />
+              >
+                <Route index element={<Navigate to="/painel/agenda" replace />} />
+              </Route>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/:slug" element={<div>Página pública (Task 14+)</div>} />
             </Routes>
