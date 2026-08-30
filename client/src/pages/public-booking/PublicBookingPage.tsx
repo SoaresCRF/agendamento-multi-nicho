@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { usePublicProfile, usePublicServiceTypes } from './usePublicBooking'
+import { usePublicProfile, usePublicServiceTypes, usePublicSlots } from './usePublicBooking'
 import { ServiceTypeSelector } from './ServiceTypeSelector'
+import { CalendarPicker } from './CalendarPicker'
+import { SlotGrid } from './SlotGrid'
+import { formatInTimeZone } from 'date-fns-tz'
 
 type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
 
@@ -12,6 +15,10 @@ export function PublicBookingPage() {
   const [step, setStep] = useState<Step>('select-service')
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd')
+  )
+  const { data: slots } = usePublicSlots(slug!, selectedServiceTypeId, selectedDate)
 
   function handleSelectServiceType(id: string) {
     setSelectedServiceTypeId(id)
@@ -36,10 +43,28 @@ export function PublicBookingPage() {
           </>
         )}
 
-        {step === 'pick-slot' && selectedServiceType && (
+        {step === 'pick-slot' && selectedServiceType && profile && (
           <div>
             <h2 className="mb-md font-display text-display-md">Escolha um horário</h2>
-            {/* Task 15 fills in the calendar + slot grid here, using selectedServiceType and setSelectedSlot/setStep('form') */}
+            <div className="flex flex-col gap-lg sm:flex-row">
+              <CalendarPicker selectedDate={selectedDate} onSelectDate={setSelectedDate} timezone={profile.timezone} />
+              <div className="flex-1">
+                {slots && slots.length === 0 && (
+                  <p className="font-sans text-body-sm text-muted">Nenhum horário disponível neste dia.</p>
+                )}
+                {slots && slots.length > 0 && (
+                  <SlotGrid
+                    slots={slots}
+                    selectedSlot={selectedSlot}
+                    onSelectSlot={(iso) => {
+                      setSelectedSlot(iso)
+                      setStep('form')
+                    }}
+                    timezone={profile.timezone}
+                  />
+                )}
+              </div>
+            </div>
           </div>
         )}
       </div>

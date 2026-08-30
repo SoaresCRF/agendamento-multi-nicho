@@ -12,3 +12,16 @@ export function usePublicServiceTypes(slug: string) {
     queryFn: () => api.get<PublicServiceType[]>(`/api/public/${slug}/service-types`),
   })
 }
+
+export function usePublicSlots(slug: string, serviceTypeId: string | null, date: string) {
+  return useQuery({
+    queryKey: ['public', slug, 'slots', serviceTypeId, date],
+    queryFn: async () => {
+      const result = await api.get<{ slots: string[] }>(
+        `/api/public/${slug}/service-types/${serviceTypeId}/slots?date=${date}`
+      )
+      return result.slots
+    },
+    enabled: serviceTypeId !== null,
+  })
+}
