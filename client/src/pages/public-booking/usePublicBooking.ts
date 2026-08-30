@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '../../lib/api'
 import type { PublicProfile, PublicServiceType } from '../../lib/types'
 
@@ -23,5 +23,26 @@ export function usePublicSlots(slug: string, serviceTypeId: string | null, date:
       return result.slots
     },
     enabled: serviceTypeId !== null,
+  })
+}
+
+export interface CreateBookingInput {
+  serviceTypeId: string
+  startsAt: string
+  clientName: string
+  clientEmail: string
+  formResponses?: Record<string, unknown>
+}
+
+export interface CreateBookingResult {
+  id: string
+  startsAt: string
+  endsAt: string
+  status: string
+}
+
+export function useCreateBooking(slug: string) {
+  return useMutation({
+    mutationFn: (input: CreateBookingInput) => api.post<CreateBookingResult>(`/api/public/${slug}/bookings`, input),
   })
 }

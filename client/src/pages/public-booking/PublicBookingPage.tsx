@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { usePublicProfile, usePublicServiceTypes, usePublicSlots } from './usePublicBooking'
+import { usePublicProfile, usePublicServiceTypes, usePublicSlots, useCreateBooking } from './usePublicBooking'
 import { ServiceTypeSelector } from './ServiceTypeSelector'
 import { CalendarPicker } from './CalendarPicker'
 import { SlotGrid } from './SlotGrid'
+import { BookingForm } from './BookingForm'
+import { ApiError } from '../../lib/api'
 import { formatInTimeZone } from 'date-fns-tz'
 
 type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
@@ -16,6 +18,8 @@ export function PublicBookingPage() {
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const createBooking = useCreateBooking(slug!)
+  const [bookingError, setBookingError] = useState<string | null>(null)
   const effectiveDate =
     selectedDate ??
     (profile ? formatInTimeZone(new Date(), profile.timezone, 'yyyy-MM-dd') : formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd'))
@@ -25,6 +29,29 @@ export function PublicBookingPage() {
     setSelectedServiceTypeId(id)
     setSelectedSlot(null)
     setStep('pick-slot')
+  }
+
+  async function handleBookingSubmit(values: { clientName: string; clientEmail: string; formResponses: Record<string, unknown> }) {
+    if (!selectedServiceTypeId || !selectedSlot) return
+    setBookingError(null)
+    try {
+      await createBooking.mutateAsync({
+        serviceTypeId: selectedServiceTypeId,
+        startsAt: selectedSlot,
+        clientName: values.clientName,
+        clientEmail: values.clientEmail,
+        formResponses: values.formResponses,
+      })
+      setStep('confirmed')
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setBookingError('Esse horário acabou de ser reservado — escolha outro.')
+        setSelectedSlot(null)
+        setStep('pick-slot')
+      } else {
+        setBookingError(err instanceof ApiError ? err.message : 'Erro ao confirmar agendamento')
+      }
+    }
   }
 
   const selectedServiceType = serviceTypes?.find((st) => st.id === selectedServiceTypeId) ?? null
@@ -66,6 +93,21 @@ export function PublicBookingPage() {
                 )}
               </div>
             </div>
+          </div>
+        )}
+
+        {step === 'form' && selectedServiceType && (
+          <div>
+            <h2 className="mb-md font-display text-display-md">Seus dados</h2>
+            {bookingError && <p className="mb-md font-sans text-body-sm text-error">{bookingError}</p>}
+            <BookingForm serviceType={selectedServiceType} onSubmit={handleBookingSubmit} isSubmitting={createBooking.isPending} />
+          </div>
+        )}
+
+        {step === 'confirmed' && (
+          <div className="text-center">
+            <h2 className="mb-sm font-display text-display-md">Agendamento confirmado!</h2>
+            <p className="font-sans text-body-md text-muted">Você receberá um e-mail de confirmação em breve.</p>
           </div>
         )}
       </div>
