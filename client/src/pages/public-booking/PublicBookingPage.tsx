@@ -15,10 +15,11 @@ export function PublicBookingPage() {
   const [step, setStep] = useState<Step>('select-service')
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-  const [selectedDate, setSelectedDate] = useState<string>(() =>
-    formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd')
-  )
-  const { data: slots } = usePublicSlots(slug!, selectedServiceTypeId, selectedDate)
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const effectiveDate =
+    selectedDate ??
+    (profile ? formatInTimeZone(new Date(), profile.timezone, 'yyyy-MM-dd') : formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd'))
+  const { data: slots } = usePublicSlots(slug!, selectedServiceTypeId, effectiveDate)
 
   function handleSelectServiceType(id: string) {
     setSelectedServiceTypeId(id)
@@ -47,7 +48,7 @@ export function PublicBookingPage() {
           <div>
             <h2 className="mb-md font-display text-display-md">Escolha um horário</h2>
             <div className="flex flex-col gap-lg sm:flex-row">
-              <CalendarPicker selectedDate={selectedDate} onSelectDate={setSelectedDate} timezone={profile.timezone} />
+              <CalendarPicker selectedDate={effectiveDate} onSelectDate={setSelectedDate} timezone={profile.timezone} />
               <div className="flex-1">
                 {slots && slots.length === 0 && (
                   <p className="font-sans text-body-sm text-muted">Nenhum horário disponível neste dia.</p>

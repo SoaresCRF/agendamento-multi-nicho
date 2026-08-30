@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatInTimeZone, toZonedTime } from 'date-fns-tz'
+import { formatInTimeZone } from 'date-fns-tz'
 import { cx } from '../../lib/cx'
 
 interface CalendarPickerProps {
@@ -16,7 +16,7 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
   const [year, month] = viewMonth.split('-').map(Number)
   const firstOfMonth = new Date(Date.UTC(year, month - 1, 1))
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
-  const startWeekday = toZonedTime(firstOfMonth, timezone).getUTCDay()
+  const startWeekday = firstOfMonth.getUTCDay()
 
   const cells: Array<{ dateStr: string; day: number } | null> = []
   for (let i = 0; i < startWeekday; i++) cells.push(null)
