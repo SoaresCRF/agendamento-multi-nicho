@@ -9,6 +9,7 @@ import { RegisterPage } from './pages/auth/RegisterPage'
 import { PanelLayout } from './pages/panel/PanelLayout'
 import { ServiceTypesListPage } from './pages/panel/service-types/ServiceTypesListPage'
 import { ServiceTypeFormPage } from './pages/panel/service-types/ServiceTypeFormPage'
+import { AvailabilityPage } from './pages/panel/availability/AvailabilityPage'
 
 export function App() {
   return (
@@ -31,6 +32,7 @@ export function App() {
                 <Route path="tipos-de-servico" element={<ServiceTypesListPage />} />
                 <Route path="tipos-de-servico/novo" element={<ServiceTypeFormPage />} />
                 <Route path="tipos-de-servico/:id" element={<ServiceTypeFormPage />} />
+                <Route path="disponibilidade" element={<AvailabilityPage />} />
               </Route>
               <Route path="/" element={<Navigate to="/login" replace />} />
               <Route path="/:slug" element={<div>Página pública (Task 14+)</div>} />
