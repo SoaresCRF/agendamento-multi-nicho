@@ -73,4 +73,34 @@ describe('ServiceTypeFormPage', () => {
     expect(await screen.findByDisplayValue('Sessão')).toBeInTheDocument()
     expect(screen.getByDisplayValue('50')).toBeInTheDocument()
   })
+
+  it('loads and saves per-service-type availability rules in edit mode', async () => {
+    let putBody: unknown = null
+    global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      if (typeof url === 'string' && url.includes('/availability-rules') && opts?.method === 'PUT') {
+        putBody = JSON.parse(opts.body as string)
+        return Promise.resolve(new Response(JSON.stringify(putBody), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/availability-rules')) {
+        return Promise.resolve(new Response('[]', { status: 200 }))
+      }
+      if (typeof url === 'string' && url.endsWith('/api/service-types/st1')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ id: 'st1', name: 'Sessão', durationMinutes: 50, description: null, requiresCustomForm: false, customFields: [] }),
+            { status: 200 }
+          )
+        )
+      }
+      return Promise.resolve(new Response('{}', { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderAt('/painel/tipos-de-servico/st1')
+    await screen.findByDisplayValue('Sessão')
+
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Terça-feira' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar regras de disponibilidade' }))
+
+    await waitFor(() => expect(putBody).toEqual([{ dayOfWeek: 2, startTime: '09:00', endTime: '18:00' }]))
+  })
 })

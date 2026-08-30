@@ -1,16 +1,17 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Input } from '../../../components/Input'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { useCreateServiceType, useUpdateServiceType } from './useServiceTypes'
 import { useToast } from '../../../components/toast/useToast'
 import { api, ApiError } from '../../../lib/api'
-import type { ServiceType } from '../../../lib/types'
+import { WeeklyScheduleEditor } from '../availability/WeeklyScheduleEditor'
+import type { ServiceType, AvailabilityRule } from '../../../lib/types'
 
 // Mirrors server/src/modules/service-types/service-types.schemas.ts exactly.
 const customFieldFormSchema = z.object({
@@ -47,6 +48,28 @@ export function ServiceTypeFormPage() {
     queryKey: ['service-types', id],
     queryFn: () => api.get<ServiceType>(`/api/service-types/${id}`),
     enabled: isEdit,
+  })
+
+  const queryClient = useQueryClient()
+  const { data: existingRules } = useQuery({
+    queryKey: ['service-types', id, 'availability-rules'],
+    queryFn: () => api.get<AvailabilityRule[]>(`/api/service-types/${id}/availability-rules`),
+    enabled: isEdit,
+  })
+  const [rules, setRules] = useState<AvailabilityRule[]>([])
+
+  useEffect(() => {
+    if (existingRules) setRules(existingRules)
+  }, [existingRules])
+
+  const saveRules = useMutation({
+    mutationFn: (input: AvailabilityRule[]) => api.put<AvailabilityRule[]>(`/api/service-types/${id}/availability-rules`, input),
+    onSuccess: (saved) => {
+      setRules(saved)
+      queryClient.setQueryData(['service-types', id, 'availability-rules'], saved)
+      show('Regras de disponibilidade salvas')
+    },
+    onError: (err) => show(err instanceof ApiError ? err.message : 'Erro ao salvar', 'error'),
   })
 
   const { register, control, handleSubmit, reset, watch, formState: { errors } } =
@@ -165,6 +188,18 @@ export function ServiceTypeFormPage() {
           </Button>
         </div>
       </form>
+      {isEdit && (
+        <div className="mt-lg border-t border-hairline pt-lg">
+          <h2 className="mb-md font-sans text-title-md">Disponibilidade específica deste tipo de serviço</h2>
+          <p className="mb-md font-sans text-body-sm text-muted">
+            Se configurada, substitui a disponibilidade geral apenas para este tipo de serviço.
+          </p>
+          <WeeklyScheduleEditor value={rules} onChange={setRules} />
+          <Button className="mt-md" onClick={() => saveRules.mutate(rules)}>
+            Salvar regras de disponibilidade
+          </Button>
+        </div>
+      )}
     </Card>
   )
 }
