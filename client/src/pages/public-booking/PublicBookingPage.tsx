@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { usePublicProfile, usePublicServiceTypes, usePublicSlots, useCreateBooking } from './usePublicBooking'
 import { ServiceTypeSelector } from './ServiceTypeSelector'
 import { CalendarPicker } from './CalendarPicker'
@@ -12,6 +13,7 @@ type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
 
 export function PublicBookingPage() {
   const { slug } = useParams<{ slug: string }>()
+  const queryClient = useQueryClient()
   const { data: profile } = usePublicProfile(slug!)
   const { data: serviceTypes } = usePublicServiceTypes(slug!)
   const [step, setStep] = useState<Step>('select-service')
@@ -48,6 +50,7 @@ export function PublicBookingPage() {
         setBookingError('Esse horário acabou de ser reservado — escolha outro.')
         setSelectedSlot(null)
         setStep('pick-slot')
+        queryClient.invalidateQueries({ queryKey: ['public', slug, 'slots', selectedServiceTypeId, effectiveDate] })
       } else {
         setBookingError(err instanceof ApiError ? err.message : 'Erro ao confirmar agendamento')
       }
@@ -64,6 +67,8 @@ export function PublicBookingPage() {
       </div>
 
       <div className="mx-auto max-w-[720px] px-lg py-xl">
+        {bookingError && <p className="mb-md font-sans text-body-sm text-error">{bookingError}</p>}
+
         {step === 'select-service' && serviceTypes && (
           <>
             <h2 className="mb-md font-display text-display-md">Escolha um tipo de serviço</h2>
@@ -99,7 +104,6 @@ export function PublicBookingPage() {
         {step === 'form' && selectedServiceType && (
           <div>
             <h2 className="mb-md font-display text-display-md">Seus dados</h2>
-            {bookingError && <p className="mb-md font-sans text-body-sm text-error">{bookingError}</p>}
             <BookingForm serviceType={selectedServiceType} onSubmit={handleBookingSubmit} isSubmitting={createBooking.isPending} />
           </div>
         )}

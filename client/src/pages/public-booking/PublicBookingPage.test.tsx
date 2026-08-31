@@ -43,4 +43,32 @@ describe('PublicBookingPage', () => {
     await userEvent.click(screen.getByText('Primeira consulta'))
     expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
   })
+
+  it('shows the conflict error and returns to the slot picker when booking gets a 409', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/slots')) {
+        return Promise.resolve(new Response(JSON.stringify({ slots: ['2026-09-20T13:00:00.000Z'] }), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/bookings')) {
+        return Promise.resolve(new Response(JSON.stringify({ error: 'Slot already booked' }), { status: 409 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    await userEvent.click(await screen.findByText('Primeira consulta'))
+    const slotButton = await screen.findByRole('button', { name: '10:00' }) // 13:00 UTC = 10:00 -03:00
+    await userEvent.click(slotButton)
+
+    await userEvent.type(await screen.findByLabelText('Nome'), 'Cliente Teste')
+    await userEvent.type(screen.getByLabelText('E-mail'), 'cliente@example.com')
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar agendamento' }))
+
+    expect(await screen.findByText('Esse horário acabou de ser reservado — escolha outro.')).toBeInTheDocument()
+    expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
+  })
 })
