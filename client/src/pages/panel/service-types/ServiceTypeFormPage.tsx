@@ -57,29 +57,43 @@ export function ServiceTypeFormPage() {
     enabled: isEdit,
   })
   const [rules, setRules] = useState<AvailabilityRule[]>([])
+  const [isRulesDirty, setIsRulesDirty] = useState(false)
 
+  // Only re-seed from the server while the user hasn't started editing —
+  // otherwise a background refetch (staleTime elapses + window refocus)
+  // silently discards an in-progress, unsaved edit.
   useEffect(() => {
-    if (existingRules) setRules(existingRules)
-  }, [existingRules])
+    if (existingRules && !isRulesDirty) setRules(existingRules)
+  }, [existingRules, isRulesDirty])
+
+  function handleRulesChange(next: AvailabilityRule[]) {
+    setRules(next)
+    setIsRulesDirty(true)
+  }
 
   const saveRules = useMutation({
     mutationFn: (input: AvailabilityRule[]) => api.put<AvailabilityRule[]>(`/api/service-types/${id}/availability-rules`, input),
     onSuccess: (saved) => {
       setRules(saved)
+      setIsRulesDirty(false)
       queryClient.setQueryData(['service-types', id, 'availability-rules'], saved)
       show('Regras de disponibilidade salvas')
     },
     onError: (err) => show(err instanceof ApiError ? err.message : 'Erro ao salvar', 'error'),
   })
 
-  const { register, control, handleSubmit, reset, watch, formState: { errors } } =
+  const { register, control, handleSubmit, reset, watch, formState: { errors, isDirty } } =
     useForm<ServiceTypeFormValues>({ resolver: zodResolver(serviceTypeFormSchema), defaultValues: EMPTY_FORM })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'customFields' })
   const requiresCustomForm = watch('requiresCustomForm')
 
+  // Only re-seed from the server while the user hasn't started editing —
+  // `isDirty` is false right after `reset()` populates the form and flips to
+  // true the moment the user changes anything, so a background refetch can't
+  // silently discard an in-progress, unsaved edit.
   useEffect(() => {
-    if (existing) {
+    if (existing && !isDirty) {
       reset({
         name: existing.name,
         durationMinutes: existing.durationMinutes,
@@ -91,7 +105,7 @@ export function ServiceTypeFormPage() {
         })),
       })
     }
-  }, [existing, reset])
+  }, [existing, reset, isDirty])
 
   async function onSubmit(values: ServiceTypeFormValues) {
     const input = {
@@ -194,7 +208,7 @@ export function ServiceTypeFormPage() {
           <p className="mb-md font-sans text-body-sm text-muted">
             Se configurada, substitui a disponibilidade geral apenas para este tipo de serviço.
           </p>
-          <WeeklyScheduleEditor value={rules} onChange={setRules} />
+          <WeeklyScheduleEditor value={rules} onChange={handleRulesChange} />
           <Button className="mt-md" onClick={() => saveRules.mutate(rules)}>
             Salvar regras de disponibilidade
           </Button>
