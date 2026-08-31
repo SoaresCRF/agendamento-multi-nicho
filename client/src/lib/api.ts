@@ -10,6 +10,16 @@ export function getAccessToken(): string | null {
   return accessToken
 }
 
+let onAuthFailure: (() => void) | null = null
+
+// Lets a listener (AuthProvider) find out when a refresh has definitively
+// failed on an already-authenticated request, so it can clear its state and
+// let ProtectedRoute redirect to /login. api.ts is a plain module with no
+// React, so this is a callback slot rather than an event emitter/store.
+export function setOnAuthFailure(callback: (() => void) | null) {
+  onAuthFailure = callback
+}
+
 export class ApiError extends Error {
   status: number
   details?: unknown
@@ -46,6 +56,7 @@ async function request<T>(path: string, options: RequestInit = {}, allowRetry = 
   if (res.status === 401 && allowRetry && path !== '/api/auth/refresh') {
     const refreshed = await tryRefresh()
     if (refreshed) return request<T>(path, options, false)
+    onAuthFailure?.()
   }
 
   if (!res.ok) {

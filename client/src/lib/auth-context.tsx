@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { api, ApiError, setAccessToken, getAccessToken } from './api'
+import { api, ApiError, setAccessToken, getAccessToken, setOnAuthFailure } from './api'
 import type { AuthUser, MeResponse } from './types'
 
 interface AuthContextValue {
@@ -44,6 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
     }
     bootstrap()
+  }, [])
+
+  useEffect(() => {
+    // A refresh only ever fails this way for an already-authenticated request
+    // (see api.ts's request()), so clearing state here is a no-op before login
+    // and correctly logs the user out when their session dies mid-use.
+    setOnAuthFailure(() => {
+      setAccessToken(null)
+      setUser(null)
+      setToken(null)
+    })
+    return () => setOnAuthFailure(null)
   }, [])
 
   const login = (u: AuthUser, accessToken: string) => {

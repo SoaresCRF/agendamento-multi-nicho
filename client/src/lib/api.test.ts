@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { api, ApiError, setAccessToken, getAccessToken } from './api'
+import { api, ApiError, setAccessToken, getAccessToken, setOnAuthFailure } from './api'
 
 const originalFetch = global.fetch
 
@@ -9,6 +9,7 @@ describe('api client', () => {
   })
   afterEach(() => {
     global.fetch = originalFetch
+    setOnAuthFailure(null)
     vi.restoreAllMocks()
   })
 
@@ -65,5 +66,21 @@ describe('api client', () => {
     }) as unknown as typeof fetch
 
     await expect(api.get('/api/me')).rejects.toMatchObject({ status: 401 })
+  })
+
+  it('notifies the registered onAuthFailure callback exactly once when refresh fails, and still throws the original 401', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/api/auth/refresh')) {
+        return Promise.resolve(new Response(JSON.stringify({ error: 'Sessão inválida' }), { status: 401 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify({ error: 'Não autenticado' }), { status: 401 }))
+    }) as unknown as typeof fetch
+
+    const onAuthFailure = vi.fn()
+    setOnAuthFailure(onAuthFailure)
+
+    await expect(api.get('/api/me')).rejects.toMatchObject({ status: 401 })
+
+    expect(onAuthFailure).toHaveBeenCalledTimes(1)
   })
 })
