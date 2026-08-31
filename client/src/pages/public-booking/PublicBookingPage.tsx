@@ -8,14 +8,15 @@ import { SlotGrid } from './SlotGrid'
 import { BookingForm } from './BookingForm'
 import { ApiError } from '../../lib/api'
 import { formatInTimeZone } from 'date-fns-tz'
+import { EmptyState } from '../../components/EmptyState'
 
 type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
 
 export function PublicBookingPage() {
   const { slug } = useParams<{ slug: string }>()
   const queryClient = useQueryClient()
-  const { data: profile } = usePublicProfile(slug!)
-  const { data: serviceTypes } = usePublicServiceTypes(slug!)
+  const { data: profile, isLoading: isProfileLoading, isError: isProfileError } = usePublicProfile(slug!)
+  const { data: serviceTypes, isLoading: isServiceTypesLoading, isError: isServiceTypesError } = usePublicServiceTypes(slug!)
   const [step, setStep] = useState<Step>('select-service')
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
@@ -58,6 +59,25 @@ export function PublicBookingPage() {
   }
 
   const selectedServiceType = serviceTypes?.find((st) => st.id === selectedServiceTypeId) ?? null
+
+  if (isProfileLoading || isServiceTypesLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
+        <p className="font-sans text-body-md text-muted">Carregando…</p>
+      </div>
+    )
+  }
+
+  if (isProfileError || isServiceTypesError || !profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-canvas px-lg">
+        <EmptyState
+          title="Página não encontrada"
+          description="Verifique o link e tente novamente."
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-canvas">

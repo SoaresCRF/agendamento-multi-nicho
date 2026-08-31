@@ -71,4 +71,15 @@ describe('PublicBookingPage', () => {
     expect(await screen.findByText('Esse horário acabou de ser reservado — escolha outro.')).toBeInTheDocument()
     expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
   })
+
+  it('shows a not-found message instead of a blank page for an invalid slug', async () => {
+    global.fetch = vi.fn().mockImplementation(() => {
+      return Promise.resolve(new Response(JSON.stringify({ error: 'Not found' }), { status: 404 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    expect(await screen.findByText('Página não encontrada')).toBeInTheDocument()
+    expect(screen.queryByText('Joana Silva')).not.toBeInTheDocument()
+  })
 })
