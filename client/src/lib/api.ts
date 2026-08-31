@@ -38,7 +38,23 @@ async function parseErrorBody(res: Response): Promise<{ error: string; details?:
   }
 }
 
-async function tryRefresh(): Promise<boolean> {
+// Server-side, a successful refresh revokes the presented refresh-token cookie's
+// session and issues a brand-new one. If two 401s happen around the same time,
+// firing two concurrent refresh requests means the second one arrives carrying
+// an already-revoked cookie and fails, wrongly logging the user out. This guard
+// makes concurrent callers share one in-flight request instead.
+let refreshing: Promise<boolean> | null = null
+
+function tryRefresh(): Promise<boolean> {
+  if (!refreshing) {
+    refreshing = doRefresh().finally(() => {
+      refreshing = null
+    })
+  }
+  return refreshing
+}
+
+async function doRefresh(): Promise<boolean> {
   const res = await fetch(`${API_BASE}/api/auth/refresh`, { method: 'POST', credentials: 'include' })
   if (!res.ok) return false
   const data = (await res.json()) as { accessToken: string }

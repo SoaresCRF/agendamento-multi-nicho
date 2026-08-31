@@ -83,4 +83,39 @@ describe('api client', () => {
 
     expect(onAuthFailure).toHaveBeenCalledTimes(1)
   })
+
+  it('shares a single in-flight refresh across concurrent 401s, and still refreshes again on a later cycle', async () => {
+    let refreshCalls = 0
+    let validToken = ''
+
+    global.fetch = vi.fn().mockImplementation((url: string, options?: RequestInit) => {
+      if (typeof url === 'string' && url.endsWith('/api/auth/refresh')) {
+        refreshCalls++
+        validToken = `token-${refreshCalls}`
+        return Promise.resolve(new Response(JSON.stringify({ accessToken: validToken }), { status: 200 }))
+      }
+      const headers = new Headers(options?.headers)
+      if (validToken !== '' && headers.get('Authorization') === `Bearer ${validToken}`) {
+        return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify({ error: 'Não autenticado' }), { status: 401 }))
+    }) as unknown as typeof fetch
+
+    // Two queries mount together and both fire with a stale/absent access token,
+    // so both independently hit a 401 at roughly the same time.
+    const [bookings, me] = await Promise.all([api.get('/api/bookings'), api.get('/api/me')])
+
+    expect(bookings).toEqual({ ok: true })
+    expect(me).toEqual({ ok: true })
+    expect(refreshCalls).toBe(1)
+
+    // A later, genuinely separate refresh cycle (e.g. the access token expires
+    // again after the first cycle fully settled) must still fire a fresh request -
+    // the guard must not be permanently wedged to "only ever refreshes once".
+    setAccessToken('stale-token')
+    const again = await api.get('/api/me')
+
+    expect(again).toEqual({ ok: true })
+    expect(refreshCalls).toBe(2)
+  })
 })
