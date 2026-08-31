@@ -10,7 +10,7 @@ import { EmptyState } from '../../../components/EmptyState'
 import { useToast } from '../../../components/toast/useToast'
 import { api, ApiError } from '../../../lib/api'
 import type { MeResponse } from '../../../lib/types'
-import { formatInTimeZone } from 'date-fns-tz'
+import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
 const blockedSlotSchema = z
   .object({
@@ -40,8 +40,8 @@ export function BlockedSlotsPage() {
   async function onSubmit(values: BlockedSlotFormValues) {
     try {
       await createBlockedSlot.mutateAsync({
-        startsAt: new Date(values.startsAt).toISOString(),
-        endsAt: new Date(values.endsAt).toISOString(),
+        startsAt: fromZonedTime(values.startsAt, profile!.timezone).toISOString(),
+        endsAt: fromZonedTime(values.endsAt, profile!.timezone).toISOString(),
         reason: values.reason || undefined,
       })
       show('Bloqueio adicionado')
@@ -69,7 +69,7 @@ export function BlockedSlotsPage() {
           <Input label="Início" id="startsAt" type="datetime-local" error={errors.startsAt?.message} {...register('startsAt')} />
           <Input label="Fim" id="endsAt" type="datetime-local" error={errors.endsAt?.message} {...register('endsAt')} />
           <Input label="Motivo (opcional)" id="reason" {...register('reason')} />
-          <Button type="submit">Adicionar bloqueio</Button>
+          <Button type="submit" disabled={!profile}>Adicionar bloqueio</Button>
         </form>
       </Card>
 
