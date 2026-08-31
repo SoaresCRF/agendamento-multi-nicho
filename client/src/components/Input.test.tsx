@@ -13,4 +13,9 @@ describe('Input', () => {
     expect(screen.getByText('E-mail inválido')).toBeInTheDocument()
     expect(screen.getByLabelText('E-mail')).toHaveAttribute('aria-invalid', 'true')
   })
+
+  it('has a visible focus ring for keyboard navigation', () => {
+    render(<Input label="E-mail" id="email" />)
+    expect(screen.getByLabelText('E-mail').className).toContain('focus-visible:ring-primary')
+  })
 })

@@ -17,4 +17,9 @@ describe('Button', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
     expect(onClick).not.toHaveBeenCalled()
   })
+
+  it('has a visible focus ring for keyboard navigation', () => {
+    render(<Button>Salvar</Button>)
+    expect(screen.getByRole('button', { name: 'Salvar' }).className).toContain('focus-visible:ring-primary')
+  })
 })

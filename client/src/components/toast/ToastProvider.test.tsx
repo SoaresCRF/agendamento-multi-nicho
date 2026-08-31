@@ -18,6 +18,7 @@ describe('ToastProvider', () => {
     )
     fireEvent.click(screen.getByText('disparar'))
     expect(screen.getByText('Alterações salvas')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveAttribute('aria-live', 'polite')
 
     act(() => {
       vi.advanceTimersByTime(4000)
