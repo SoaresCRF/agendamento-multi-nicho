@@ -30,6 +30,15 @@ describe('RegisterPage', () => {
     expect(await screen.findByText('Use apenas letras minúsculas, números e hífen')).toBeInTheDocument()
   })
 
+  it('rejects an invalid IANA timezone before hitting the server', async () => {
+    global.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 401 })) as unknown as typeof fetch
+    renderPage()
+    await waitFor(() => screen.getByLabelText('Fuso horário'))
+    await userEvent.type(screen.getByLabelText('Fuso horário'), 'Brasilia')
+    await userEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
+    expect(await screen.findByText('Fuso horário inválido (ex: America/Sao_Paulo)')).toBeInTheDocument()
+  })
+
   it('submits a valid registration and shows the server 409 on a duplicate', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.endsWith('/api/auth/register')) {

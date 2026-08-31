@@ -4,6 +4,7 @@ import { queryClient } from './lib/query-client'
 import { AuthProvider } from './lib/auth-context'
 import { ToastProvider } from './components/toast/ToastProvider'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { PanelLayout } from './pages/panel/PanelLayout'
@@ -16,35 +17,37 @@ import { PublicBookingPage } from './pages/public-booking/PublicBookingPage'
 
 export function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/registro" element={<RegisterPage />} />
-              <Route
-                path="/painel"
-                element={
-                  <ProtectedRoute>
-                    <PanelLayout />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Navigate to="/painel/agenda" replace />} />
-                <Route path="agenda" element={<AgendaPage />} />
-                <Route path="tipos-de-servico" element={<ServiceTypesListPage />} />
-                <Route path="tipos-de-servico/novo" element={<ServiceTypeFormPage />} />
-                <Route path="tipos-de-servico/:id" element={<ServiceTypeFormPage />} />
-                <Route path="disponibilidade" element={<AvailabilityPage />} />
-                <Route path="bloqueios" element={<BlockedSlotsPage />} />
-              </Route>
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/:slug" element={<PublicBookingPage />} />
-            </Routes>
-          </BrowserRouter>
-        </AuthProvider>
-      </ToastProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <AuthProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/registro" element={<RegisterPage />} />
+                <Route
+                  path="/painel"
+                  element={
+                    <ProtectedRoute>
+                      <PanelLayout />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Navigate to="/painel/agenda" replace />} />
+                  <Route path="agenda" element={<AgendaPage />} />
+                  <Route path="tipos-de-servico" element={<ServiceTypesListPage />} />
+                  <Route path="tipos-de-servico/novo" element={<ServiceTypeFormPage />} />
+                  <Route path="tipos-de-servico/:id" element={<ServiceTypeFormPage />} />
+                  <Route path="disponibilidade" element={<AvailabilityPage />} />
+                  <Route path="bloqueios" element={<BlockedSlotsPage />} />
+                </Route>
+                <Route path="/" element={<Navigate to="/login" replace />} />
+                <Route path="/:slug" element={<PublicBookingPage />} />
+              </Routes>
+            </BrowserRouter>
+          </AuthProvider>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }

@@ -9,7 +9,19 @@ import { api, ApiError } from '../../lib/api'
 import { useAuth } from '../../lib/auth-context'
 import type { AuthUser } from '../../lib/types'
 
-// Mirrors server/src/modules/auth/auth.schemas.ts's registerSchema exactly.
+function isValidTimeZone(tz: string): boolean {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Mirrors server/src/modules/auth/auth.schemas.ts's registerSchema, plus a
+// client-only IANA check: the server accepts any non-empty string, and an
+// invalid zone (e.g. "Brasilia") crashes every formatInTimeZone call in the
+// app with no ErrorBoundary to catch it downstream.
 const registerSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('E-mail inválido'),
@@ -18,7 +30,10 @@ const registerSchema = z.object({
     .string()
     .min(3, 'O slug precisa ter ao menos 3 caracteres')
     .regex(/^[a-z0-9-]+$/, 'Use apenas letras minúsculas, números e hífen'),
-  timezone: z.string().min(1, 'Fuso horário é obrigatório'),
+  timezone: z
+    .string()
+    .min(1, 'Fuso horário é obrigatório')
+    .refine(isValidTimeZone, 'Fuso horário inválido (ex: America/Sao_Paulo)'),
   niche: z.string().optional(),
 })
 
