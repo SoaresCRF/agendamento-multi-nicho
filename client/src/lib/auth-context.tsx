@@ -19,7 +19,12 @@ async function silentRefresh(): Promise<MeResponse | null> {
     // lightest authenticated endpoint that exists for this purpose — its response
     // is also the profile data bootstrap needs, so nothing else re-fetches it.
     return await api.get<MeResponse>('/api/me')
-  } catch {
+  } catch (err) {
+    // A 401 here just means there's no valid session yet (e.g. first visit) —
+    // expected, not worth logging. Anything else is a real, unexpected failure.
+    if (!(err instanceof ApiError && err.status === 401)) {
+      console.error('Silent session refresh failed unexpectedly:', err)
+    }
     return null
   }
 }
@@ -62,8 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     try {
       await api.post('/api/auth/logout')
-    } catch {
+    } catch (err) {
       // Best-effort: even if the network call fails, clear local state below.
+      console.warn('Logout request failed (clearing local session anyway):', err)
     }
     setAccessToken(null)
     setUser(null)

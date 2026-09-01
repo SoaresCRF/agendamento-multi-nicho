@@ -48,7 +48,8 @@ describe('AuthProvider', () => {
     expect(getAccessToken()).toBe('tok')
   })
 
-  it('ends up logged out when the refresh cookie is absent/invalid', async () => {
+  it('ends up logged out when the refresh cookie is absent/invalid, without logging (expected case)', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     global.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 401 })) as unknown as typeof fetch
 
     render(
@@ -58,6 +59,21 @@ describe('AuthProvider', () => {
     )
 
     await waitFor(() => expect(screen.getByText(/deslogado/)).toBeInTheDocument())
+    expect(consoleError).not.toHaveBeenCalled()
+  })
+
+  it('logs an unexpected (non-401) silent-refresh failure instead of swallowing it', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    global.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 500 })) as unknown as typeof fetch
+
+    render(
+      <AuthProvider>
+        <Consumer />
+      </AuthProvider>
+    )
+
+    await waitFor(() => expect(screen.getByText(/deslogado/)).toBeInTheDocument())
+    expect(consoleError).toHaveBeenCalledWith('Silent session refresh failed unexpectedly:', expect.anything())
   })
 
   it('clears the session when a later authenticated request finds the refresh token dead', async () => {
