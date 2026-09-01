@@ -23,6 +23,10 @@ export function buildCustomFieldsSchema(fields: ServiceTypeCustomField[]) {
             : z.string().refine(() => false, { message: `O campo "${field.label}" não tem opções configuradas` })
         break
       }
+      default:
+        // Defensive: fieldType is server-controlled data, not a compile-time guarantee —
+        // a malformed or future value must fail validation cleanly, not throw a raw TypeError.
+        fieldSchema = z.any().refine(() => false, { message: `O campo "${field.label}" tem um tipo não suportado` })
     }
     shape[field.id] = field.required
       ? fieldSchema.refine((v) => v !== undefined && v !== '', { message: `O campo "${field.label}" é obrigatório` })

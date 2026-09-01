@@ -31,4 +31,11 @@ describe('buildCustomFieldsSchema', () => {
     expect(schema.safeParse({ f1: 'Sim' }).success).toBe(true)
     expect(schema.safeParse({ f1: 'Talvez' }).success).toBe(false)
   })
+
+  it('fails validation instead of throwing for a malformed server fieldType', () => {
+    const malformed = { ...baseField, fieldType: 'DATE' } as unknown as ServiceTypeCustomField
+    const schema = buildCustomFieldsSchema([malformed])
+    expect(() => schema.safeParse({ f1: 'qualquer coisa' })).not.toThrow()
+    expect(schema.safeParse({ f1: 'qualquer coisa' }).success).toBe(false)
+  })
 })
