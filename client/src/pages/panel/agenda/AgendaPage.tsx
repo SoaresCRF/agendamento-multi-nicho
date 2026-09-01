@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { formatInTimeZone } from 'date-fns-tz'
-import { useQuery } from '@tanstack/react-query'
 import { useBookings, useCancelBooking } from './useBookings'
 import { Card } from '../../../components/Card'
 import { Badge } from '../../../components/Badge'
@@ -8,15 +7,12 @@ import { Button } from '../../../components/Button'
 import { Modal } from '../../../components/Modal'
 import { EmptyState } from '../../../components/EmptyState'
 import { useToast } from '../../../components/toast/useToast'
-import { api, ApiError } from '../../../lib/api'
-import type { MeResponse } from '../../../lib/types'
+import { ApiError } from '../../../lib/api'
+import { useMe } from '../../../lib/useMe'
 
 export function AgendaPage() {
   const { data: bookings } = useBookings()
-  const { data: profile } = useQuery({
-    queryKey: ['me'],
-    queryFn: () => api.get<MeResponse>('/api/me'),
-  })
+  const { data: profile } = useMe()
   const cancelBooking = useCancelBooking()
   const { show } = useToast()
   const [pendingCancelId, setPendingCancelId] = useState<string | null>(null)

@@ -12,15 +12,15 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-async function silentRefresh(): Promise<boolean> {
+async function silentRefresh(): Promise<MeResponse | null> {
   try {
     // A GET that requires auth doubles as the refresh trigger: api.ts's request()
     // retries any 401 via POST /auth/refresh automatically, and /api/me is the
-    // lightest authenticated endpoint that exists for this purpose.
-    await api.get<MeResponse>('/api/me')
-    return true
+    // lightest authenticated endpoint that exists for this purpose — its response
+    // is also the profile data bootstrap needs, so nothing else re-fetches it.
+    return await api.get<MeResponse>('/api/me')
   } catch {
-    return false
+    return null
   }
 }
 
@@ -31,15 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function bootstrap() {
-      const ok = await silentRefresh()
-      if (ok) {
-        try {
-          const me = await api.get<MeResponse>('/api/me')
-          setUser({ id: me.id, name: me.name, email: me.email, slug: me.slug })
-          setToken(getAccessToken())
-        } catch {
-          setAccessToken(null)
-        }
+      const me = await silentRefresh()
+      if (me) {
+        setUser({ id: me.id, name: me.name, email: me.email, slug: me.slug })
+        setToken(getAccessToken())
       }
       setIsLoading(false)
     }

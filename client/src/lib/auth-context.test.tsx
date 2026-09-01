@@ -74,19 +74,15 @@ describe('AuthProvider', () => {
       }
       if (typeof url === 'string' && url.endsWith('/api/me')) {
         meCallCount += 1
-        // Call 1: silentRefresh's initial 401 that triggers the refresh-and-retry.
-        // Call 2: that retry, inside silentRefresh, succeeding (shape doesn't matter).
-        // Call 3: bootstrap's own /api/me for the user's profile, once refreshed.
-        if (meCallCount <= 2) {
-          if (meCallCount === 1) return Promise.resolve(new Response('{}', { status: 401 }))
-          return Promise.resolve(new Response('{}', { status: 200 }))
-        }
-        if (meCallCount === 3) {
+        // Call 1: bootstrap's initial 401 that triggers the refresh-and-retry.
+        // Call 2: that retry, succeeding — its response is used directly as the profile.
+        if (meCallCount === 1) return Promise.resolve(new Response('{}', { status: 401 }))
+        if (meCallCount === 2) {
           return Promise.resolve(
             new Response(JSON.stringify({ id: '1', name: 'Joana', email: 'j@x.com', slug: 'joana' }), { status: 200 })
           )
         }
-        // Call 4+: something in the panel calls /api/me again after the session died.
+        // Call 3+: something in the panel calls /api/me again after the session died.
         return Promise.resolve(new Response('{}', { status: 401 }))
       }
       return Promise.resolve(new Response('{}', { status: 200 }))

@@ -1,15 +1,14 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useQuery } from '@tanstack/react-query'
 import { useBlockedSlots, useCreateBlockedSlot, useDeleteBlockedSlot } from './useBlockedSlots'
 import { Card } from '../../../components/Card'
 import { Input } from '../../../components/Input'
 import { Button } from '../../../components/Button'
 import { EmptyState } from '../../../components/EmptyState'
 import { useToast } from '../../../components/toast/useToast'
-import { api, ApiError } from '../../../lib/api'
-import type { MeResponse } from '../../../lib/types'
+import { ApiError } from '../../../lib/api'
+import { useMe } from '../../../lib/useMe'
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
 const blockedSlotSchema = z
@@ -27,10 +26,7 @@ type BlockedSlotFormValues = z.infer<typeof blockedSlotSchema>
 
 export function BlockedSlotsPage() {
   const { data: blockedSlots } = useBlockedSlots()
-  const { data: profile } = useQuery({
-    queryKey: ['me'],
-    queryFn: () => api.get<MeResponse>('/api/me'),
-  })
+  const { data: profile } = useMe()
   const createBlockedSlot = useCreateBlockedSlot()
   const deleteBlockedSlot = useDeleteBlockedSlot()
   const { show } = useToast()
