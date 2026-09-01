@@ -69,7 +69,10 @@ como parte deste projeto.
 
 **Frontend (Vercel):** conectar o repositório, definir o *root directory*
 como `client/`, build command `npm run build`, output `dist/`. Configurar
-`VITE_API_URL` apontando para a URL pública da API.
+`VITE_API_URL` apontando para a URL pública da API. Headers de segurança
+mínimos (CSP, `X-Content-Type-Options`, `X-Frame-Options`,
+`Strict-Transport-Security`) já vêm de `client/vercel.json` — nenhuma
+configuração extra no painel da Vercel é necessária.
 
 **Backend (Render ou Railway):** conectar o repositório, *root directory*
 `server/`, build command `npm install && npx prisma migrate deploy && npm run build`,
