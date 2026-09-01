@@ -14,6 +14,7 @@ import { AvailabilityPage } from './pages/panel/availability/AvailabilityPage'
 import { BlockedSlotsPage } from './pages/panel/blocked-slots/BlockedSlotsPage'
 import { AgendaPage } from './pages/panel/agenda/AgendaPage'
 import { PublicBookingPage } from './pages/public-booking/PublicBookingPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 
 export function App() {
   return (
@@ -40,9 +41,11 @@ export function App() {
                   <Route path="tipos-de-servico/:id" element={<ServiceTypeFormPage />} />
                   <Route path="disponibilidade" element={<AvailabilityPage />} />
                   <Route path="bloqueios" element={<BlockedSlotsPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Route>
                 <Route path="/" element={<Navigate to="/login" replace />} />
                 <Route path="/:slug" element={<PublicBookingPage />} />
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </BrowserRouter>
           </AuthProvider>
