@@ -8,6 +8,11 @@ describe('Input', () => {
     expect(screen.getByLabelText('E-mail')).toBeInTheDocument()
   })
 
+  it('still associates the label with the input when no id prop is given', () => {
+    render(<Input label="E-mail" />)
+    expect(screen.getByLabelText('E-mail')).toBeInTheDocument()
+  })
+
   it('shows the error message and marks the input invalid', () => {
     render(<Input label="E-mail" id="email" error="E-mail inválido" />)
     expect(screen.getByText('E-mail inválido')).toBeInTheDocument()
