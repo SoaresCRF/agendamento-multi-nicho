@@ -66,7 +66,7 @@ export function AgendaPage() {
           <Button variant="secondary" onClick={() => setPendingCancelId(null)}>
             Voltar
           </Button>
-          <Button onClick={confirmCancel}>Confirmar cancelamento</Button>
+          <Button onClick={confirmCancel} disabled={cancelBooking.isPending}>Confirmar cancelamento</Button>
         </div>
       </Modal>
     </div>

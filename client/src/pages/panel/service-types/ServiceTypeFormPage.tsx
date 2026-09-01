@@ -196,7 +196,7 @@ export function ServiceTypeFormPage() {
         )}
 
         <div className="flex gap-sm">
-          <Button type="submit">Salvar</Button>
+          <Button type="submit" disabled={createServiceType.isPending || updateServiceType.isPending}>Salvar</Button>
           <Button type="button" variant="secondary" onClick={() => navigate('/painel/tipos-de-servico')}>
             Cancelar
           </Button>
@@ -209,7 +209,7 @@ export function ServiceTypeFormPage() {
             Se configurada, substitui a disponibilidade geral apenas para este tipo de serviço.
           </p>
           <WeeklyScheduleEditor value={rules} onChange={handleRulesChange} />
-          <Button className="mt-md" onClick={() => saveRules.mutate(rules)}>
+          <Button className="mt-md" onClick={() => saveRules.mutate(rules)} disabled={saveRules.isPending}>
             Salvar regras de disponibilidade
           </Button>
         </div>

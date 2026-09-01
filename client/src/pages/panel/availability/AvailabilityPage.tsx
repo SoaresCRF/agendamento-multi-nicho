@@ -41,7 +41,7 @@ export function AvailabilityPage() {
     <Card className="max-w-2xl">
       <h1 className="mb-lg font-display text-display-sm">Disponibilidade geral</h1>
       <WeeklyScheduleEditor value={rules} onChange={handleRulesChange} />
-      <Button className="mt-lg" onClick={() => save.mutate(rules)}>
+      <Button className="mt-lg" onClick={() => save.mutate(rules)} disabled={save.isPending}>
         Salvar
       </Button>
     </Card>

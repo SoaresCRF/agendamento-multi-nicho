@@ -55,6 +55,33 @@ describe('AgendaPage', () => {
     await waitFor(() => expect(cancelled).toBe(true))
   })
 
+  it('disables the confirm button while the cancel mutation is pending', async () => {
+    let resolvePatch: (res: Response) => void
+    global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
+      if (opts?.method === 'PATCH') {
+        return new Promise<Response>((resolve) => { resolvePatch = resolve })
+      }
+      if (typeof url === 'string' && url.includes('/api/me')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ id: 'u1', name: 'Pro', email: 'pro@example.com', slug: 'pro', timezone: 'UTC', niche: null }),
+            { status: 200 }
+          )
+        )
+      }
+      return Promise.resolve(new Response(JSON.stringify([booking]), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+    await userEvent.click(await screen.findByRole('button', { name: 'Cancelar' }))
+    const confirmButton = screen.getByRole('button', { name: 'Confirmar cancelamento' })
+    await userEvent.click(confirmButton)
+
+    expect(confirmButton).toBeDisabled()
+    resolvePatch!(new Response(JSON.stringify({ ...booking, status: 'CANCELLED' }), { status: 200 }))
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Confirmar cancelamento' })).not.toBeInTheDocument())
+  })
+
   it('displays booking times converted to the professional timezone, not UTC', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.includes('/api/me')) {

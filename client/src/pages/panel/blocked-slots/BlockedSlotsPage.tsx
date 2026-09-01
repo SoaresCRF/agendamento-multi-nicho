@@ -65,7 +65,7 @@ export function BlockedSlotsPage() {
           <Input label="Início" id="startsAt" type="datetime-local" error={errors.startsAt?.message} {...register('startsAt')} />
           <Input label="Fim" id="endsAt" type="datetime-local" error={errors.endsAt?.message} {...register('endsAt')} />
           <Input label="Motivo (opcional)" id="reason" {...register('reason')} />
-          <Button type="submit" disabled={!profile}>Adicionar bloqueio</Button>
+          <Button type="submit" disabled={!profile || createBlockedSlot.isPending}>Adicionar bloqueio</Button>
         </form>
       </Card>
 
@@ -82,7 +82,7 @@ export function BlockedSlotsPage() {
                 </p>
                 {b.reason && <p className="font-sans text-body-sm text-muted">{b.reason}</p>}
               </div>
-              <Button variant="text-link" onClick={() => handleDelete(b.id)}>
+              <Button variant="text-link" onClick={() => handleDelete(b.id)} disabled={deleteBlockedSlot.isPending}>
                 Remover
               </Button>
             </Card>

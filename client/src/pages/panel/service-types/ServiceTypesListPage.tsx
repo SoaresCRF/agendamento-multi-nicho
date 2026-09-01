@@ -78,7 +78,7 @@ export function ServiceTypesListPage() {
           <Button variant="secondary" onClick={() => setPendingDeleteId(null)}>
             Cancelar
           </Button>
-          <Button onClick={confirmDelete}>Confirmar exclusão</Button>
+          <Button onClick={confirmDelete} disabled={deleteServiceType.isPending}>Confirmar exclusão</Button>
         </div>
       </Modal>
     </div>
