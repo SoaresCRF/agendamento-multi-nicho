@@ -6,7 +6,7 @@ import { CalendarPicker } from './CalendarPicker'
 describe('CalendarPicker', () => {
   it('calls onSelectDate with YYYY-MM-DD when a future day is clicked', async () => {
     const onSelectDate = vi.fn()
-    render(<CalendarPicker selectedDate="2026-09-15" onSelectDate={onSelectDate} timezone="America/Sao_Paulo" />)
+    render(<CalendarPicker selectedDate="2026-09-15" onSelectDate={onSelectDate} timezone="America/Sao_Paulo" now={new Date('2026-09-01T12:00:00Z')} />)
 
     await userEvent.click(screen.getByRole('button', { name: '20' }))
     expect(onSelectDate).toHaveBeenCalledWith(expect.stringMatching(/^2026-09-20$/))
