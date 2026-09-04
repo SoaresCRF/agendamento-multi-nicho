@@ -8,8 +8,10 @@ import { Modal } from '../../../components/Modal'
 import { EmptyState } from '../../../components/EmptyState'
 import { useToast } from '../../../components/toast/useToast'
 import { ApiError } from '../../../lib/api'
+import { useDocumentTitle } from '../../../lib/useDocumentTitle'
 
 export function ServiceTypesListPage() {
+  useDocumentTitle('Tipos de serviço')
   const { data: serviceTypes, isLoading } = useServiceTypes()
   const deleteServiceType = useDeleteServiceType()
   const { show } = useToast()

@@ -10,6 +10,7 @@ import { ApiError } from '../../lib/api'
 import { formatInTimeZone } from 'date-fns-tz'
 import { EmptyState } from '../../components/EmptyState'
 import { Badge, toneForNiche } from '../../components/Badge'
+import { useDocumentTitle } from '../../lib/useDocumentTitle'
 
 type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
 
@@ -17,6 +18,7 @@ export function PublicBookingPage() {
   const { slug } = useParams<{ slug: string }>()
   const queryClient = useQueryClient()
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError } = usePublicProfile(slug!)
+  useDocumentTitle(profile?.name ?? 'Agendar horário')
   const { data: serviceTypes, isLoading: isServiceTypesLoading, isError: isServiceTypesError } = usePublicServiceTypes(slug!)
   const [step, setStep] = useState<Step>('select-service')
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)

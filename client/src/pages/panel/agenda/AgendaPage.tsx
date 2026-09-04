@@ -9,8 +9,10 @@ import { EmptyState } from '../../../components/EmptyState'
 import { useToast } from '../../../components/toast/useToast'
 import { ApiError } from '../../../lib/api'
 import { useMe } from '../../../lib/useMe'
+import { useDocumentTitle } from '../../../lib/useDocumentTitle'
 
 export function AgendaPage() {
+  useDocumentTitle('Agenda')
   const { data: bookings } = useBookings()
   const { data: profile } = useMe()
   const cancelBooking = useCancelBooking()

@@ -9,6 +9,7 @@ import { EmptyState } from '../../../components/EmptyState'
 import { useToast } from '../../../components/toast/useToast'
 import { ApiError } from '../../../lib/api'
 import { useMe } from '../../../lib/useMe'
+import { useDocumentTitle } from '../../../lib/useDocumentTitle'
 import { formatInTimeZone, fromZonedTime } from 'date-fns-tz'
 
 const blockedSlotSchema = z
@@ -25,6 +26,7 @@ const blockedSlotSchema = z
 type BlockedSlotFormValues = z.infer<typeof blockedSlotSchema>
 
 export function BlockedSlotsPage() {
+  useDocumentTitle('Bloqueios')
   const { data: blockedSlots } = useBlockedSlots()
   const { data: profile } = useMe()
   const createBlockedSlot = useCreateBlockedSlot()

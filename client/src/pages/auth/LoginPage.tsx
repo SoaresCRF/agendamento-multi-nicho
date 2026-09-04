@@ -7,6 +7,7 @@ import { Input } from '../../components/Input'
 import { Button } from '../../components/Button'
 import { api, ApiError } from '../../lib/api'
 import { useAuth } from '../../lib/auth-context'
+import { useDocumentTitle } from '../../lib/useDocumentTitle'
 import type { AuthUser } from '../../lib/types'
 
 const loginSchema = z.object({
@@ -22,6 +23,7 @@ interface LoginResponse {
 }
 
 export function LoginPage() {
+  useDocumentTitle('Entrar')
   const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   })

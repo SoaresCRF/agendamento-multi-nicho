@@ -5,9 +5,11 @@ import { Card } from '../../../components/Card'
 import { Button } from '../../../components/Button'
 import { useToast } from '../../../components/toast/useToast'
 import { api, ApiError } from '../../../lib/api'
+import { useDocumentTitle } from '../../../lib/useDocumentTitle'
 import type { AvailabilityRule } from '../../../lib/types'
 
 export function AvailabilityPage() {
+  useDocumentTitle('Disponibilidade')
   const { data } = useQuery({ queryKey: ['availability'], queryFn: () => api.get<AvailabilityRule[]>('/api/availability') })
   const [rules, setRules] = useState<AvailabilityRule[]>([])
   const [isRulesDirty, setIsRulesDirty] = useState(false)

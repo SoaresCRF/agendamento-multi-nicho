@@ -10,6 +10,7 @@ import { Card } from '../../../components/Card'
 import { useCreateServiceType, useUpdateServiceType } from './useServiceTypes'
 import { useToast } from '../../../components/toast/useToast'
 import { api, ApiError } from '../../../lib/api'
+import { useDocumentTitle } from '../../../lib/useDocumentTitle'
 import { WeeklyScheduleEditor } from '../availability/WeeklyScheduleEditor'
 import type { ServiceType, AvailabilityRule } from '../../../lib/types'
 
@@ -39,6 +40,7 @@ const EMPTY_FORM: ServiceTypeFormValues = {
 export function ServiceTypeFormPage() {
   const { id } = useParams<{ id: string }>()
   const isEdit = id !== undefined && id !== 'novo'
+  useDocumentTitle(isEdit ? 'Editar tipo de serviço' : 'Novo tipo de serviço')
   const navigate = useNavigate()
   const { show } = useToast()
   const createServiceType = useCreateServiceType()

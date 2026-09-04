@@ -21,6 +21,11 @@ function renderPage() {
 describe('LoginPage', () => {
   afterEach(() => vi.restoreAllMocks())
 
+  it('sets a page-specific document title', () => {
+    renderPage()
+    expect(document.title).toBe('Entrar · Agendamento')
+  })
+
   it('shows validation errors for an empty submit', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 401 })) as unknown as typeof fetch
     renderPage()
