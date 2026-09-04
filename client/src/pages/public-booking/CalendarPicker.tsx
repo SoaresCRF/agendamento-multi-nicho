@@ -1,6 +1,11 @@
 import { useState } from 'react'
 import { formatInTimeZone } from 'date-fns-tz'
+import { ptBR } from 'date-fns/locale'
 import { cx } from '../../lib/cx'
+
+function capitalize(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
 
 interface CalendarPickerProps {
   selectedDate: string
@@ -17,6 +22,7 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
   const firstOfMonth = new Date(Date.UTC(year, month - 1, 1))
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
   const startWeekday = firstOfMonth.getUTCDay()
+  const monthLabel = capitalize(formatInTimeZone(firstOfMonth, 'UTC', 'MMMM yyyy', { locale: ptBR }))
 
   const cells: Array<{ dateStr: string; day: number } | null> = []
   for (let i = 0; i < startWeekday; i++) cells.push(null)
@@ -36,7 +42,7 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
         <button onClick={() => shiftMonth(-1)} aria-label="Mês anterior" className="text-muted hover:text-ink">
           ‹
         </button>
-        <span className="font-sans text-title-sm text-ink">{viewMonth}</span>
+        <span className="font-sans text-title-sm text-ink">{monthLabel}</span>
         <button onClick={() => shiftMonth(1)} aria-label="Próximo mês" className="text-muted hover:text-ink">
           ›
         </button>
@@ -46,12 +52,17 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
           if (!cell) return <div key={`empty-${i}`} />
           const isPast = cell.dateStr < todayStr
           const isSelected = cell.dateStr === selectedDate
+          const fullDateLabel = capitalize(
+            formatInTimeZone(new Date(`${cell.dateStr}T00:00:00Z`), 'UTC', "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+          )
+          const stateSuffix = isPast ? ' (indisponível)' : isSelected ? ' (selecionado)' : ''
           return (
             <button
               key={cell.dateStr}
               disabled={isPast}
               onClick={() => onSelectDate(cell.dateStr)}
-              aria-label={String(cell.day)}
+              aria-label={`${fullDateLabel}${stateSuffix}`}
+              aria-current={isSelected ? 'date' : undefined}
               className={cx(
                 'h-11 w-11 rounded-full font-sans text-body-sm',
                 isSelected && 'bg-primary text-on-primary',

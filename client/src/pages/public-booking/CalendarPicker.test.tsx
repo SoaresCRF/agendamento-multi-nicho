@@ -8,7 +8,7 @@ describe('CalendarPicker', () => {
     const onSelectDate = vi.fn()
     render(<CalendarPicker selectedDate="2026-09-15" onSelectDate={onSelectDate} timezone="America/Sao_Paulo" now={new Date('2026-09-01T12:00:00Z')} />)
 
-    await userEvent.click(screen.getByRole('button', { name: '20' }))
+    await userEvent.click(screen.getByRole('button', { name: '20 de setembro de 2026' }))
     expect(onSelectDate).toHaveBeenCalledWith(expect.stringMatching(/^2026-09-20$/))
   })
 
@@ -16,8 +16,17 @@ describe('CalendarPicker', () => {
     const onSelectDate = vi.fn()
     render(<CalendarPicker selectedDate="2026-09-15" onSelectDate={onSelectDate} timezone="America/Sao_Paulo" now={new Date('2026-09-15T12:00:00Z')} />)
 
-    const pastDayButtons = screen.getAllByRole('button', { name: '1' })
-    await userEvent.click(pastDayButtons[0])
+    const pastDay = screen.getByRole('button', { name: '1 de setembro de 2026 (indisponível)' })
+    await userEvent.click(pastDay)
     expect(onSelectDate).not.toHaveBeenCalled()
+  })
+
+  it('shows a localized month header and marks the selected day for assistive tech', () => {
+    const onSelectDate = vi.fn()
+    render(<CalendarPicker selectedDate="2026-09-15" onSelectDate={onSelectDate} timezone="America/Sao_Paulo" now={new Date('2026-09-01T12:00:00Z')} />)
+
+    expect(screen.getByText('Setembro 2026')).toBeInTheDocument()
+    const selectedDay = screen.getByRole('button', { name: '15 de setembro de 2026 (selecionado)' })
+    expect(selectedDay).toHaveAttribute('aria-current', 'date')
   })
 })
