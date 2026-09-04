@@ -15,6 +15,10 @@ export default tseslint.config(
       '**/vite.config.d.ts',
       '**/vitest.config.js',
       '**/vitest.config.d.ts',
+      // Claude Code's own local tooling (gitignored, not project source) — its
+      // skill scripts live outside this project's TS/lint conventions.
+      '.claude/**',
+      '.impeccable/**',
     ],
   },
   js.configs.recommended,
