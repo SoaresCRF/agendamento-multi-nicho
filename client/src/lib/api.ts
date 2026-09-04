@@ -34,6 +34,9 @@ async function parseErrorBody(res: Response): Promise<{ error: string; details?:
   try {
     return await res.json()
   } catch {
+    // express-rate-limit's default 429 response is plain text, not JSON — give
+    // it a specific message rather than falling through to "Erro desconhecido".
+    if (res.status === 429) return { error: 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' }
     return { error: 'Erro desconhecido' }
   }
 }

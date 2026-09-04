@@ -38,6 +38,17 @@ describe('api client', () => {
     )
   })
 
+  it('gives a specific message for a 429 with a non-JSON body, instead of "Erro desconhecido"', async () => {
+    global.fetch = vi.fn().mockResolvedValue(
+      new Response('Too many requests, please try again later.', { status: 429 })
+    ) as unknown as typeof fetch
+
+    await expect(api.get('/api/me')).rejects.toMatchObject({
+      status: 429,
+      message: 'Muitas tentativas. Aguarde alguns minutos e tente novamente.',
+    })
+  })
+
   it('retries once via /auth/refresh on a 401, then succeeds with the new token', async () => {
     let call = 0
     global.fetch = vi.fn().mockImplementation((url: string) => {
