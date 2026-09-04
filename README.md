@@ -34,8 +34,8 @@ npm install
 docker compose up -d postgres
 cp server/.env.example server/.env    # edite JWT_SECRET
 cp client/.env.example client/.env
-npm run --workspace server db:migrate  # aplica as migrations do Prisma
-npm run --workspace server db:seed     # cria os 2 profissionais de exemplo
+npm run --workspace server prisma:migrate  # aplica as migrations do Prisma
+npm run --workspace server prisma:seed     # cria os 2 profissionais de exemplo
 npm run dev:server                     # http://localhost:3000
 npm run dev:client                     # http://localhost:5173 (outro terminal)
 ```
@@ -85,11 +85,17 @@ Instruções, não provisionamento — nenhuma infraestrutura foi de fato criada
 como parte deste projeto.
 
 **Frontend (Vercel):** conectar o repositório, definir o *root directory*
-como `client/`, build command `npm run build`, output `dist/`. Configurar
-`VITE_API_URL` apontando para a URL pública da API. Headers de segurança
-mínimos (CSP, `X-Content-Type-Options`, `X-Frame-Options`,
-`Strict-Transport-Security`) já vêm de `client/vercel.json` — nenhuma
-configuração extra no painel da Vercel é necessária.
+como `client/`, build command `npm run build`, output `dist/`. Como o
+repositório é um monorepo com npm workspaces, habilitar em
+"Root Directory" → "Include files outside of the Root Directory" para o
+build ver `package-lock.json`/`node_modules` hoisted da raiz — sem isso o
+install falha. Configurar `VITE_API_URL` apontando para a URL pública da
+API. Headers de segurança mínimos (CSP, `X-Content-Type-Options`,
+`X-Frame-Options`, `Strict-Transport-Security`) e o fallback de SPA (todo
+caminho cai em `index.html`, necessário para as rotas do React Router
+funcionarem em acesso direto/refresh, ex. `/joana-psicologa` ou
+`/painel/agenda`) já vêm de `client/vercel.json` — nenhuma configuração
+extra no painel da Vercel é necessária além do toggle acima.
 
 **Backend (Render ou Railway):** conectar o repositório, *root directory*
 `server/`, build command `npm install && npx prisma migrate deploy && npm run build`,
