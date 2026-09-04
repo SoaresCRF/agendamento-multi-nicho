@@ -31,16 +31,43 @@ export function BookingForm({ serviceType, onSubmit, isSubmitting }: BookingForm
       <Input label="Nome" id="clientName" error={errors.clientName?.message as string | undefined} {...register('clientName' as never)} />
       <Input label="E-mail" id="clientEmail" type="email" error={errors.clientEmail?.message as string | undefined} {...register('clientEmail' as never)} />
 
-      {serviceType.customFields.map((field) => (
-        <Input
-          key={field.id}
-          label={field.label}
-          id={field.id}
-          type={field.fieldType === 'NUMBER' ? 'number' : 'text'}
-          error={errors[field.id]?.message as string | undefined}
-          {...register(field.id as never)}
-        />
-      ))}
+      {serviceType.customFields.map((field) =>
+        field.fieldType === 'SELECT' ? (
+          <div key={field.id} className="flex flex-col gap-xxs">
+            <label htmlFor={field.id} className="font-sans text-body-sm text-body">
+              {field.label}
+            </label>
+            <select
+              id={field.id}
+              defaultValue=""
+              aria-invalid={errors[field.id] ? 'true' : undefined}
+              className="h-11 rounded-md border border-hairline bg-surface px-[14px] font-sans text-body-md text-ink focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+              {...register(field.id as never)}
+            >
+              <option value="" disabled>
+                Selecione…
+              </option>
+              {(field.options ?? []).map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            {errors[field.id] && (
+              <span className="font-sans text-body-sm text-error">{errors[field.id]?.message as string}</span>
+            )}
+          </div>
+        ) : (
+          <Input
+            key={field.id}
+            label={field.label}
+            id={field.id}
+            type={field.fieldType === 'NUMBER' ? 'number' : 'text'}
+            error={errors[field.id]?.message as string | undefined}
+            {...register(field.id as never)}
+          />
+        )
+      )}
 
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? 'Enviando…' : 'Confirmar agendamento'}
