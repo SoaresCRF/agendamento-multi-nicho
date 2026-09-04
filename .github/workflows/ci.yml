@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: agendamento
+          POSTGRES_PASSWORD: agendamento
+          POSTGRES_DB: agendamento
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agendamento"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://agendamento:agendamento@localhost:5432/agendamento
+      JWT_SECRET: ci-only-secret-not-used-anywhere-else-32chars
+      PORT: 3000
+      CLIENT_ORIGIN: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # npm 11's install-scripts guard blocks @prisma/client's postinstall (prisma
+      # generate) by default — generate explicitly rather than approve/bypass it.
+      - run: npx prisma generate
+        working-directory: server
+      - run: npm run lint
+      - run: npm run typecheck:client
+      - run: npm run typecheck:server
+      - run: npm run test:client
+      - run: npx prisma migrate deploy
+        working-directory: server
+      - run: npm run test:server
+      - run: npm run build --workspace client

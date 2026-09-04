@@ -62,6 +62,23 @@ npm run test --workspace server
 npm run test --workspace client
 ```
 
+## Lint e formatação
+
+```bash
+npm run lint           # ESLint em client/ e server/
+npm run format         # Prettier --write no repo inteiro
+npm run format:check   # Prettier --check, sem escrever
+```
+
+`format`/`format:check` ainda não rodam no CI: o repo pré-existe ao Prettier e
+tem ~159 arquivos fora do estilo configurado (sem ponto e vírgula, aspas
+simples, 120 colunas) — aplicar `--write` neles é uma reformatação em massa
+fora do escopo desta mudança, fica para uma sessão dedicada.
+
+O CI (`.github/workflows/ci.yml`) roda em cada push/PR para `main`: lint,
+typecheck e testes de `client/` e `server/` (com um Postgres de serviço), e o
+build de produção do `client/`.
+
 ## Deploy
 
 Instruções, não provisionamento — nenhuma infraestrutura foi de fato criada
