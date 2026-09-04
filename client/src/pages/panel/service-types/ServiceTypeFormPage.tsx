@@ -115,11 +115,15 @@ export function ServiceTypeFormPage() {
       durationMinutes: values.durationMinutes,
       description: values.description || undefined,
       requiresCustomForm: values.requiresCustomForm,
-      customFields: values.customFields.map((f) => ({
+      // Recompute order from final array position rather than trusting each
+      // field's stored value — append() only ever sets order to the length at
+      // that moment, so removing a field (or removing then appending another)
+      // leaves gaps or even duplicate order values among the survivors.
+      customFields: values.customFields.map((f, order) => ({
         label: f.label,
         fieldType: f.fieldType,
         required: f.required,
-        order: f.order,
+        order,
         options: f.fieldType === 'SELECT' && f.options
           ? f.options.split(',').map((o) => o.trim()).filter(Boolean)
           : undefined,

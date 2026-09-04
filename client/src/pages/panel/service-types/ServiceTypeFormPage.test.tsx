@@ -58,6 +58,41 @@ describe('ServiceTypeFormPage', () => {
     }))
   })
 
+  it('recomputes contiguous order values after removing a custom field, instead of leaving a gap', async () => {
+    let posted: unknown = null
+    global.fetch = vi.fn().mockImplementation((_url: string, opts?: RequestInit) => {
+      if (opts?.method === 'POST') {
+        posted = JSON.parse(opts.body as string)
+        return Promise.resolve(new Response(JSON.stringify({ id: 'new-id' }), { status: 201 }))
+      }
+      return Promise.resolve(new Response('{}', { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderAt('/painel/tipos-de-servico/novo')
+
+    await userEvent.type(screen.getByLabelText('Nome'), 'Primeira consulta')
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Exige formulário customizado' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar campo' }))
+    await userEvent.type(screen.getByLabelText('Rótulo do campo 1'), 'Campo A')
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar campo' }))
+    await userEvent.type(screen.getByLabelText('Rótulo do campo 2'), 'Campo B')
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar campo' }))
+    await userEvent.type(screen.getByLabelText('Rótulo do campo 3'), 'Campo C')
+
+    // Remove the middle field (originally order 1) — the survivors' original
+    // order values (0 and 2) must not be submitted as-is; they should be
+    // renumbered to 0 and 1 to match their new positions.
+    await userEvent.click(screen.getAllByRole('button', { name: 'Remover campo' })[1])
+    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
+
+    await waitFor(() => expect(posted).toMatchObject({
+      customFields: [
+        { label: 'Campo A', order: 0 },
+        { label: 'Campo C', order: 1 },
+      ],
+    }))
+  })
+
   it('loads an existing service type in edit mode and pre-fills the form', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response(
