@@ -9,6 +9,7 @@ import { BookingForm } from './BookingForm'
 import { ApiError } from '../../lib/api'
 import { formatInTimeZone } from 'date-fns-tz'
 import { EmptyState } from '../../components/EmptyState'
+import { Badge, toneForNiche } from '../../components/Badge'
 
 type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
 
@@ -83,7 +84,11 @@ export function PublicBookingPage() {
     <div className="min-h-screen bg-canvas">
       <div className="bg-secondary-dark px-lg py-section text-center text-on-secondary-dark">
         <h1 className="font-display text-display-lg">{profile?.name}</h1>
-        {profile?.niche && <p className="mt-xs font-sans text-body-md">{profile.niche}</p>}
+        {profile?.niche && (
+          <Badge tone={toneForNiche(profile.niche)} className="mt-xs">
+            {profile.niche}
+          </Badge>
+        )}
       </div>
 
       <div className="mx-auto max-w-[720px] px-lg py-xl">
