@@ -24,7 +24,9 @@ export function ServiceTypeSelector({ serviceTypes, selectedId, onSelect }: Serv
             <p className="font-sans text-title-lg text-ink">{st.name}</p>
             {st.description && <p className="mt-xs font-sans text-body-sm text-muted">{st.description}</p>}
             {st.requiresCustomForm && (
-              <p className="mt-xs font-sans text-caption text-muted">📋 requer formulário</p>
+              <p className="mt-xs font-sans text-caption text-muted">
+                <span aria-hidden="true">📋</span> requer formulário
+              </p>
             )}
           </div>
           <Badge>{st.durationMinutes} min</Badge>
