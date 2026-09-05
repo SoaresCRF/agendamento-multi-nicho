@@ -55,7 +55,7 @@ describe('AgendaPage', () => {
           ),
         )
       }
-      return Promise.resolve(new Response(JSON.stringify([booking]), { status: 200 }))
+      return Promise.resolve(new Response(JSON.stringify({ items: [booking], nextCursor: null }), { status: 200 }))
     }) as unknown as typeof fetch
 
     renderPage()
@@ -91,7 +91,7 @@ describe('AgendaPage', () => {
           ),
         )
       }
-      return Promise.resolve(new Response(JSON.stringify([booking]), { status: 200 }))
+      return Promise.resolve(new Response(JSON.stringify({ items: [booking], nextCursor: null }), { status: 200 }))
     }) as unknown as typeof fetch
 
     renderPage()
@@ -124,7 +124,7 @@ describe('AgendaPage', () => {
         )
       }
       if (typeof url === 'string' && url.includes('/api/bookings')) {
-        return Promise.resolve(new Response(JSON.stringify([booking]), { status: 200 }))
+        return Promise.resolve(new Response(JSON.stringify({ items: [booking], nextCursor: null }), { status: 200 }))
       }
       return Promise.resolve(new Response('{}', { status: 200 }))
     }) as unknown as typeof fetch
