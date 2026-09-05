@@ -25,7 +25,10 @@ describe('public booking-page endpoints', () => {
     await prisma.serviceType.create({ data: { userId: user.id, name: 'Sem form', durationMinutes: 30 } })
     await prisma.serviceType.create({
       data: {
-        userId: user.id, name: 'Com form', durationMinutes: 60, requiresCustomForm: true,
+        userId: user.id,
+        name: 'Com form',
+        durationMinutes: 60,
+        requiresCustomForm: true,
         customFields: { create: [{ label: 'Objetivo', fieldType: 'TEXT', required: true, order: 0 }] },
       },
     })
@@ -40,9 +43,13 @@ describe('public booking-page endpoints', () => {
   it('returns available slots for a date, respecting general availability', async () => {
     const { user } = await createTestUser({ email: 'slots@example.com', slug: 'slots-slug' })
     await prisma.availability.create({ data: { userId: user.id, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' } })
-    const serviceType = await prisma.serviceType.create({ data: { userId: user.id, name: 'Sessão', durationMinutes: 60 } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 60 },
+    })
 
-    const res = await request(createApp()).get(`/api/public/slots-slug/service-types/${serviceType.id}/slots?date=2026-09-07`)
+    const res = await request(createApp()).get(
+      `/api/public/slots-slug/service-types/${serviceType.id}/slots?date=2026-09-07`,
+    )
     expect(res.status).toBe(200)
     expect(res.body.slots).toEqual(['2026-09-07T12:00:00.000Z'])
   })

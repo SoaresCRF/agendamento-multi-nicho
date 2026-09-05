@@ -20,7 +20,9 @@ export function SlotGrid({ slots, selectedSlot, onSelectSlot, timezone }: SlotGr
             onClick={() => onSelectSlot(iso)}
             className={cx(
               'h-11 min-w-[72px] rounded-md border font-sans text-body-sm',
-              isSelected ? 'border-primary bg-primary text-on-primary' : 'border-hairline bg-surface text-ink hover:bg-surface-soft'
+              isSelected
+                ? 'border-primary bg-primary text-on-primary'
+                : 'border-hairline bg-surface text-ink hover:bg-surface-soft',
             )}
           >
             {label}

@@ -27,7 +27,7 @@ export function Badge({ tone = 'neutral', className, ...props }: BadgeProps) {
         tone === 'accent-teal' && 'bg-accent-teal text-ink',
         tone === 'accent-terracotta' && 'bg-accent-terracotta text-ink',
         tone === 'accent-lilac' && 'bg-accent-lilac text-ink',
-        className
+        className,
       )}
       {...props}
     />

@@ -73,14 +73,14 @@ export function ServiceTypesListPage() {
       )}
 
       <Modal open={pendingDeleteId !== null} onClose={() => setPendingDeleteId(null)} title="Excluir tipo de serviço">
-        <p className="mb-md font-sans text-body-md text-body">
-          Tem certeza? Essa ação não pode ser desfeita.
-        </p>
+        <p className="mb-md font-sans text-body-md text-body">Tem certeza? Essa ação não pode ser desfeita.</p>
         <div className="flex justify-end gap-sm">
           <Button variant="secondary" onClick={() => setPendingDeleteId(null)}>
             Cancelar
           </Button>
-          <Button onClick={confirmDelete} disabled={deleteServiceType.isPending}>Confirmar exclusão</Button>
+          <Button onClick={confirmDelete} disabled={deleteServiceType.isPending}>
+            Confirmar exclusão
+          </Button>
         </div>
       </Modal>
     </div>

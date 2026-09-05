@@ -17,7 +17,9 @@ export function ServiceTypeSelector({ serviceTypes, selectedId, onSelect }: Serv
           onClick={() => onSelect(st.id)}
           className={cx(
             'flex items-start justify-between rounded-lg border p-lg text-left transition-colors',
-            selectedId === st.id ? 'border-primary bg-primary-soft' : 'border-hairline bg-surface hover:bg-surface-soft'
+            selectedId === st.id
+              ? 'border-primary bg-primary-soft'
+              : 'border-hairline bg-surface hover:bg-surface-soft',
           )}
         >
           <div>

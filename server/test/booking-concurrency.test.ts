@@ -13,9 +13,17 @@ describe('booking concurrency', () => {
 
   it('allows only one of two simultaneous bookings for the same slot to succeed', async () => {
     const user = await prisma.user.create({
-      data: { name: 'Joana', email: 'joana-conc@example.com', passwordHash: 'x', slug: 'joana-conc', timezone: TIMEZONE },
+      data: {
+        name: 'Joana',
+        email: 'joana-conc@example.com',
+        passwordHash: 'x',
+        slug: 'joana-conc',
+        timezone: TIMEZONE,
+      },
     })
-    const serviceType = await prisma.serviceType.create({ data: { userId: user.id, name: 'Sessão', durationMinutes: 50 } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
     // Tomorrow at a fixed 10:00 local time — not "now + 24h" — so the test doesn't
     // depend on what time of day it happens to run (a slot starting late at night
     // could push its end past midnight, outside any single day's availability window).
@@ -33,9 +41,17 @@ describe('booking concurrency', () => {
       },
     })
 
-    const attempt = () => createPublicBooking('joana-conc', {
-      serviceTypeId: serviceType.id, startsAt, clientName: 'Cliente', clientEmail: 'cliente@example.com',
-    }, fakeMailer)
+    const attempt = () =>
+      createPublicBooking(
+        'joana-conc',
+        {
+          serviceTypeId: serviceType.id,
+          startsAt,
+          clientName: 'Cliente',
+          clientEmail: 'cliente@example.com',
+        },
+        fakeMailer,
+      )
 
     const results = await Promise.allSettled([attempt(), attempt()])
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)

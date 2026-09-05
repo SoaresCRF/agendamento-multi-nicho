@@ -15,9 +15,7 @@ describe('api client', () => {
 
   it('sends the Authorization header when a token is set', async () => {
     setAccessToken('abc123')
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ ok: true }), { status: 200 })
-    )
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }))
     global.fetch = fetchMock as unknown as typeof fetch
 
     await api.get('/api/me')
@@ -29,19 +27,21 @@ describe('api client', () => {
   })
 
   it('throws ApiError with the server message on a non-2xx response', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ error: 'Não autenticado' }), { status: 401 })
-    ) as unknown as typeof fetch
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify({ error: 'Não autenticado' }), { status: 401 }),
+      ) as unknown as typeof fetch
 
-    await expect(api.get('/api/me')).rejects.toMatchObject(
-      new ApiError(401, 'Não autenticado')
-    )
+    await expect(api.get('/api/me')).rejects.toMatchObject(new ApiError(401, 'Não autenticado'))
   })
 
   it('gives a specific message for a 429 with a non-JSON body, instead of "Erro desconhecido"', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response('Too many requests, please try again later.', { status: 429 })
-    ) as unknown as typeof fetch
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response('Too many requests, please try again later.', { status: 429 }),
+      ) as unknown as typeof fetch
 
     await expect(api.get('/api/me')).rejects.toMatchObject({
       status: 429,

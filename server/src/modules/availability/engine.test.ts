@@ -80,14 +80,22 @@ describe('getAvailableSlots', () => {
     // Brazil abolished DST in 2019 and America/Sao_Paulo has had a fixed -03:00
     // offset since; this locks in that a fixed-offset zone stays stable year-round.
     const winter = getAvailableSlots({
-      date: '2026-06-01', timezone: SP, durationMinutes: 60,
+      date: '2026-06-01',
+      timezone: SP,
+      durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-01-01T00:00:00Z'),
     })
     const summer = getAvailableSlots({
-      date: '2026-12-07', timezone: SP, durationMinutes: 60,
+      date: '2026-12-07',
+      timezone: SP,
+      durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-01-01T00:00:00Z'),
     })
     expect(winter[0].getUTCHours()).toBe(12) // 09:00 -03:00
     expect(summer[0].getUTCHours()).toBe(12) // 09:00 -03:00, same fixed offset
@@ -103,14 +111,22 @@ describe('getAvailableSlots', () => {
     // and the booking-creation availability check (which both call this same
     // function) must not disagree on.
     const beforeSpringForward = getAvailableSlots({
-      date: '2026-03-02', timezone: NY, durationMinutes: 60, // Monday, EST
+      date: '2026-03-02',
+      timezone: NY,
+      durationMinutes: 60, // Monday, EST
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-01-01T00:00:00Z'),
     })
     const afterSpringForward = getAvailableSlots({
-      date: '2026-03-09', timezone: NY, durationMinutes: 60, // Monday, EDT
+      date: '2026-03-09',
+      timezone: NY,
+      durationMinutes: 60, // Monday, EDT
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-01-01T00:00:00Z'),
     })
     expect(beforeSpringForward[0].toISOString()).toBe('2026-03-02T14:00:00.000Z') // 09:00 -05:00
     expect(afterSpringForward[0].toISOString()).toBe('2026-03-09T13:00:00.000Z') // 09:00 -04:00
@@ -119,9 +135,12 @@ describe('getAvailableSlots', () => {
   it('returns no slots when no rule exists for that weekday', () => {
     const slots = getAvailableSlots({
       date: '2026-09-06', // a Sunday
-      timezone: SP, durationMinutes: 60,
+      timezone: SP,
+      durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-09-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-09-01T00:00:00Z'),
     })
     expect(slots).toHaveLength(0)
   })

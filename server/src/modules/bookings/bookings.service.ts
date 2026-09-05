@@ -19,11 +19,7 @@ export interface CreateBookingInput {
 
 const SLOT_TAKEN_MESSAGE = 'Esse horário acabou de ser reservado, escolha outro.'
 
-export async function createPublicBooking(
-  slug: string,
-  input: CreateBookingInput,
-  mailer: Mailer = nodemailerMailer
-) {
+export async function createPublicBooking(slug: string, input: CreateBookingInput, mailer: Mailer = nodemailerMailer) {
   const user = await prisma.user.findUnique({ where: { slug } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
 
@@ -42,7 +38,7 @@ export async function createPublicBooking(
           ...f,
           options: Array.isArray(f.options) ? (f.options as string[]) : null,
         })),
-        input.formResponses ?? {}
+        input.formResponses ?? {},
       )
     : undefined
 
@@ -58,9 +54,12 @@ export async function createPublicBooking(
   try {
     booking = await prisma.booking.create({
       data: {
-        userId: user.id, serviceTypeId: serviceType.id,
-        clientName: input.clientName, clientEmail: input.clientEmail,
-        startsAt, endsAt,
+        userId: user.id,
+        serviceTypeId: serviceType.id,
+        clientName: input.clientName,
+        clientEmail: input.clientEmail,
+        startsAt,
+        endsAt,
         formResponses: validatedResponses as Prisma.InputJsonValue,
       },
     })
@@ -84,7 +83,9 @@ export async function createPublicBooking(
       html: `<p>${input.clientName} agendou "${serviceType.name}" para ${startsAt.toISOString()}.</p>`,
     }),
   ]).catch((err) => {
-    logger.error('Failed to send booking confirmation emails', { message: err instanceof Error ? err.message : String(err) })
+    logger.error('Failed to send booking confirmation emails', {
+      message: err instanceof Error ? err.message : String(err),
+    })
   })
 
   return booking

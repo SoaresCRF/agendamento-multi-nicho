@@ -12,13 +12,10 @@ describe('WeeklyScheduleEditor', () => {
     expect(onChange).toHaveBeenCalledWith([{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }])
   })
 
-  it('editing a start/end time updates that day\'s rule', async () => {
+  it("editing a start/end time updates that day's rule", async () => {
     const onChange = vi.fn()
     render(
-      <WeeklyScheduleEditor
-        value={[{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }]}
-        onChange={onChange}
-      />
+      <WeeklyScheduleEditor value={[{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }]} onChange={onChange} />,
     )
     const input = screen.getByLabelText('Início — Segunda-feira') as HTMLInputElement
     fireEvent.change(input, { target: { value: '08:00' } })

@@ -19,7 +19,11 @@ export function PublicBookingPage() {
   const queryClient = useQueryClient()
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError } = usePublicProfile(slug!)
   useDocumentTitle(profile?.name ?? 'Agendar horário')
-  const { data: serviceTypes, isLoading: isServiceTypesLoading, isError: isServiceTypesError } = usePublicServiceTypes(slug!)
+  const {
+    data: serviceTypes,
+    isLoading: isServiceTypesLoading,
+    isError: isServiceTypesError,
+  } = usePublicServiceTypes(slug!)
   const [step, setStep] = useState<Step>('select-service')
   const [selectedServiceTypeId, setSelectedServiceTypeId] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
@@ -28,7 +32,9 @@ export function PublicBookingPage() {
   const [bookingError, setBookingError] = useState<string | null>(null)
   const effectiveDate =
     selectedDate ??
-    (profile ? formatInTimeZone(new Date(), profile.timezone, 'yyyy-MM-dd') : formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd'))
+    (profile
+      ? formatInTimeZone(new Date(), profile.timezone, 'yyyy-MM-dd')
+      : formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd'))
   const { data: slots } = usePublicSlots(slug!, selectedServiceTypeId, effectiveDate)
 
   function handleSelectServiceType(id: string) {
@@ -37,7 +43,11 @@ export function PublicBookingPage() {
     setStep('pick-slot')
   }
 
-  async function handleBookingSubmit(values: { clientName: string; clientEmail: string; formResponses: Record<string, unknown> }) {
+  async function handleBookingSubmit(values: {
+    clientName: string
+    clientEmail: string
+    formResponses: Record<string, unknown>
+  }) {
     if (!selectedServiceTypeId || !selectedSlot) return
     setBookingError(null)
     try {
@@ -74,10 +84,7 @@ export function PublicBookingPage() {
   if (isProfileError || isServiceTypesError || !profile) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-canvas px-lg">
-        <EmptyState
-          title="Página não encontrada"
-          description="Verifique o link e tente novamente."
-        />
+        <EmptyState title="Página não encontrada" description="Verifique o link e tente novamente." />
       </div>
     )
   }
@@ -99,7 +106,11 @@ export function PublicBookingPage() {
         {step === 'select-service' && serviceTypes && (
           <>
             <h2 className="mb-md font-display text-display-md">Escolha um tipo de serviço</h2>
-            <ServiceTypeSelector serviceTypes={serviceTypes} selectedId={selectedServiceTypeId} onSelect={handleSelectServiceType} />
+            <ServiceTypeSelector
+              serviceTypes={serviceTypes}
+              selectedId={selectedServiceTypeId}
+              onSelect={handleSelectServiceType}
+            />
           </>
         )}
 
@@ -131,7 +142,11 @@ export function PublicBookingPage() {
         {step === 'form' && selectedServiceType && (
           <div>
             <h2 className="mb-md font-display text-display-md">Seus dados</h2>
-            <BookingForm serviceType={selectedServiceType} onSubmit={handleBookingSubmit} isSubmitting={createBooking.isPending} />
+            <BookingForm
+              serviceType={selectedServiceType}
+              onSubmit={handleBookingSubmit}
+              isSubmitting={createBooking.isPending}
+            />
           </div>
         )}
 

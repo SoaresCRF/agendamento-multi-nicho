@@ -14,7 +14,7 @@ describe('ToastProvider', () => {
     render(
       <ToastProvider>
         <TriggerButton />
-      </ToastProvider>
+      </ToastProvider>,
     )
     fireEvent.click(screen.getByText('disparar'))
     expect(screen.getByText('Alterações salvas')).toBeInTheDocument()

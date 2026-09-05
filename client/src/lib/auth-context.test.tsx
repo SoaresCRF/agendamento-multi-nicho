@@ -8,7 +8,11 @@ const originalFetch = global.fetch
 function Consumer() {
   const { user, accessToken, isLoading } = useAuth()
   if (isLoading) return <div>carregando</div>
-  return <div>{user ? `logado: ${user.name}` : 'deslogado'} / token: {accessToken ?? 'none'}</div>
+  return (
+    <div>
+      {user ? `logado: ${user.name}` : 'deslogado'} / token: {accessToken ?? 'none'}
+    </div>
+  )
 }
 
 describe('AuthProvider', () => {
@@ -31,7 +35,7 @@ describe('AuthProvider', () => {
           return Promise.resolve(new Response('{}', { status: 401 }))
         }
         return Promise.resolve(
-          new Response(JSON.stringify({ id: '1', name: 'Joana', email: 'j@x.com', slug: 'joana' }), { status: 200 })
+          new Response(JSON.stringify({ id: '1', name: 'Joana', email: 'j@x.com', slug: 'joana' }), { status: 200 }),
         )
       }
       return Promise.resolve(new Response('{}', { status: 200 }))
@@ -40,7 +44,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <Consumer />
-      </AuthProvider>
+      </AuthProvider>,
     )
 
     expect(screen.getByText('carregando')).toBeInTheDocument()
@@ -55,7 +59,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <Consumer />
-      </AuthProvider>
+      </AuthProvider>,
     )
 
     await waitFor(() => expect(screen.getByText(/deslogado/)).toBeInTheDocument())
@@ -69,7 +73,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <Consumer />
-      </AuthProvider>
+      </AuthProvider>,
     )
 
     await waitFor(() => expect(screen.getByText(/deslogado/)).toBeInTheDocument())
@@ -95,7 +99,7 @@ describe('AuthProvider', () => {
         if (meCallCount === 1) return Promise.resolve(new Response('{}', { status: 401 }))
         if (meCallCount === 2) {
           return Promise.resolve(
-            new Response(JSON.stringify({ id: '1', name: 'Joana', email: 'j@x.com', slug: 'joana' }), { status: 200 })
+            new Response(JSON.stringify({ id: '1', name: 'Joana', email: 'j@x.com', slug: 'joana' }), { status: 200 }),
           )
         }
         // Call 3+: something in the panel calls /api/me again after the session died.
@@ -107,7 +111,7 @@ describe('AuthProvider', () => {
     render(
       <AuthProvider>
         <Consumer />
-      </AuthProvider>
+      </AuthProvider>,
     )
 
     await waitFor(() => expect(screen.getByText(/logado: Joana/)).toBeInTheDocument())

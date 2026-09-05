@@ -24,7 +24,7 @@ describe('PanelLayout', () => {
             <Route index element={<div>conteúdo</div>} />
           </Route>
         </Routes>
-      </MemoryRouter>
+      </MemoryRouter>,
     )
 
     expect(screen.getByText('Tipos de Serviço')).toBeInTheDocument()
@@ -52,7 +52,7 @@ describe('PanelLayout', () => {
             <Route index element={<div>conteúdo</div>} />
           </Route>
         </Routes>
-      </MemoryRouter>
+      </MemoryRouter>,
     )
     await userEvent.click(screen.getByRole('button', { name: 'Sair' }))
     expect(logout).toHaveBeenCalledOnce()

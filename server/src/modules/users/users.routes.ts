@@ -7,7 +7,14 @@ export const usersRouter = Router()
 usersRouter.get('/me', requireAuth, async (req, res, next) => {
   try {
     const user = await prisma.user.findUniqueOrThrow({ where: { id: req.userId } })
-    res.json({ id: user.id, name: user.name, email: user.email, slug: user.slug, timezone: user.timezone, niche: user.niche })
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      slug: user.slug,
+      timezone: user.timezone,
+      niche: user.niche,
+    })
   } catch (err) {
     next(err)
   }

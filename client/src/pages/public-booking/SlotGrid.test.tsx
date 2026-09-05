@@ -12,7 +12,7 @@ describe('SlotGrid', () => {
         selectedSlot={null}
         onSelectSlot={onSelectSlot}
         timezone="America/Sao_Paulo"
-      />
+      />,
     )
     const button = screen.getByRole('button', { name: '10:00' }) // 13:00 UTC = 10:00 -03:00
     await userEvent.click(button)

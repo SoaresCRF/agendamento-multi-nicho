@@ -5,9 +5,22 @@ import { BookingForm } from './BookingForm'
 import type { PublicServiceType } from '../../lib/types'
 
 const serviceType: PublicServiceType = {
-  id: 'st1', name: 'Primeira consulta', durationMinutes: 60, description: null,
+  id: 'st1',
+  name: 'Primeira consulta',
+  durationMinutes: 60,
+  description: null,
   requiresCustomForm: true,
-  customFields: [{ id: 'f1', serviceTypeId: 'st1', label: 'Queixa principal', fieldType: 'TEXT', required: true, order: 0, options: null }],
+  customFields: [
+    {
+      id: 'f1',
+      serviceTypeId: 'st1',
+      label: 'Queixa principal',
+      fieldType: 'TEXT',
+      required: true,
+      order: 0,
+      options: null,
+    },
+  ],
 }
 
 describe('BookingForm', () => {
@@ -37,7 +50,15 @@ describe('BookingForm', () => {
     const selectServiceType: PublicServiceType = {
       ...serviceType,
       customFields: [
-        { id: 'f1', serviceTypeId: 'st1', label: 'Convênio', fieldType: 'SELECT', required: true, order: 0, options: ['Particular', 'Unimed'] },
+        {
+          id: 'f1',
+          serviceTypeId: 'st1',
+          label: 'Convênio',
+          fieldType: 'SELECT',
+          required: true,
+          order: 0,
+          options: ['Particular', 'Unimed'],
+        },
       ],
     }
     render(<BookingForm serviceType={selectServiceType} onSubmit={onSubmit} isSubmitting={false} />)

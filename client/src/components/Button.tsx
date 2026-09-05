@@ -16,7 +16,7 @@ export function Button({ variant = 'primary', className, ...props }: ButtonProps
         variant === 'secondary' &&
           'bg-surface text-ink rounded-pill px-[22px] h-11 border border-hairline hover:bg-surface-soft disabled:opacity-50',
         variant === 'text-link' && 'bg-transparent text-primary hover:underline disabled:opacity-50',
-        className
+        className,
       )}
       {...props}
     />

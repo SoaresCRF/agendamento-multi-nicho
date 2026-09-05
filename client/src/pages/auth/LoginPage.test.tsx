@@ -14,7 +14,7 @@ function renderPage() {
           <LoginPage />
         </AuthProvider>
       </ToastProvider>
-    </MemoryRouter>
+    </MemoryRouter>,
   )
 }
 

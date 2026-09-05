@@ -53,7 +53,7 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
           const isPast = cell.dateStr < todayStr
           const isSelected = cell.dateStr === selectedDate
           const fullDateLabel = capitalize(
-            formatInTimeZone(new Date(`${cell.dateStr}T00:00:00Z`), 'UTC', "d 'de' MMMM 'de' yyyy", { locale: ptBR })
+            formatInTimeZone(new Date(`${cell.dateStr}T00:00:00Z`), 'UTC', "d 'de' MMMM 'de' yyyy", { locale: ptBR }),
           )
           const stateSuffix = isPast ? ' (indisponível)' : isSelected ? ' (selecionado)' : ''
           return (
@@ -67,7 +67,7 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
                 'h-11 w-11 rounded-full font-sans text-body-sm',
                 isSelected && 'bg-primary text-on-primary',
                 !isSelected && !isPast && 'text-ink hover:bg-surface-soft',
-                isPast && 'cursor-not-allowed text-muted-soft'
+                isPast && 'cursor-not-allowed text-muted-soft',
               )}
             >
               {cell.day}

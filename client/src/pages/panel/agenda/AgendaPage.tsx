@@ -44,7 +44,8 @@ export function AgendaPage() {
               <div>
                 <p className="font-sans text-title-sm text-ink">{b.clientName}</p>
                 <p className="font-sans text-body-sm text-muted">
-                  {b.serviceType.name} — {formatInTimeZone(new Date(b.startsAt), profile?.timezone ?? 'UTC', "dd/MM/yyyy HH:mm")}
+                  {b.serviceType.name} —{' '}
+                  {formatInTimeZone(new Date(b.startsAt), profile?.timezone ?? 'UTC', 'dd/MM/yyyy HH:mm')}
                 </p>
               </div>
               <div className="flex items-center gap-sm">
@@ -68,7 +69,9 @@ export function AgendaPage() {
           <Button variant="secondary" onClick={() => setPendingCancelId(null)}>
             Voltar
           </Button>
-          <Button onClick={confirmCancel} disabled={cancelBooking.isPending}>Confirmar cancelamento</Button>
+          <Button onClick={confirmCancel} disabled={cancelBooking.isPending}>
+            Confirmar cancelamento
+          </Button>
         </div>
       </Modal>
     </div>

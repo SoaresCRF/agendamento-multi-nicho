@@ -9,8 +9,11 @@ describe('POST /api/auth/login', () => {
   it('logs in with correct credentials', async () => {
     const app = createApp()
     await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'joana@example.com', password: 'password123',
-      slug: 'joana', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'joana@example.com',
+      password: 'password123',
+      slug: 'joana',
+      timezone: 'America/Sao_Paulo',
     })
     const res = await request(app).post('/api/auth/login').send({ email: 'joana@example.com', password: 'password123' })
     expect(res.status).toBe(200)
@@ -20,8 +23,11 @@ describe('POST /api/auth/login', () => {
   it('rejects wrong password with 401', async () => {
     const app = createApp()
     await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'joana2@example.com', password: 'password123',
-      slug: 'joana2', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'joana2@example.com',
+      password: 'password123',
+      slug: 'joana2',
+      timezone: 'America/Sao_Paulo',
     })
     const res = await request(app).post('/api/auth/login').send({ email: 'joana2@example.com', password: 'wrong' })
     expect(res.status).toBe(401)

@@ -13,7 +13,10 @@ export async function getPublicProfile(slug: string) {
 export async function listPublicServiceTypes(slug: string) {
   const user = await prisma.user.findUnique({ where: { slug } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
-  const serviceTypes = await prisma.serviceType.findMany({ where: { userId: user.id }, include: { customFields: true } })
+  const serviceTypes = await prisma.serviceType.findMany({
+    where: { userId: user.id },
+    include: { customFields: true },
+  })
   return serviceTypes.map((st) => ({
     id: st.id,
     name: st.name,
@@ -31,7 +34,7 @@ export async function computeAvailableSlots(
   userId: string,
   serviceType: { id: string; durationMinutes: number },
   date: string,
-  timezone: string
+  timezone: string,
 ) {
   const [generalRules, serviceTypeRules] = await Promise.all([
     prisma.availability.findMany({ where: { userId } }),
@@ -54,7 +57,11 @@ export async function computeAvailableSlots(
     timezone,
     durationMinutes: serviceType.durationMinutes,
     generalRules: generalRules.map((r) => ({ dayOfWeek: r.dayOfWeek, startTime: r.startTime, endTime: r.endTime })),
-    serviceTypeRules: serviceTypeRules.map((r) => ({ dayOfWeek: r.dayOfWeek, startTime: r.startTime, endTime: r.endTime })),
+    serviceTypeRules: serviceTypeRules.map((r) => ({
+      dayOfWeek: r.dayOfWeek,
+      startTime: r.startTime,
+      endTime: r.endTime,
+    })),
     conflicts: [...bookings, ...blockedSlots].map((c) => ({ startsAt: c.startsAt, endsAt: c.endsAt })),
   })
 }

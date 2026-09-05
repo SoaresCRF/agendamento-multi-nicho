@@ -7,7 +7,10 @@ import { describe, it, expect, vi, afterEach } from 'vitest'
 import { ServiceTypeFormPage } from './ServiceTypeFormPage'
 import { ToastProvider } from '../../../components/toast/ToastProvider'
 
-function renderAt(path: string, queryClient: QueryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })) {
+function renderAt(
+  path: string,
+  queryClient: QueryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   render(
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
@@ -17,7 +20,7 @@ function renderAt(path: string, queryClient: QueryClient = new QueryClient({ def
           </Routes>
         </MemoryRouter>
       </ToastProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
   return queryClient
 }
@@ -50,12 +53,14 @@ describe('ServiceTypeFormPage', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 
-    await waitFor(() => expect(posted).toMatchObject({
-      name: 'Primeira consulta',
-      durationMinutes: 60,
-      requiresCustomForm: true,
-      customFields: [{ label: 'Queixa principal', fieldType: 'TEXT', required: false, order: 0 }],
-    }))
+    await waitFor(() =>
+      expect(posted).toMatchObject({
+        name: 'Primeira consulta',
+        durationMinutes: 60,
+        requiresCustomForm: true,
+        customFields: [{ label: 'Queixa principal', fieldType: 'TEXT', required: false, order: 0 }],
+      }),
+    )
   })
 
   it('recomputes contiguous order values after removing a custom field, instead of leaving a gap', async () => {
@@ -85,23 +90,29 @@ describe('ServiceTypeFormPage', () => {
     await userEvent.click(screen.getAllByRole('button', { name: 'Remover campo' })[1])
     await userEvent.click(screen.getByRole('button', { name: 'Salvar' }))
 
-    await waitFor(() => expect(posted).toMatchObject({
-      customFields: [
-        { label: 'Campo A', order: 0 },
-        { label: 'Campo C', order: 1 },
-      ],
-    }))
+    await waitFor(() =>
+      expect(posted).toMatchObject({
+        customFields: [
+          { label: 'Campo A', order: 0 },
+          { label: 'Campo C', order: 1 },
+        ],
+      }),
+    )
   })
 
   it('loads an existing service type in edit mode and pre-fills the form', async () => {
     global.fetch = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
-          id: 'st1', name: 'Sessão', durationMinutes: 50, description: null,
-          requiresCustomForm: false, customFields: [],
+          id: 'st1',
+          name: 'Sessão',
+          durationMinutes: 50,
+          description: null,
+          requiresCustomForm: false,
+          customFields: [],
         }),
-        { status: 200 }
-      )
+        { status: 200 },
+      ),
     ) as unknown as typeof fetch
 
     renderAt('/painel/tipos-de-servico/st1')
@@ -123,9 +134,16 @@ describe('ServiceTypeFormPage', () => {
       if (typeof url === 'string' && url.endsWith('/api/service-types/st1')) {
         return Promise.resolve(
           new Response(
-            JSON.stringify({ id: 'st1', name: 'Sessão', durationMinutes: 50, description: null, requiresCustomForm: false, customFields: [] }),
-            { status: 200 }
-          )
+            JSON.stringify({
+              id: 'st1',
+              name: 'Sessão',
+              durationMinutes: 50,
+              description: null,
+              requiresCustomForm: false,
+              customFields: [],
+            }),
+            { status: 200 },
+          ),
         )
       }
       return Promise.resolve(new Response('{}', { status: 200 }))
@@ -147,9 +165,16 @@ describe('ServiceTypeFormPage', () => {
       }
       return Promise.resolve(
         new Response(
-          JSON.stringify({ id: 'st1', name: 'Sessão', durationMinutes: 50, description: null, requiresCustomForm: false, customFields: [] }),
-          { status: 200 }
-        )
+          JSON.stringify({
+            id: 'st1',
+            name: 'Sessão',
+            durationMinutes: 50,
+            description: null,
+            requiresCustomForm: false,
+            customFields: [],
+          }),
+          { status: 200 },
+        ),
       )
     }) as unknown as typeof fetch
 
@@ -167,7 +192,12 @@ describe('ServiceTypeFormPage', () => {
     // actually flush before we assert.
     await act(async () => {
       queryClient.setQueryData(['service-types', 'st1'], {
-        id: 'st1', name: 'Outro nome', durationMinutes: 50, description: null, requiresCustomForm: false, customFields: [],
+        id: 'st1',
+        name: 'Outro nome',
+        durationMinutes: 50,
+        description: null,
+        requiresCustomForm: false,
+        customFields: [],
       })
       await new Promise((resolve) => setTimeout(resolve, 0))
     })
@@ -178,13 +208,22 @@ describe('ServiceTypeFormPage', () => {
   it('does not let a background refetch clobber an in-progress per-service-type rules edit', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.includes('/availability-rules')) {
-        return Promise.resolve(new Response(JSON.stringify([{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }]), { status: 200 }))
+        return Promise.resolve(
+          new Response(JSON.stringify([{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }]), { status: 200 }),
+        )
       }
       return Promise.resolve(
         new Response(
-          JSON.stringify({ id: 'st1', name: 'Sessão', durationMinutes: 50, description: null, requiresCustomForm: false, customFields: [] }),
-          { status: 200 }
-        )
+          JSON.stringify({
+            id: 'st1',
+            name: 'Sessão',
+            durationMinutes: 50,
+            description: null,
+            requiresCustomForm: false,
+            customFields: [],
+          }),
+          { status: 200 },
+        ),
       )
     }) as unknown as typeof fetch
 
@@ -204,7 +243,10 @@ describe('ServiceTypeFormPage', () => {
     // TanStack Query's batched subscriber notification (and any resulting
     // effect/render) actually flush before we assert.
     await act(async () => {
-      queryClient.setQueryData(['service-types', 'st1', 'availability-rules'], [{ dayOfWeek: 3, startTime: '09:00', endTime: '18:00' }])
+      queryClient.setQueryData(
+        ['service-types', 'st1', 'availability-rules'],
+        [{ dayOfWeek: 3, startTime: '09:00', endTime: '18:00' }],
+      )
       await new Promise((resolve) => setTimeout(resolve, 0))
     })
 

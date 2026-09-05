@@ -22,8 +22,12 @@ export async function registerUser(input: RegisterInput): Promise<AuthResult> {
   const passwordHash = await hashPassword(input.password)
   const user = await prisma.user.create({
     data: {
-      name: input.name, email: input.email, passwordHash,
-      slug: input.slug, timezone: input.timezone, niche: input.niche,
+      name: input.name,
+      email: input.email,
+      passwordHash,
+      slug: input.slug,
+      timezone: input.timezone,
+      niche: input.niche,
     },
   })
   return issueTokens(user.id, { id: user.id, name: user.name, email: user.email, slug: user.slug })
@@ -53,7 +57,10 @@ export async function refreshSession(refreshToken: string): Promise<AuthResult> 
   }
   await prisma.refreshToken.update({ where: { id: record.id }, data: { revokedAt: new Date() } })
   return issueTokens(record.userId, {
-    id: record.user.id, name: record.user.name, email: record.user.email, slug: record.user.slug,
+    id: record.user.id,
+    name: record.user.name,
+    email: record.user.email,
+    slug: record.user.slug,
   })
 }
 

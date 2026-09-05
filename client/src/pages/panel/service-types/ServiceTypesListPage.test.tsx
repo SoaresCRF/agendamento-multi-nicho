@@ -7,8 +7,15 @@ import { ServiceTypesListPage } from './ServiceTypesListPage'
 import { ToastProvider } from '../../../components/toast/ToastProvider'
 
 const serviceType = {
-  id: 'st1', userId: 'u1', name: 'Primeira consulta', durationMinutes: 60,
-  description: null, requiresCustomForm: false, createdAt: '', updatedAt: '', customFields: [],
+  id: 'st1',
+  userId: 'u1',
+  name: 'Primeira consulta',
+  durationMinutes: 60,
+  description: null,
+  requiresCustomForm: false,
+  createdAt: '',
+  updatedAt: '',
+  customFields: [],
 }
 
 function renderPage() {
@@ -20,7 +27,7 @@ function renderPage() {
           <ServiceTypesListPage />
         </MemoryRouter>
       </ToastProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 

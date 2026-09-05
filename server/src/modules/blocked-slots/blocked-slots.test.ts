@@ -12,7 +12,9 @@ describe('blocked-slot CRUD', () => {
     const auth = { Authorization: `Bearer ${accessToken}` }
 
     const createRes = await request(app).post('/api/blocked-slots').set(auth).send({
-      startsAt: '2026-12-25T00:00:00.000Z', endsAt: '2026-12-26T00:00:00.000Z', reason: 'Feriado',
+      startsAt: '2026-12-25T00:00:00.000Z',
+      endsAt: '2026-12-26T00:00:00.000Z',
+      reason: 'Feriado',
     })
     expect(createRes.status).toBe(201)
 
@@ -20,7 +22,8 @@ describe('blocked-slot CRUD', () => {
     expect(listRes.body).toHaveLength(1)
 
     const other = await createTestUser({ email: 'other@example.com', slug: 'other' })
-    const forbiddenRes = await request(app).delete(`/api/blocked-slots/${createRes.body.id}`)
+    const forbiddenRes = await request(app)
+      .delete(`/api/blocked-slots/${createRes.body.id}`)
       .set('Authorization', `Bearer ${other.accessToken}`)
     expect(forbiddenRes.status).toBe(404)
 
@@ -34,13 +37,16 @@ describe('blocked-slot CRUD', () => {
     const auth = { Authorization: `Bearer ${accessToken}` }
 
     await request(app).post('/api/blocked-slots').set(auth).send({
-      startsAt: '2026-03-01T00:00:00.000Z', endsAt: '2026-03-02T00:00:00.000Z',
+      startsAt: '2026-03-01T00:00:00.000Z',
+      endsAt: '2026-03-02T00:00:00.000Z',
     })
     await request(app).post('/api/blocked-slots').set(auth).send({
-      startsAt: '2026-12-25T00:00:00.000Z', endsAt: '2026-12-26T00:00:00.000Z',
+      startsAt: '2026-12-25T00:00:00.000Z',
+      endsAt: '2026-12-26T00:00:00.000Z',
     })
 
-    const filteredRes = await request(app).get('/api/blocked-slots')
+    const filteredRes = await request(app)
+      .get('/api/blocked-slots')
       .query({ from: '2026-12-01T00:00:00.000Z', to: '2026-12-31T00:00:00.000Z' })
       .set(auth)
     expect(filteredRes.body).toHaveLength(1)

@@ -14,12 +14,16 @@ serviceTypeRulesRouter.use(requireAuth)
 serviceTypeRulesRouter.get('/', async (req: Request<Params>, res: Response, next: NextFunction) => {
   try {
     res.json(await service.getServiceTypeRules(req.userId!, req.params.id))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 serviceTypeRulesRouter.put('/', async (req: Request<Params>, res: Response, next: NextFunction) => {
   try {
     const rules = availabilityListSchema.parse(req.body)
     res.json(await service.replaceServiceTypeRules(req.userId!, req.params.id, rules))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })

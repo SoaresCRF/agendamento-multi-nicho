@@ -32,7 +32,7 @@ export function PanelLayout() {
                 className={({ isActive }) =>
                   cx(
                     'rounded-sm px-[12px] py-[10px] font-sans text-nav-link',
-                    isActive ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-surface-soft'
+                    isActive ? 'bg-primary-soft text-primary' : 'text-muted hover:bg-surface-soft',
                   )
                 }
               >

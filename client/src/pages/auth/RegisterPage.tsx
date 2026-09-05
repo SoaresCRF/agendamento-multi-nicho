@@ -47,7 +47,11 @@ interface RegisterResponse {
 
 export function RegisterPage() {
   useDocumentTitle('Criar conta')
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterFormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
   })
   const { login } = useAuth()
@@ -72,15 +76,30 @@ export function RegisterPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-md">
           <Input label="Nome" id="name" error={errors.name?.message} {...register('name')} />
           <Input label="E-mail" id="email" type="email" error={errors.email?.message} {...register('email')} />
-          <Input label="Senha" id="password" type="password" error={errors.password?.message} {...register('password')} />
+          <Input
+            label="Senha"
+            id="password"
+            type="password"
+            error={errors.password?.message}
+            {...register('password')}
+          />
           <Input label="Slug (URL pública)" id="slug" error={errors.slug?.message} {...register('slug')} />
-          <Input label="Fuso horário" id="timezone" placeholder="America/Sao_Paulo" error={errors.timezone?.message} {...register('timezone')} />
+          <Input
+            label="Fuso horário"
+            id="timezone"
+            placeholder="America/Sao_Paulo"
+            error={errors.timezone?.message}
+            {...register('timezone')}
+          />
           <Input label="Nicho (opcional)" id="niche" {...register('niche')} />
           {serverError && <p className="font-sans text-body-sm text-error">{serverError}</p>}
           <Button type="submit">Criar conta</Button>
         </form>
         <p className="mt-md font-sans text-body-sm text-muted">
-          Já tem conta? <Link to="/login" className="text-primary">Entrar</Link>
+          Já tem conta?{' '}
+          <Link to="/login" className="text-primary">
+            Entrar
+          </Link>
         </p>
       </div>
     </div>

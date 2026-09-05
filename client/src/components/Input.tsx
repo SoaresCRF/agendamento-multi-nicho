@@ -8,7 +8,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   { label, error, id, className, ...props },
-  ref
+  ref,
 ) {
   const generatedId = useId()
   const inputId = id ?? generatedId
@@ -25,7 +25,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           'h-11 rounded-md border bg-surface px-[14px] font-sans text-body-md text-ink',
           'focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1',
           error ? 'border-error' : 'border-hairline',
-          className
+          className,
         )}
         {...props}
       />

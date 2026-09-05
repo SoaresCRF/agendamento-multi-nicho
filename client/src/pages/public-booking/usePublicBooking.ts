@@ -3,7 +3,10 @@ import { api } from '../../lib/api'
 import type { PublicProfile, PublicServiceType } from '../../lib/types'
 
 export function usePublicProfile(slug: string) {
-  return useQuery({ queryKey: ['public', slug, 'profile'], queryFn: () => api.get<PublicProfile>(`/api/public/${slug}`) })
+  return useQuery({
+    queryKey: ['public', slug, 'profile'],
+    queryFn: () => api.get<PublicProfile>(`/api/public/${slug}`),
+  })
 }
 
 export function usePublicServiceTypes(slug: string) {
@@ -18,7 +21,7 @@ export function usePublicSlots(slug: string, serviceTypeId: string | null, date:
     queryKey: ['public', slug, 'slots', serviceTypeId, date],
     queryFn: async () => {
       const result = await api.get<{ slots: string[] }>(
-        `/api/public/${slug}/service-types/${serviceTypeId}/slots?date=${date}`
+        `/api/public/${slug}/service-types/${serviceTypeId}/slots?date=${date}`,
       )
       return result.slots
     },

@@ -19,7 +19,9 @@ export function buildCustomFieldsSchema(fields: ServiceTypeCustomField[]) {
         const options = field.options ?? []
         fieldSchema =
           options.length > 0
-            ? z.enum(options as [string, ...string[]], { errorMap: () => ({ message: `O campo "${field.label}" tem um valor inválido` }) })
+            ? z.enum(options as [string, ...string[]], {
+                errorMap: () => ({ message: `O campo "${field.label}" tem um valor inválido` }),
+              })
             : z.string().refine(() => false, { message: `O campo "${field.label}" não tem opções configuradas` })
         break
       }

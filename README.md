@@ -41,18 +41,21 @@ npm run dev:client                     # http://localhost:5173 (outro terminal)
 ```
 
 Profissionais de exemplo (senha `demo1234` para ambos):
+
 - `/joana-psicologa` — Psicologia
 - `/carlos-personal` — Personal Trainer
 
 ## Variáveis de ambiente
 
 **`server/.env`** (ver `server/.env.example`):
+
 - `DATABASE_URL` — string de conexão do Postgres.
 - `JWT_SECRET` — 32+ caracteres aleatórios.
 - `PORT` — porta da API (padrão 3000).
 - `CLIENT_ORIGIN` — origem permitida por CORS (padrão `http://localhost:5173`).
 
 **`client/.env`** (ver `client/.env.example`):
+
 - `VITE_API_URL` — URL base da API (padrão `http://localhost:3000`).
 
 ## Testes
@@ -70,21 +73,16 @@ npm run format         # Prettier --write no repo inteiro
 npm run format:check   # Prettier --check, sem escrever
 ```
 
-`format`/`format:check` ainda não rodam no CI: o repo pré-existe ao Prettier e
-tem ~159 arquivos fora do estilo configurado (sem ponto e vírgula, aspas
-simples, 120 colunas) — aplicar `--write` neles é uma reformatação em massa
-fora do escopo desta mudança, fica para uma sessão dedicada.
-
 O CI (`.github/workflows/ci.yml`) roda em cada push/PR para `main`: lint,
-typecheck e testes de `client/` e `server/` (com um Postgres de serviço), e o
-build de produção do `client/`.
+`format:check`, typecheck e testes de `client/` e `server/` (com um Postgres
+de serviço), e o build de produção do `client/`.
 
 ## Deploy
 
 Instruções, não provisionamento — nenhuma infraestrutura foi de fato criada
 como parte deste projeto.
 
-**Frontend (Vercel):** conectar o repositório, definir o *root directory*
+**Frontend (Vercel):** conectar o repositório, definir o _root directory_
 como `client/`, build command `npm run build`, output `dist/`. Como o
 repositório é um monorepo com npm workspaces, habilitar em
 "Root Directory" → "Include files outside of the Root Directory" para o
@@ -97,7 +95,7 @@ funcionarem em acesso direto/refresh, ex. `/joana-psicologa` ou
 `/painel/agenda`) já vêm de `client/vercel.json` — nenhuma configuração
 extra no painel da Vercel é necessária além do toggle acima.
 
-**Backend (Render ou Railway):** conectar o repositório, *root directory*
+**Backend (Render ou Railway):** conectar o repositório, _root directory_
 `server/`, build command `npm install && npx prisma migrate deploy && npm run build`,
 start command `npm start`. Provisionar um banco Postgres gerenciado na
 mesma plataforma e apontar `DATABASE_URL` para ele. Definir `JWT_SECRET`

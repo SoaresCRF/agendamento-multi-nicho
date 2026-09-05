@@ -39,6 +39,7 @@ jobs:
       - run: npx prisma generate
         working-directory: server
       - run: npm run lint
+      - run: npm run format:check
       - run: npm run typecheck:client
       - run: npm run typecheck:server
       - run: npm run test:client

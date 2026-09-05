@@ -28,6 +28,7 @@
 ## Task 1: Workspace scaffold + env loader
 
 **Files:**
+
 - Create: `package.json` (root)
 - Create: `server/package.json`
 - Create: `server/tsconfig.json`
@@ -37,11 +38,13 @@
 - Test: `server/src/lib/env.test.ts`
 
 **Interfaces:**
+
 - Produces: `env: { DATABASE_URL: string; JWT_SECRET: string; PORT: number; CLIENT_ORIGIN: string; SMTP_HOST?: string; SMTP_PORT?: number; SMTP_USER?: string; SMTP_PASS?: string }` exported from `server/src/lib/env.ts` — every later task that reads config imports this.
 
 - [ ] **Step 1: Create the root and server package manifests**
 
 `package.json` (repo root):
+
 ```json
 {
   "name": "agendamento-multi-nicho",
@@ -55,6 +58,7 @@
 ```
 
 `server/package.json`:
+
 ```json
 {
   "name": "server",
@@ -101,6 +105,7 @@
 ```
 
 `server/tsconfig.json`:
+
 ```json
 {
   "compilerOptions": {
@@ -119,6 +124,7 @@
 ```
 
 `server/vitest.config.ts`:
+
 ```ts
 import { defineConfig } from 'vitest/config'
 
@@ -132,6 +138,7 @@ export default defineConfig({
 ```
 
 `server/.env.example`:
+
 ```
 DATABASE_URL="postgresql://agendamento:agendamento@localhost:5432/agendamento"
 JWT_SECRET="change-this-to-a-random-32-plus-character-secret"
@@ -144,6 +151,7 @@ Copy `server/.env.example` to `server/.env` for local dev (not committed).
 - [ ] **Step 2: Write the failing test for the env loader**
 
 `server/src/lib/env.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
@@ -182,6 +190,7 @@ Expected: FAIL — `server/src/lib/env.ts` does not exist yet.
 - [ ] **Step 4: Implement the env loader**
 
 `server/src/lib/env.ts`:
+
 ```ts
 import 'dotenv/config'
 import { z } from 'zod'
@@ -217,6 +226,7 @@ git commit -m "chore: scaffold server workspace with validated env loader"
 ## Task 2: Postgres + Prisma schema + anti-overlap constraint
 
 **Files:**
+
 - Create: `docker-compose.yml` (root)
 - Create: `server/prisma/schema.prisma`
 - Create: `server/prisma/migrations/**` (generated + hand-edited)
@@ -224,12 +234,14 @@ git commit -m "chore: scaffold server workspace with validated env loader"
 - Test: `server/prisma/exclusion-constraint.test.ts`
 
 **Interfaces:**
+
 - Produces: `prisma: PrismaClient` exported from `server/src/lib/prisma.ts` — every module from here on imports this singleton instead of instantiating its own client.
 - Produces: the `Booking`, `User`, `ServiceType`, `CustomFormField`, `Availability`, `ServiceTypeAvailabilityRule`, `BlockedSlot`, `RefreshToken` Prisma models (spec §4). Note one implementation detail not pinned by the spec: `Availability.startTime`/`endTime` and `ServiceTypeAvailabilityRule.startTime`/`endTime` are modeled as `String` in `"HH:mm"` format (validated by Zod later) rather than Postgres `@db.Time`, to avoid Prisma's awkward `DateTime`-wrapping-a-time-value representation for that column type. Still local wall-clock, per spec §5 — just a different column type.
 
 - [ ] **Step 1: Add Docker Compose for local Postgres**
 
 `docker-compose.yml` (repo root):
+
 ```yaml
 services:
   postgres:
@@ -239,7 +251,7 @@ services:
       POSTGRES_PASSWORD: agendamento
       POSTGRES_DB: agendamento
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
 volumes:
@@ -251,6 +263,7 @@ Run: `docker compose up -d` and confirm with `docker compose ps` that `postgres`
 - [ ] **Step 2: Write the Prisma schema**
 
 `server/prisma/schema.prisma`:
+
 ```prisma
 generator client {
   provider = "prisma-client-js"
@@ -379,6 +392,7 @@ model RefreshToken {
 Run (from `server/`): `npx prisma migrate dev --name init --create-only`
 
 This creates `server/prisma/migrations/<timestamp>_init/migration.sql`. Append to that generated file:
+
 ```sql
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
@@ -397,6 +411,7 @@ Expected: migration applies cleanly, `npx prisma generate` runs automatically.
 - [ ] **Step 4: Add the Prisma client singleton**
 
 `server/src/lib/prisma.ts`:
+
 ```ts
 import { PrismaClient } from '@prisma/client'
 
@@ -406,6 +421,7 @@ export const prisma = new PrismaClient()
 - [ ] **Step 5: Write the constraint test and verify it fails first, then passes**
 
 `server/prisma/exclusion-constraint.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach, afterAll } from 'vitest'
 import { prisma } from '../src/lib/prisma'
@@ -420,8 +436,11 @@ describe('no_overlapping_confirmed_bookings constraint', () => {
     await prisma.user.deleteMany()
     const user = await prisma.user.create({
       data: {
-        name: 'Test', email: `t-${Date.now()}@example.com`, passwordHash: 'x',
-        slug: `t-${Date.now()}`, timezone: 'America/Sao_Paulo',
+        name: 'Test',
+        email: `t-${Date.now()}@example.com`,
+        passwordHash: 'x',
+        slug: `t-${Date.now()}`,
+        timezone: 'America/Sao_Paulo',
       },
     })
     userId = user.id
@@ -438,17 +457,25 @@ describe('no_overlapping_confirmed_bookings constraint', () => {
   it('rejects a second CONFIRMED booking that overlaps an existing one', async () => {
     await prisma.booking.create({
       data: {
-        userId, serviceTypeId, clientName: 'A', clientEmail: 'a@example.com',
-        startsAt: new Date('2026-09-01T13:00:00Z'), endsAt: new Date('2026-09-01T13:50:00Z'),
+        userId,
+        serviceTypeId,
+        clientName: 'A',
+        clientEmail: 'a@example.com',
+        startsAt: new Date('2026-09-01T13:00:00Z'),
+        endsAt: new Date('2026-09-01T13:50:00Z'),
       },
     })
     await expect(
       prisma.booking.create({
         data: {
-          userId, serviceTypeId, clientName: 'B', clientEmail: 'b@example.com',
-          startsAt: new Date('2026-09-01T13:25:00Z'), endsAt: new Date('2026-09-01T14:15:00Z'),
+          userId,
+          serviceTypeId,
+          clientName: 'B',
+          clientEmail: 'b@example.com',
+          startsAt: new Date('2026-09-01T13:25:00Z'),
+          endsAt: new Date('2026-09-01T14:15:00Z'),
         },
-      })
+      }),
     ).rejects.toThrow()
   })
 
@@ -457,14 +484,19 @@ describe('no_overlapping_confirmed_bookings constraint', () => {
     const endsAt = new Date('2026-09-02T13:50:00Z')
     await prisma.booking.create({
       data: {
-        userId, serviceTypeId, clientName: 'A', clientEmail: 'a@example.com',
-        startsAt, endsAt, status: 'CANCELLED',
+        userId,
+        serviceTypeId,
+        clientName: 'A',
+        clientEmail: 'a@example.com',
+        startsAt,
+        endsAt,
+        status: 'CANCELLED',
       },
     })
     await expect(
       prisma.booking.create({
         data: { userId, serviceTypeId, clientName: 'B', clientEmail: 'b@example.com', startsAt, endsAt },
-      })
+      }),
     ).resolves.toBeDefined()
   })
 })
@@ -485,15 +517,18 @@ git commit -m "feat: add Prisma schema and DB-level anti-overlap booking constra
 ## Task 3: Seed script (two demo professionals)
 
 **Files:**
+
 - Create: `server/prisma/seed.ts`
 - Test: `server/prisma/seed.test.ts`
 
 **Interfaces:**
+
 - Consumes: `PrismaClient` from `@prisma/client` directly (seed scripts run standalone, outside the app).
 
 - [ ] **Step 1: Write the seed script**
 
 `server/prisma/seed.ts`:
+
 ```ts
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
@@ -527,7 +562,13 @@ async function main() {
             customFields: {
               create: [
                 { label: 'Queixa principal', fieldType: 'TEXTAREA', required: true, order: 0 },
-                { label: 'Já fez terapia antes?', fieldType: 'SELECT', required: true, order: 1, options: ['Sim', 'Não'] },
+                {
+                  label: 'Já fez terapia antes?',
+                  fieldType: 'SELECT',
+                  required: true,
+                  order: 1,
+                  options: ['Sim', 'Não'],
+                },
                 { label: 'Está em uso de medicação?', fieldType: 'TEXT', required: false, order: 2 },
               ],
             },
@@ -562,7 +603,10 @@ async function main() {
                 { label: 'Objetivo', fieldType: 'TEXT', required: true, order: 0 },
                 { label: 'Lesões ou restrições', fieldType: 'TEXTAREA', required: false, order: 1 },
                 {
-                  label: 'Nível de atividade atual', fieldType: 'SELECT', required: true, order: 2,
+                  label: 'Nível de atividade atual',
+                  fieldType: 'SELECT',
+                  required: true,
+                  order: 2,
                   options: ['Sedentário', 'Leve', 'Moderado', 'Intenso'],
                 },
               ],
@@ -593,6 +637,7 @@ Expected: logs `{ psicologa: 'joana-psicologa', personalTrainer: 'carlos-persona
 - [ ] **Step 3: Write a verification test and run it**
 
 `server/prisma/seed.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest'
 import { prisma } from '../src/lib/prisma'
@@ -631,6 +676,7 @@ git commit -m "feat: seed two demo professionals (psicóloga, personal trainer)"
 ## Task 4: Express app skeleton — logger, error handling, health check
 
 **Files:**
+
 - Create: `server/src/lib/logger.ts`
 - Create: `server/src/lib/errors.ts`
 - Create: `server/src/middleware/errorHandler.ts`
@@ -639,6 +685,7 @@ git commit -m "feat: seed two demo professionals (psicóloga, personal trainer)"
 - Test: `server/src/app.test.ts`
 
 **Interfaces:**
+
 - Produces: `logger: { debug, info, warn, error }` from `server/src/lib/logger.ts`.
 - Produces: `class AppError extends Error { statusCode: number }` from `server/src/lib/errors.ts` — thrown by services for expected/client-facing failures; anything else is treated as unexpected and logged.
 - Produces: `errorHandler: ErrorRequestHandler` from `server/src/middleware/errorHandler.ts`.
@@ -647,6 +694,7 @@ git commit -m "feat: seed two demo professionals (psicóloga, personal trainer)"
 - [ ] **Step 1: Write the logger and AppError**
 
 `server/src/lib/logger.ts`:
+
 ```ts
 type Level = 'debug' | 'info' | 'warn' | 'error'
 
@@ -666,9 +714,13 @@ export const logger = {
 ```
 
 `server/src/lib/errors.ts`:
+
 ```ts
 export class AppError extends Error {
-  constructor(public statusCode: number, message: string) {
+  constructor(
+    public statusCode: number,
+    message: string,
+  ) {
     super(message)
     this.name = 'AppError'
   }
@@ -678,6 +730,7 @@ export class AppError extends Error {
 - [ ] **Step 2: Write the error handler middleware**
 
 `server/src/middleware/errorHandler.ts`:
+
 ```ts
 import type { ErrorRequestHandler } from 'express'
 import { ZodError } from 'zod'
@@ -704,6 +757,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 - [ ] **Step 3: Write the failing app test**
 
 `server/src/app.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest'
 import request from 'supertest'
@@ -725,6 +779,7 @@ Expected: FAIL — `server/src/app.ts` does not exist yet.
 - [ ] **Step 4: Implement the app skeleton**
 
 `server/src/app.ts`:
+
 ```ts
 import express from 'express'
 import cookieParser from 'cookie-parser'
@@ -749,6 +804,7 @@ export function createApp() {
 ```
 
 `server/src/server.ts`:
+
 ```ts
 import { createApp } from './app'
 import { env } from './lib/env'
@@ -777,18 +833,21 @@ git commit -m "feat: add Express app skeleton with logging and central error han
 ## Task 5: Password hashing + JWT utilities
 
 **Files:**
+
 - Create: `server/src/lib/password.ts`
 - Create: `server/src/lib/jwt.ts`
 - Test: `server/src/lib/password.test.ts`
 - Test: `server/src/lib/jwt.test.ts`
 
 **Interfaces:**
+
 - Produces: `hashPassword(plain: string): Promise<string>`, `verifyPassword(plain: string, hash: string): Promise<boolean>` from `server/src/lib/password.ts`.
 - Produces: `signAccessToken(payload: { userId: string }): string`, `verifyAccessToken(token: string): { userId: string } | null` from `server/src/lib/jwt.ts`.
 
 - [ ] **Step 1: Write the failing tests**
 
 `server/src/lib/password.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest'
 import { hashPassword, verifyPassword } from './password'
@@ -804,6 +863,7 @@ describe('password hashing', () => {
 ```
 
 `server/src/lib/jwt.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 
@@ -833,6 +893,7 @@ Expected: FAIL — files don't exist yet.
 - [ ] **Step 2: Implement both utilities**
 
 `server/src/lib/password.ts`:
+
 ```ts
 import bcrypt from 'bcryptjs'
 
@@ -848,6 +909,7 @@ export function verifyPassword(plain: string, hash: string): Promise<boolean> {
 ```
 
 `server/src/lib/jwt.ts`:
+
 ```ts
 import jwt from 'jsonwebtoken'
 import { env } from './env'
@@ -888,17 +950,20 @@ git commit -m "feat: add password hashing and JWT access-token utilities"
 ## Task 6: Refresh-token utilities + test helpers
 
 **Files:**
+
 - Create: `server/src/lib/refreshToken.ts`
 - Create: `server/test/helpers.ts`
 - Test: `server/src/lib/refreshToken.test.ts`
 
 **Interfaces:**
+
 - Produces: `generateRefreshToken(): string`, `hashToken(token: string): string`, `REFRESH_TOKEN_TTL_MS: number` from `server/src/lib/refreshToken.ts`.
 - Produces: `createTestUser(overrides?): Promise<{ user, accessToken }>`, `cleanDatabase(): Promise<void>` from `server/test/helpers.ts` — every endpoint test from Task 7 onward uses these.
 
 - [ ] **Step 1: Write the failing test**
 
 `server/src/lib/refreshToken.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest'
 import { generateRefreshToken, hashToken } from './refreshToken'
@@ -921,6 +986,7 @@ Expected: FAIL — file doesn't exist.
 - [ ] **Step 2: Implement the utility**
 
 `server/src/lib/refreshToken.ts`:
+
 ```ts
 import { randomBytes, createHash } from 'node:crypto'
 
@@ -938,6 +1004,7 @@ export const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
 - [ ] **Step 3: Add the shared test helpers (no test-of-the-test needed — exercised by Task 7 onward)**
 
 `server/test/helpers.ts`:
+
 ```ts
 import { prisma } from '../src/lib/prisma'
 import { hashPassword } from '../src/lib/password'
@@ -987,6 +1054,7 @@ git commit -m "feat: add refresh-token utilities and shared test helpers"
 ## Task 7: POST /api/auth/register
 
 **Files:**
+
 - Create: `server/src/modules/auth/auth.service.ts`
 - Create: `server/src/modules/auth/auth.schemas.ts`
 - Create: `server/src/modules/auth/auth.routes.ts`
@@ -994,6 +1062,7 @@ git commit -m "feat: add refresh-token utilities and shared test helpers"
 - Test: `server/src/modules/auth/auth.register.test.ts`
 
 **Interfaces:**
+
 - Consumes: `hashPassword` (Task 5), `signAccessToken` (Task 5), `generateRefreshToken`/`hashToken`/`REFRESH_TOKEN_TTL_MS` (Task 6), `prisma` (Task 2), `AppError` (Task 4), `cleanDatabase` (Task 6).
 - Produces: `registerUser(input: RegisterInput): Promise<AuthResult>` from `auth.service.ts`, where `AuthResult = { user: { id, name, email, slug }, accessToken: string, refreshToken: string }` — reused by `loginUser`/`refreshSession` in Task 8/10.
 - Produces: `authRouter: Router` from `auth.routes.ts`, mounted at `/api/auth`.
@@ -1001,6 +1070,7 @@ git commit -m "feat: add refresh-token utilities and shared test helpers"
 - [ ] **Step 1: Write the request schema and failing test**
 
 `server/src/modules/auth/auth.schemas.ts`:
+
 ```ts
 import { z } from 'zod'
 
@@ -1008,13 +1078,17 @@ export const registerSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(8),
-  slug: z.string().min(3).regex(/^[a-z0-9-]+$/, 'Use apenas letras minúsculas, números e hífen'),
+  slug: z
+    .string()
+    .min(3)
+    .regex(/^[a-z0-9-]+$/, 'Use apenas letras minúsculas, números e hífen'),
   timezone: z.string().min(1),
   niche: z.string().optional(),
 })
 ```
 
 `server/src/modules/auth/auth.register.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -1027,8 +1101,12 @@ describe('POST /api/auth/register', () => {
   it('creates a professional and returns an access token + refresh cookie', async () => {
     const app = createApp()
     const res = await request(app).post('/api/auth/register').send({
-      name: 'Joana Silva', email: 'joana@example.com', password: 'password123',
-      slug: 'joana-psicologa', timezone: 'America/Sao_Paulo', niche: 'Psicologia',
+      name: 'Joana Silva',
+      email: 'joana@example.com',
+      password: 'password123',
+      slug: 'joana-psicologa',
+      timezone: 'America/Sao_Paulo',
+      niche: 'Psicologia',
     })
     expect(res.status).toBe(201)
     expect(res.body.user).toMatchObject({ email: 'joana@example.com', slug: 'joana-psicologa' })
@@ -1039,11 +1117,16 @@ describe('POST /api/auth/register', () => {
   it('rejects a duplicate email with 409', async () => {
     const app = createApp()
     const payload = {
-      name: 'A', email: 'dup@example.com', password: 'password123',
-      slug: 'slug-a', timezone: 'America/Sao_Paulo',
+      name: 'A',
+      email: 'dup@example.com',
+      password: 'password123',
+      slug: 'slug-a',
+      timezone: 'America/Sao_Paulo',
     }
     await request(app).post('/api/auth/register').send(payload)
-    const res = await request(app).post('/api/auth/register').send({ ...payload, slug: 'slug-b' })
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ ...payload, slug: 'slug-b' })
     expect(res.status).toBe(409)
   })
 })
@@ -1055,6 +1138,7 @@ Expected: FAIL — `auth.service.ts`/`auth.routes.ts` don't exist.
 - [ ] **Step 2: Implement the auth service**
 
 `server/src/modules/auth/auth.service.ts`:
+
 ```ts
 import { prisma } from '../../lib/prisma'
 import { hashPassword } from '../../lib/password'
@@ -1080,8 +1164,12 @@ export async function registerUser(input: RegisterInput): Promise<AuthResult> {
   const passwordHash = await hashPassword(input.password)
   const user = await prisma.user.create({
     data: {
-      name: input.name, email: input.email, passwordHash,
-      slug: input.slug, timezone: input.timezone, niche: input.niche,
+      name: input.name,
+      email: input.email,
+      passwordHash,
+      slug: input.slug,
+      timezone: input.timezone,
+      niche: input.niche,
     },
   })
   return issueTokens(user.id, { id: user.id, name: user.name, email: user.email, slug: user.slug })
@@ -1099,6 +1187,7 @@ export async function issueTokens(userId: string, user: AuthResult['user']): Pro
 - [ ] **Step 3: Implement the route and mount it**
 
 `server/src/modules/auth/auth.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { registerSchema } from './auth.schemas'
@@ -1127,11 +1216,13 @@ authRouter.post('/register', async (req, res, next) => {
 ```
 
 Modify `server/src/app.ts` — add the import and mount line:
+
 ```ts
 import { authRouter } from './modules/auth/auth.routes'
 // ...
 app.use('/api/auth', authRouter)
 ```
+
 (insert both the import near the top and the `app.use` line where the comment `// Later tasks mount feature routers here` was, replacing that comment)
 
 - [ ] **Step 4: Run the test and verify it passes**
@@ -1151,18 +1242,21 @@ git commit -m "feat: add professional registration endpoint"
 ## Task 8: POST /api/auth/login
 
 **Files:**
+
 - Modify: `server/src/modules/auth/auth.schemas.ts` — add `loginSchema`
 - Modify: `server/src/modules/auth/auth.service.ts` — add `loginUser`
 - Modify: `server/src/modules/auth/auth.routes.ts` — add `POST /login`
 - Test: `server/src/modules/auth/auth.login.test.ts`
 
 **Interfaces:**
+
 - Consumes: `verifyPassword` (Task 5), `issueTokens` (Task 7).
 - Produces: `loginUser(email: string, password: string): Promise<AuthResult>`.
 
 - [ ] **Step 1: Write the failing test**
 
 `server/src/modules/auth/auth.login.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -1175,8 +1269,11 @@ describe('POST /api/auth/login', () => {
   it('logs in with correct credentials', async () => {
     const app = createApp()
     await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'joana@example.com', password: 'password123',
-      slug: 'joana', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'joana@example.com',
+      password: 'password123',
+      slug: 'joana',
+      timezone: 'America/Sao_Paulo',
     })
     const res = await request(app).post('/api/auth/login').send({ email: 'joana@example.com', password: 'password123' })
     expect(res.status).toBe(200)
@@ -1186,8 +1283,11 @@ describe('POST /api/auth/login', () => {
   it('rejects wrong password with 401', async () => {
     const app = createApp()
     await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'joana2@example.com', password: 'password123',
-      slug: 'joana2', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'joana2@example.com',
+      password: 'password123',
+      slug: 'joana2',
+      timezone: 'America/Sao_Paulo',
     })
     const res = await request(app).post('/api/auth/login').send({ email: 'joana2@example.com', password: 'wrong' })
     expect(res.status).toBe(401)
@@ -1201,6 +1301,7 @@ Expected: FAIL — `POST /login` not implemented.
 - [ ] **Step 2: Add `loginUser` to the service**
 
 Append to `server/src/modules/auth/auth.service.ts`:
+
 ```ts
 import { verifyPassword } from '../../lib/password'
 
@@ -1212,16 +1313,19 @@ export async function loginUser(email: string, password: string): Promise<AuthRe
   return issueTokens(user.id, { id: user.id, name: user.name, email: user.email, slug: user.slug })
 }
 ```
+
 (add the `verifyPassword` import to the existing import block at the top of the file rather than duplicating it)
 
 - [ ] **Step 3: Add the schema and route**
 
 Append to `server/src/modules/auth/auth.schemas.ts`:
+
 ```ts
 export const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) })
 ```
 
 Append to `server/src/modules/auth/auth.routes.ts` (import `loginSchema` and `loginUser` alongside the existing imports):
+
 ```ts
 authRouter.post('/login', async (req, res, next) => {
   try {
@@ -1252,6 +1356,7 @@ git commit -m "feat: add professional login endpoint"
 ## Task 9: requireAuth middleware + GET /api/me
 
 **Files:**
+
 - Create: `server/src/types/express.d.ts`
 - Create: `server/src/middleware/requireAuth.ts`
 - Create: `server/src/modules/users/users.routes.ts`
@@ -1259,6 +1364,7 @@ git commit -m "feat: add professional login endpoint"
 - Test: `server/src/middleware/requireAuth.test.ts`
 
 **Interfaces:**
+
 - Consumes: `verifyAccessToken` (Task 5).
 - Produces: `req.userId: string | undefined` (via Express `Request` augmentation) — every protected route from Task 11 onward reads `req.userId!` after `requireAuth`.
 - Produces: `requireAuth: RequestHandler` from `server/src/middleware/requireAuth.ts`.
@@ -1266,6 +1372,7 @@ git commit -m "feat: add professional login endpoint"
 - [ ] **Step 1: Add the Express type augmentation**
 
 `server/src/types/express.d.ts`:
+
 ```ts
 declare global {
   namespace Express {
@@ -1281,6 +1388,7 @@ export {}
 - [ ] **Step 2: Write the failing test**
 
 `server/src/middleware/requireAuth.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest'
 import express from 'express'
@@ -1320,6 +1428,7 @@ Expected: FAIL — `requireAuth.ts` doesn't exist.
 - [ ] **Step 3: Implement the middleware**
 
 `server/src/middleware/requireAuth.ts`:
+
 ```ts
 import type { RequestHandler } from 'express'
 import { verifyAccessToken } from '../lib/jwt'
@@ -1350,6 +1459,7 @@ Expected: PASS (3 tests)
 - [ ] **Step 5: Add GET /api/me, wire it up, and test it**
 
 `server/src/modules/users/users.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { prisma } from '../../lib/prisma'
@@ -1360,7 +1470,14 @@ export const usersRouter = Router()
 usersRouter.get('/me', requireAuth, async (req, res, next) => {
   try {
     const user = await prisma.user.findUniqueOrThrow({ where: { id: req.userId } })
-    res.json({ id: user.id, name: user.name, email: user.email, slug: user.slug, timezone: user.timezone, niche: user.niche })
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      slug: user.slug,
+      timezone: user.timezone,
+      niche: user.niche,
+    })
   } catch (err) {
     next(err)
   }
@@ -1368,6 +1485,7 @@ usersRouter.get('/me', requireAuth, async (req, res, next) => {
 ```
 
 Modify `server/src/app.ts` — add:
+
 ```ts
 import { usersRouter } from './modules/users/users.routes'
 // ...
@@ -1375,6 +1493,7 @@ app.use('/api', usersRouter)
 ```
 
 Test — `server/src/modules/users/users.me.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -1413,17 +1532,20 @@ git commit -m "feat: add requireAuth middleware and GET /api/me"
 ## Task 10: POST /api/auth/refresh + POST /api/auth/logout
 
 **Files:**
+
 - Modify: `server/src/modules/auth/auth.service.ts` — add `refreshSession`, `logoutUser`
 - Modify: `server/src/modules/auth/auth.routes.ts` — add `POST /refresh`, `POST /logout`
 - Test: `server/src/modules/auth/auth.refresh.test.ts`
 
 **Interfaces:**
+
 - Consumes: `issueTokens`, `hashToken`, `REFRESH_COOKIE`/`refreshCookieOptions` (Tasks 6/7).
 - Produces: `refreshSession(refreshToken: string): Promise<AuthResult>`, `logoutUser(refreshToken: string): Promise<void>`.
 
 - [ ] **Step 1: Write the failing test**
 
 `server/src/modules/auth/auth.refresh.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -1441,8 +1563,11 @@ describe('POST /api/auth/refresh and /logout', () => {
   it('issues a new access token and rotates the refresh cookie', async () => {
     const app = createApp()
     const registerRes = await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'refresh@example.com', password: 'password123',
-      slug: 'refresh-slug', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'refresh@example.com',
+      password: 'password123',
+      slug: 'refresh-slug',
+      timezone: 'America/Sao_Paulo',
     })
     const cookie = extractCookie(registerRes)
 
@@ -1462,8 +1587,11 @@ describe('POST /api/auth/refresh and /logout', () => {
   it('revokes the refresh token on logout', async () => {
     const app = createApp()
     const registerRes = await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'logout@example.com', password: 'password123',
-      slug: 'logout-slug', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'logout@example.com',
+      password: 'password123',
+      slug: 'logout-slug',
+      timezone: 'America/Sao_Paulo',
     })
     const cookie = extractCookie(registerRes)
 
@@ -1482,6 +1610,7 @@ Expected: FAIL — routes not implemented.
 - [ ] **Step 2: Implement the service functions**
 
 Append to `server/src/modules/auth/auth.service.ts`:
+
 ```ts
 export async function refreshSession(refreshToken: string): Promise<AuthResult> {
   const tokenHash = hashToken(refreshToken)
@@ -1491,7 +1620,10 @@ export async function refreshSession(refreshToken: string): Promise<AuthResult> 
   }
   await prisma.refreshToken.update({ where: { id: record.id }, data: { revokedAt: new Date() } })
   return issueTokens(record.userId, {
-    id: record.user.id, name: record.user.name, email: record.user.email, slug: record.user.slug,
+    id: record.user.id,
+    name: record.user.name,
+    email: record.user.email,
+    slug: record.user.slug,
   })
 }
 
@@ -1500,11 +1632,13 @@ export async function logoutUser(refreshToken: string): Promise<void> {
   await prisma.refreshToken.updateMany({ where: { tokenHash, revokedAt: null }, data: { revokedAt: new Date() } })
 }
 ```
+
 (add `hashToken` to the existing import from `../../lib/refreshToken` at the top of the file)
 
 - [ ] **Step 3: Add the routes**
 
 Append to `server/src/modules/auth/auth.routes.ts` (import `refreshSession`, `logoutUser` alongside existing imports):
+
 ```ts
 authRouter.post('/refresh', async (req, res, next) => {
   try {
@@ -1550,6 +1684,7 @@ git commit -m "feat: add refresh-token rotation and logout endpoints"
 ## Task 11: Service-type CRUD (with nested custom form fields)
 
 **Files:**
+
 - Create: `server/src/modules/service-types/service-types.schemas.ts`
 - Create: `server/src/modules/service-types/service-types.service.ts`
 - Create: `server/src/modules/service-types/service-types.routes.ts`
@@ -1557,12 +1692,14 @@ git commit -m "feat: add refresh-token rotation and logout endpoints"
 - Test: `server/src/modules/service-types/service-types.test.ts`
 
 **Interfaces:**
+
 - Consumes: `requireAuth` (Task 9), `AppError` (Task 4), `createTestUser`/`cleanDatabase` (Task 6).
 - Produces: `serviceTypesRouter: Router`, mounted at `/api/service-types` — later tasks (12, 13) mount sibling routers under `/api/service-types/:id/...`.
 
 - [ ] **Step 1: Write the schema and the failing tests**
 
 `server/src/modules/service-types/service-types.schemas.ts`:
+
 ```ts
 import { z } from 'zod'
 
@@ -1584,6 +1721,7 @@ export const serviceTypeInputSchema = z.object({
 ```
 
 `server/src/modules/service-types/service-types.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -1594,7 +1732,9 @@ describe('service-type CRUD', () => {
   beforeEach(cleanDatabase)
 
   const payload = {
-    name: 'Primeira consulta', durationMinutes: 60, requiresCustomForm: true,
+    name: 'Primeira consulta',
+    durationMinutes: 60,
+    requiresCustomForm: true,
     customFields: [{ label: 'Queixa principal', fieldType: 'TEXTAREA', required: true, order: 0 }],
   }
 
@@ -1614,22 +1754,28 @@ describe('service-type CRUD', () => {
     const getRes = await request(app).get(`/api/service-types/${id}`).set(auth)
     expect(getRes.status).toBe(200)
 
-    const updateRes = await request(app).patch(`/api/service-types/${id}`).set(auth).send({ ...payload, name: 'Renamed' })
+    const updateRes = await request(app)
+      .patch(`/api/service-types/${id}`)
+      .set(auth)
+      .send({ ...payload, name: 'Renamed' })
     expect(updateRes.body.name).toBe('Renamed')
 
     const deleteRes = await request(app).delete(`/api/service-types/${id}`).set(auth)
     expect(deleteRes.status).toBe(204)
   })
 
-  it('never exposes another professional\'s service types (no IDOR)', async () => {
+  it("never exposes another professional's service types (no IDOR)", async () => {
     const owner = await createTestUser({ email: 'owner@example.com', slug: 'owner' })
     const other = await createTestUser({ email: 'other@example.com', slug: 'other' })
     const app = createApp()
 
-    const createRes = await request(app).post('/api/service-types')
-      .set('Authorization', `Bearer ${owner.accessToken}`).send(payload)
+    const createRes = await request(app)
+      .post('/api/service-types')
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send(payload)
 
-    const getRes = await request(app).get(`/api/service-types/${createRes.body.id}`)
+    const getRes = await request(app)
+      .get(`/api/service-types/${createRes.body.id}`)
       .set('Authorization', `Bearer ${other.accessToken}`)
     expect(getRes.status).toBe(404)
   })
@@ -1642,6 +1788,7 @@ Expected: FAIL — module doesn't exist.
 - [ ] **Step 2: Implement the service**
 
 `server/src/modules/service-types/service-types.service.ts`:
+
 ```ts
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
@@ -1651,14 +1798,21 @@ import type { serviceTypeInputSchema } from './service-types.schemas'
 export type ServiceTypeInput = z.infer<typeof serviceTypeInputSchema>
 
 export function listServiceTypes(userId: string) {
-  return prisma.serviceType.findMany({ where: { userId }, include: { customFields: true }, orderBy: { createdAt: 'asc' } })
+  return prisma.serviceType.findMany({
+    where: { userId },
+    include: { customFields: true },
+    orderBy: { createdAt: 'asc' },
+  })
 }
 
 export function createServiceType(userId: string, input: ServiceTypeInput) {
   return prisma.serviceType.create({
     data: {
-      userId, name: input.name, durationMinutes: input.durationMinutes,
-      description: input.description, requiresCustomForm: input.requiresCustomForm,
+      userId,
+      name: input.name,
+      durationMinutes: input.durationMinutes,
+      description: input.description,
+      requiresCustomForm: input.requiresCustomForm,
       customFields: { create: input.customFields.map((f) => ({ ...f, options: f.options ?? undefined })) },
     },
     include: { customFields: true },
@@ -1677,8 +1831,10 @@ export async function updateServiceType(userId: string, id: string, input: Servi
   return prisma.serviceType.update({
     where: { id },
     data: {
-      name: input.name, durationMinutes: input.durationMinutes,
-      description: input.description, requiresCustomForm: input.requiresCustomForm,
+      name: input.name,
+      durationMinutes: input.durationMinutes,
+      description: input.description,
+      requiresCustomForm: input.requiresCustomForm,
       customFields: { create: input.customFields.map((f) => ({ ...f, options: f.options ?? undefined })) },
     },
     include: { customFields: true },
@@ -1702,6 +1858,7 @@ export async function deleteServiceType(userId: string, id: string) {
 - [ ] **Step 3: Implement the routes and mount them**
 
 `server/src/modules/service-types/service-types.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { requireAuth } from '../../middleware/requireAuth'
@@ -1714,38 +1871,49 @@ serviceTypesRouter.use(requireAuth)
 serviceTypesRouter.get('/', async (req, res, next) => {
   try {
     res.json(await service.listServiceTypes(req.userId!))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 serviceTypesRouter.post('/', async (req, res, next) => {
   try {
     const input = serviceTypeInputSchema.parse(req.body)
     res.status(201).json(await service.createServiceType(req.userId!, input))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 serviceTypesRouter.get('/:id', async (req, res, next) => {
   try {
     res.json(await service.getServiceType(req.userId!, req.params.id))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 serviceTypesRouter.patch('/:id', async (req, res, next) => {
   try {
     const input = serviceTypeInputSchema.parse(req.body)
     res.json(await service.updateServiceType(req.userId!, req.params.id, input))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 serviceTypesRouter.delete('/:id', async (req, res, next) => {
   try {
     await service.deleteServiceType(req.userId!, req.params.id)
     res.status(204).send()
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 ```
 
 Modify `server/src/app.ts`:
+
 ```ts
 import { serviceTypesRouter } from './modules/service-types/service-types.routes'
 // ...
@@ -1769,6 +1937,7 @@ git commit -m "feat: add service-type CRUD with nested custom form fields"
 ## Task 12: General availability CRUD
 
 **Files:**
+
 - Create: `server/src/modules/availability/availability.schemas.ts`
 - Create: `server/src/modules/availability/availability.service.ts`
 - Create: `server/src/modules/availability/availability.routes.ts`
@@ -1776,12 +1945,14 @@ git commit -m "feat: add service-type CRUD with nested custom form fields"
 - Test: `server/src/modules/availability/availability.test.ts`
 
 **Interfaces:**
+
 - Consumes: `requireAuth` (Task 9).
 - Produces: `availabilityListSchema: ZodSchema<AvailabilityRuleRow[]>` from `availability.schemas.ts`, where `AvailabilityRuleRow = { dayOfWeek: number; startTime: string; endTime: string }` — reused by Task 13 and consumed by the engine's input shape in Task 15.
 
 - [ ] **Step 1: Write the schema and failing test**
 
 `server/src/modules/availability/availability.schemas.ts`:
+
 ```ts
 import { z } from 'zod'
 
@@ -1795,6 +1966,7 @@ export const availabilityListSchema = z.array(availabilityRuleSchema)
 ```
 
 `server/src/modules/availability/availability.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -1817,7 +1989,9 @@ describe('GET/PUT /api/availability', () => {
     expect(putRes.status).toBe(200)
     expect(putRes.body).toHaveLength(2)
 
-    const replaceRes = await request(app).put('/api/availability').set(auth)
+    const replaceRes = await request(app)
+      .put('/api/availability')
+      .set(auth)
       .send([{ dayOfWeek: 3, startTime: '10:00', endTime: '16:00' }])
     expect(replaceRes.body).toHaveLength(1)
 
@@ -1834,6 +2008,7 @@ Expected: FAIL — module doesn't exist.
 - [ ] **Step 2: Implement the service**
 
 `server/src/modules/availability/availability.service.ts`:
+
 ```ts
 import { prisma } from '../../lib/prisma'
 import type { z } from 'zod'
@@ -1857,6 +2032,7 @@ export async function replaceGeneralAvailability(userId: string, rules: Rules) {
 - [ ] **Step 3: Implement the routes and mount them**
 
 `server/src/modules/availability/availability.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { requireAuth } from '../../middleware/requireAuth'
@@ -1869,18 +2045,23 @@ availabilityRouter.use(requireAuth)
 availabilityRouter.get('/', async (req, res, next) => {
   try {
     res.json(await service.getGeneralAvailability(req.userId!))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 availabilityRouter.put('/', async (req, res, next) => {
   try {
     const rules = availabilityListSchema.parse(req.body)
     res.json(await service.replaceGeneralAvailability(req.userId!, rules))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 ```
 
 Modify `server/src/app.ts`:
+
 ```ts
 import { availabilityRouter } from './modules/availability/availability.routes'
 // ...
@@ -1904,18 +2085,21 @@ git commit -m "feat: add general weekly availability CRUD"
 ## Task 13: Per-service-type availability rule CRUD
 
 **Files:**
+
 - Create: `server/src/modules/availability/rules.service.ts`
 - Create: `server/src/modules/availability/rules.routes.ts`
 - Modify: `server/src/app.ts` — mount at `/api/service-types/:id/availability-rules`
 - Test: `server/src/modules/availability/rules.test.ts`
 
 **Interfaces:**
+
 - Consumes: `availabilityListSchema` (Task 12), `requireAuth` (Task 9), `AppError` (Task 4).
 - Produces: `getServiceTypeRules(userId, serviceTypeId)`, `replaceServiceTypeRules(userId, serviceTypeId, rules)` — consumed by the engine wiring in Task 16.
 
 - [ ] **Step 1: Write the failing test**
 
 `server/src/modules/availability/rules.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -1926,7 +2110,7 @@ import { prisma } from '../../lib/prisma'
 describe('GET/PUT /api/service-types/:id/availability-rules', () => {
   beforeEach(cleanDatabase)
 
-  it('replaces rules scoped to one service type and rejects access to another owner\'s', async () => {
+  it("replaces rules scoped to one service type and rejects access to another owner's", async () => {
     const owner = await createTestUser({ email: 'owner@example.com', slug: 'owner' })
     const serviceType = await prisma.serviceType.create({
       data: { userId: owner.user.id, name: 'Sessão', durationMinutes: 50 },
@@ -1936,7 +2120,9 @@ describe('GET/PUT /api/service-types/:id/availability-rules', () => {
     const rules = [{ dayOfWeek: 1, startTime: '08:00', endTime: '12:00' }]
 
     const putRes = await request(app)
-      .put(`/api/service-types/${serviceType.id}/availability-rules`).set(ownerAuth).send(rules)
+      .put(`/api/service-types/${serviceType.id}/availability-rules`)
+      .set(ownerAuth)
+      .send(rules)
     expect(putRes.status).toBe(200)
     expect(putRes.body).toHaveLength(1)
 
@@ -1955,6 +2141,7 @@ Expected: FAIL — module doesn't exist.
 - [ ] **Step 2: Implement the service**
 
 `server/src/modules/availability/rules.service.ts`:
+
 ```ts
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
@@ -1971,7 +2158,8 @@ async function assertOwnership(userId: string, serviceTypeId: string) {
 export async function getServiceTypeRules(userId: string, serviceTypeId: string) {
   await assertOwnership(userId, serviceTypeId)
   return prisma.serviceTypeAvailabilityRule.findMany({
-    where: { serviceTypeId }, orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    where: { serviceTypeId },
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
   })
 }
 
@@ -1988,6 +2176,7 @@ export async function replaceServiceTypeRules(userId: string, serviceTypeId: str
 - [ ] **Step 3: Implement the routes and mount them**
 
 `server/src/modules/availability/rules.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { requireAuth } from '../../middleware/requireAuth'
@@ -2000,18 +2189,23 @@ serviceTypeRulesRouter.use(requireAuth)
 serviceTypeRulesRouter.get('/', async (req, res, next) => {
   try {
     res.json(await service.getServiceTypeRules(req.userId!, req.params.id))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 serviceTypeRulesRouter.put('/', async (req, res, next) => {
   try {
     const rules = availabilityListSchema.parse(req.body)
     res.json(await service.replaceServiceTypeRules(req.userId!, req.params.id, rules))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 ```
 
 Modify `server/src/app.ts`:
+
 ```ts
 import { serviceTypeRulesRouter } from './modules/availability/rules.routes'
 // ...
@@ -2035,6 +2229,7 @@ git commit -m "feat: add per-service-type availability rule overrides"
 ## Task 14: BlockedSlot CRUD
 
 **Files:**
+
 - Create: `server/src/modules/blocked-slots/blocked-slots.schemas.ts`
 - Create: `server/src/modules/blocked-slots/blocked-slots.service.ts`
 - Create: `server/src/modules/blocked-slots/blocked-slots.routes.ts`
@@ -2042,12 +2237,14 @@ git commit -m "feat: add per-service-type availability rule overrides"
 - Test: `server/src/modules/blocked-slots/blocked-slots.test.ts`
 
 **Interfaces:**
+
 - Consumes: `requireAuth` (Task 9), `AppError` (Task 4).
 - Produces: `BlockedSlot` rows readable by the availability engine wiring in Task 16 (`{ startsAt, endsAt }`).
 
 - [ ] **Step 1: Write the schema and failing test**
 
 `server/src/modules/blocked-slots/blocked-slots.schemas.ts`:
+
 ```ts
 import { z } from 'zod'
 
@@ -2059,6 +2256,7 @@ export const createBlockedSlotSchema = z.object({
 ```
 
 `server/src/modules/blocked-slots/blocked-slots.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -2074,7 +2272,9 @@ describe('blocked-slot CRUD', () => {
     const auth = { Authorization: `Bearer ${accessToken}` }
 
     const createRes = await request(app).post('/api/blocked-slots').set(auth).send({
-      startsAt: '2026-12-25T00:00:00.000Z', endsAt: '2026-12-26T00:00:00.000Z', reason: 'Feriado',
+      startsAt: '2026-12-25T00:00:00.000Z',
+      endsAt: '2026-12-26T00:00:00.000Z',
+      reason: 'Feriado',
     })
     expect(createRes.status).toBe(201)
 
@@ -2085,7 +2285,8 @@ describe('blocked-slot CRUD', () => {
     expect(deleteRes.status).toBe(204)
 
     const other = await createTestUser({ email: 'other@example.com', slug: 'other' })
-    const forbiddenRes = await request(app).delete(`/api/blocked-slots/${createRes.body.id}`)
+    const forbiddenRes = await request(app)
+      .delete(`/api/blocked-slots/${createRes.body.id}`)
       .set('Authorization', `Bearer ${other.accessToken}`)
     expect(forbiddenRes.status).toBe(404)
   })
@@ -2098,6 +2299,7 @@ Expected: FAIL — module doesn't exist.
 - [ ] **Step 2: Implement the service**
 
 `server/src/modules/blocked-slots/blocked-slots.service.ts`:
+
 ```ts
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
@@ -2122,6 +2324,7 @@ export async function deleteBlockedSlot(userId: string, id: string) {
 - [ ] **Step 3: Implement the routes and mount them**
 
 `server/src/modules/blocked-slots/blocked-slots.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { requireAuth } from '../../middleware/requireAuth'
@@ -2134,25 +2337,32 @@ blockedSlotsRouter.use(requireAuth)
 blockedSlotsRouter.get('/', async (req, res, next) => {
   try {
     res.json(await service.listBlockedSlots(req.userId!))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 blockedSlotsRouter.post('/', async (req, res, next) => {
   try {
     const input = createBlockedSlotSchema.parse(req.body)
     res.status(201).json(await service.createBlockedSlot(req.userId!, input))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 blockedSlotsRouter.delete('/:id', async (req, res, next) => {
   try {
     await service.deleteBlockedSlot(req.userId!, req.params.id)
     res.status(204).send()
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 ```
 
 Modify `server/src/app.ts`:
+
 ```ts
 import { blockedSlotsRouter } from './modules/blocked-slots/blocked-slots.routes'
 // ...
@@ -2178,15 +2388,25 @@ git commit -m "feat: add blocked-slot CRUD"
 This is the highest-value test target in the whole plan (spec §6).
 
 **Files:**
+
 - Create: `server/src/modules/availability/engine.ts`
 - Test: `server/src/modules/availability/engine.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing beyond `date-fns`/`date-fns-tz` — this is a dependency-free pure function, deliberately decoupled from Prisma so it's cheap to test exhaustively.
 - Produces: `getAvailableSlots(input: GetAvailableSlotsInput): Date[]`, where:
+
   ```ts
-  interface AvailabilityRuleRow { dayOfWeek: number; startTime: string; endTime: string }
-  interface ConflictRange { startsAt: Date; endsAt: Date }
+  interface AvailabilityRuleRow {
+    dayOfWeek: number
+    startTime: string
+    endTime: string
+  }
+  interface ConflictRange {
+    startsAt: Date
+    endsAt: Date
+  }
   interface GetAvailableSlotsInput {
     date: string // "YYYY-MM-DD"
     timezone: string
@@ -2197,11 +2417,13 @@ This is the highest-value test target in the whole plan (spec §6).
     now?: Date // injected for testability; defaults to `new Date()`
   }
   ```
+
   Consumed by Task 16's DB-wiring layer.
 
 - [ ] **Step 1: Write the failing tests**
 
 `server/src/modules/availability/engine.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest'
 import { getAvailableSlots } from './engine'
@@ -2286,14 +2508,22 @@ describe('getAvailableSlots', () => {
     // correctly and documents the DST-aware conversion path for zones that do
     // observe DST (date-fns-tz handles the offset lookup per-date already).
     const winter = getAvailableSlots({
-      date: '2026-06-01', timezone: SP, durationMinutes: 60,
+      date: '2026-06-01',
+      timezone: SP,
+      durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-01-01T00:00:00Z'),
     })
     const summer = getAvailableSlots({
-      date: '2026-12-07', timezone: SP, durationMinutes: 60,
+      date: '2026-12-07',
+      timezone: SP,
+      durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-01-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-01-01T00:00:00Z'),
     })
     expect(winter[0].getUTCHours()).toBe(12) // 09:00 -03:00
     expect(summer[0].getUTCHours()).toBe(12) // 09:00 -03:00, same fixed offset
@@ -2302,9 +2532,12 @@ describe('getAvailableSlots', () => {
   it('returns no slots when no rule exists for that weekday', () => {
     const slots = getAvailableSlots({
       date: '2026-09-06', // a Sunday
-      timezone: SP, durationMinutes: 60,
+      timezone: SP,
+      durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }],
-      serviceTypeRules: [], conflicts: [], now: new Date('2026-09-01T00:00:00Z'),
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-09-01T00:00:00Z'),
     })
     expect(slots).toHaveLength(0)
   })
@@ -2317,6 +2550,7 @@ Expected: FAIL — `engine.ts` doesn't exist.
 - [ ] **Step 2: Implement the engine**
 
 `server/src/modules/availability/engine.ts`:
+
 ```ts
 import { addMinutes, isBefore } from 'date-fns'
 import { zonedTimeToUtc } from 'date-fns-tz'
@@ -2402,18 +2636,21 @@ git commit -m "feat: add availability-calculation engine as a pure, DST-aware fu
 ## Task 16: Public profile + service-type list + slots endpoint
 
 **Files:**
+
 - Create: `server/src/modules/public/public.service.ts`
 - Create: `server/src/modules/public/public.routes.ts`
 - Modify: `server/src/app.ts` — mount at `/api/public`
 - Test: `server/src/modules/public/public.test.ts`
 
 **Interfaces:**
+
 - Consumes: `getAvailableSlots` (Task 15), `getServiceType`-style ownership pattern, `prisma`.
 - Produces: `getPublicProfile(slug)`, `listPublicServiceTypes(slug)`, `getSlotsForDate(slug, serviceTypeId, date)` from `public.service.ts` — `getSlotsForDate` is reused (its DB-fetch part) by Task 18's booking creation for a final availability re-check... (Task 18 calls the exclusion constraint instead; no reuse needed there — this is the read-path only.)
 
 - [ ] **Step 1: Write the failing tests**
 
 `server/src/modules/public/public.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -2442,7 +2679,10 @@ describe('public booking-page endpoints', () => {
     await prisma.serviceType.create({ data: { userId: user.id, name: 'Sem form', durationMinutes: 30 } })
     await prisma.serviceType.create({
       data: {
-        userId: user.id, name: 'Com form', durationMinutes: 60, requiresCustomForm: true,
+        userId: user.id,
+        name: 'Com form',
+        durationMinutes: 60,
+        requiresCustomForm: true,
         customFields: { create: [{ label: 'Objetivo', fieldType: 'TEXT', required: true, order: 0 }] },
       },
     })
@@ -2457,9 +2697,13 @@ describe('public booking-page endpoints', () => {
   it('returns available slots for a date, respecting general availability', async () => {
     const { user } = await createTestUser({ email: 'slots@example.com', slug: 'slots-slug' })
     await prisma.availability.create({ data: { userId: user.id, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' } })
-    const serviceType = await prisma.serviceType.create({ data: { userId: user.id, name: 'Sessão', durationMinutes: 60 } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 60 },
+    })
 
-    const res = await request(createApp()).get(`/api/public/slots-slug/service-types/${serviceType.id}/slots?date=2026-09-07`)
+    const res = await request(createApp()).get(
+      `/api/public/slots-slug/service-types/${serviceType.id}/slots?date=2026-09-07`,
+    )
     expect(res.status).toBe(200)
     expect(res.body.slots).toEqual(['2026-09-07T12:00:00.000Z'])
   })
@@ -2472,6 +2716,7 @@ Expected: FAIL — module doesn't exist.
 - [ ] **Step 2: Implement the service**
 
 `server/src/modules/public/public.service.ts`:
+
 ```ts
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
@@ -2488,7 +2733,10 @@ export async function getPublicProfile(slug: string) {
 export async function listPublicServiceTypes(slug: string) {
   const user = await prisma.user.findUnique({ where: { slug } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
-  const serviceTypes = await prisma.serviceType.findMany({ where: { userId: user.id }, include: { customFields: true } })
+  const serviceTypes = await prisma.serviceType.findMany({
+    where: { userId: user.id },
+    include: { customFields: true },
+  })
   return serviceTypes.map((st) => ({
     id: st.id,
     name: st.name,
@@ -2526,7 +2774,11 @@ export async function getSlotsForDate(slug: string, serviceTypeId: string, date:
     timezone: user.timezone,
     durationMinutes: serviceType.durationMinutes,
     generalRules: generalRules.map((r) => ({ dayOfWeek: r.dayOfWeek, startTime: r.startTime, endTime: r.endTime })),
-    serviceTypeRules: serviceTypeRules.map((r) => ({ dayOfWeek: r.dayOfWeek, startTime: r.startTime, endTime: r.endTime })),
+    serviceTypeRules: serviceTypeRules.map((r) => ({
+      dayOfWeek: r.dayOfWeek,
+      startTime: r.startTime,
+      endTime: r.endTime,
+    })),
     conflicts: [...bookings, ...blockedSlots].map((c) => ({ startsAt: c.startsAt, endsAt: c.endsAt })),
   })
 }
@@ -2535,6 +2787,7 @@ export async function getSlotsForDate(slug: string, serviceTypeId: string, date:
 - [ ] **Step 3: Implement the routes and mount them**
 
 `server/src/modules/public/public.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { z } from 'zod'
@@ -2545,13 +2798,17 @@ export const publicRouter = Router()
 publicRouter.get('/:slug', async (req, res, next) => {
   try {
     res.json(await service.getPublicProfile(req.params.slug))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 publicRouter.get('/:slug/service-types', async (req, res, next) => {
   try {
     res.json(await service.listPublicServiceTypes(req.params.slug))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 const dateQuerySchema = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
@@ -2561,11 +2818,14 @@ publicRouter.get('/:slug/service-types/:id/slots', async (req, res, next) => {
     const { date } = dateQuerySchema.parse(req.query)
     const slots = await service.getSlotsForDate(req.params.slug, req.params.id, date)
     res.json({ slots: slots.map((s) => s.toISOString()) })
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 ```
 
 Modify `server/src/app.ts`:
+
 ```ts
 import { publicRouter } from './modules/public/public.routes'
 // ...
@@ -2589,17 +2849,20 @@ git commit -m "feat: add public profile, service-type list and slots endpoints"
 ## Task 17: Email interface + Nodemailer/Ethereal implementation
 
 **Files:**
+
 - Create: `server/src/lib/email/index.ts`
 - Create: `server/src/lib/email/nodemailer.ts`
 - Test: `server/src/lib/email/nodemailer.test.ts`
 
 **Interfaces:**
+
 - Produces: `interface Mailer { sendMail(input: SendMailInput): Promise<void> }`, `interface SendMailInput { to: string; subject: string; html: string }` from `lib/email/index.ts`.
 - Produces: `nodemailerMailer: Mailer` from `lib/email/nodemailer.ts` — consumed by Task 18's booking creation as the default `Mailer` implementation.
 
 - [ ] **Step 1: Write the interface and the failing test (mocking `nodemailer` — no real network call)**
 
 `server/src/lib/email/index.ts`:
+
 ```ts
 export interface SendMailInput {
   to: string
@@ -2613,6 +2876,7 @@ export interface Mailer {
 ```
 
 `server/src/lib/email/nodemailer.test.ts`:
+
 ```ts
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
@@ -2642,7 +2906,9 @@ describe('nodemailerMailer', () => {
     const { nodemailerMailer } = await import('./nodemailer')
     await nodemailerMailer.sendMail({ to: 'a@example.com', subject: 'Hi', html: '<p>Hi</p>' })
     expect(createTestAccountMock).toHaveBeenCalledOnce()
-    expect(sendMailMock).toHaveBeenCalledWith(expect.objectContaining({ to: 'a@example.com', subject: 'Hi', html: '<p>Hi</p>' }))
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'a@example.com', subject: 'Hi', html: '<p>Hi</p>' }),
+    )
   })
 
   it('reuses the same transport across multiple sends', async () => {
@@ -2661,6 +2927,7 @@ Expected: FAIL — `nodemailer.ts` doesn't exist.
 - [ ] **Step 2: Implement the Nodemailer adapter**
 
 `server/src/lib/email/nodemailer.ts`:
+
 ```ts
 import nodemailer, { type Transporter } from 'nodemailer'
 import { logger } from '../logger'
@@ -2706,6 +2973,7 @@ git commit -m "feat: add swappable Mailer interface with an Ethereal-backed impl
 ## Task 18: Custom form validation + POST /api/public/:slug/bookings
 
 **Files:**
+
 - Create: `server/src/modules/bookings/form-validation.ts`
 - Create: `server/src/modules/bookings/bookings.service.ts`
 - Modify: `server/src/modules/public/public.routes.ts` — add `POST /:slug/bookings`
@@ -2713,6 +2981,7 @@ git commit -m "feat: add swappable Mailer interface with an Ethereal-backed impl
 - Test: `server/src/modules/bookings/bookings.create.test.ts`
 
 **Interfaces:**
+
 - Consumes: `nodemailerMailer`/`Mailer` (Task 17), `prisma` (Task 2), `AppError` (Task 4).
 - Produces: `validateFormResponses(fields, responses): Record<string, unknown>` from `form-validation.ts`.
 - Produces: `createPublicBooking(slug: string, input: CreateBookingInput, mailer?: Mailer): Promise<Booking>` from `bookings.service.ts` — the `mailer` parameter defaults to `nodemailerMailer` in production but lets Task 19's concurrency test (and this task's own test) inject a fake, keeping tests network-free.
@@ -2720,6 +2989,7 @@ git commit -m "feat: add swappable Mailer interface with an Ethereal-backed impl
 - [ ] **Step 1: Write the failing form-validation test**
 
 `server/src/modules/bookings/form-validation.test.ts`:
+
 ```ts
 import { describe, it, expect } from 'vitest'
 import { validateFormResponses } from './form-validation'
@@ -2757,6 +3027,7 @@ Expected: FAIL — file doesn't exist.
 - [ ] **Step 2: Implement form validation**
 
 `server/src/modules/bookings/form-validation.ts`:
+
 ```ts
 import { AppError } from '../../lib/errors'
 
@@ -2770,7 +3041,7 @@ export interface CustomFieldDef {
 
 export function validateFormResponses(
   fields: CustomFieldDef[],
-  responses: Record<string, unknown>
+  responses: Record<string, unknown>,
 ): Record<string, unknown> {
   const validated: Record<string, unknown> = {}
   for (const field of fields) {
@@ -2807,6 +3078,7 @@ Expected: PASS (4 tests)
 - [ ] **Step 3: Write the failing booking-creation test**
 
 `server/src/modules/bookings/bookings.create.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '../../lib/prisma'
@@ -2816,7 +3088,14 @@ import type { Mailer, SendMailInput } from '../../lib/email'
 
 function fakeMailer(): { mailer: Mailer; sent: SendMailInput[] } {
   const sent: SendMailInput[] = []
-  return { mailer: { sendMail: async (input) => { sent.push(input) } }, sent }
+  return {
+    mailer: {
+      sendMail: async (input) => {
+        sent.push(input)
+      },
+    },
+    sent,
+  }
 }
 
 describe('createPublicBooking', () => {
@@ -2826,20 +3105,27 @@ describe('createPublicBooking', () => {
     const { user } = await createTestUser({ email: 'prof@example.com', slug: 'prof' })
     const serviceType = await prisma.serviceType.create({
       data: {
-        userId: user.id, name: 'Primeira consulta', durationMinutes: 60, requiresCustomForm: true,
+        userId: user.id,
+        name: 'Primeira consulta',
+        durationMinutes: 60,
+        requiresCustomForm: true,
         customFields: { create: [{ label: 'Queixa principal', fieldType: 'TEXTAREA', required: true, order: 0 }] },
       },
       include: { customFields: true },
     })
     const { mailer, sent } = fakeMailer()
 
-    const booking = await createPublicBooking('prof', {
-      serviceTypeId: serviceType.id,
-      startsAt: '2026-09-10T13:00:00.000Z',
-      clientName: 'Cliente Teste',
-      clientEmail: 'cliente@example.com',
-      formResponses: { [serviceType.customFields[0].id]: 'Ansiedade' },
-    }, mailer)
+    const booking = await createPublicBooking(
+      'prof',
+      {
+        serviceTypeId: serviceType.id,
+        startsAt: '2026-09-10T13:00:00.000Z',
+        clientName: 'Cliente Teste',
+        clientEmail: 'cliente@example.com',
+        formResponses: { [serviceType.customFields[0].id]: 'Ansiedade' },
+      },
+      mailer,
+    )
 
     expect(booking.status).toBe('CONFIRMED')
     expect(sent).toHaveLength(2)
@@ -2850,16 +3136,27 @@ describe('createPublicBooking', () => {
     const { user } = await createTestUser({ email: 'prof2@example.com', slug: 'prof2' })
     const serviceType = await prisma.serviceType.create({
       data: {
-        userId: user.id, name: 'Consulta', durationMinutes: 60, requiresCustomForm: true,
+        userId: user.id,
+        name: 'Consulta',
+        durationMinutes: 60,
+        requiresCustomForm: true,
         customFields: { create: [{ label: 'Objetivo', fieldType: 'TEXT', required: true, order: 0 }] },
       },
     })
     const { mailer } = fakeMailer()
 
-    await expect(createPublicBooking('prof2', {
-      serviceTypeId: serviceType.id, startsAt: '2026-09-10T13:00:00.000Z',
-      clientName: 'C', clientEmail: 'c@example.com',
-    }, mailer)).rejects.toThrow(/Objetivo/)
+    await expect(
+      createPublicBooking(
+        'prof2',
+        {
+          serviceTypeId: serviceType.id,
+          startsAt: '2026-09-10T13:00:00.000Z',
+          clientName: 'C',
+          clientEmail: 'c@example.com',
+        },
+        mailer,
+      ),
+    ).rejects.toThrow(/Objetivo/)
   })
 
   it('returns 409-mapped error when the slot is already booked', async () => {
@@ -2870,9 +3167,17 @@ describe('createPublicBooking', () => {
     const { mailer } = fakeMailer()
     const startsAt = '2026-09-10T13:00:00.000Z'
 
-    await createPublicBooking('prof3', { serviceTypeId: serviceType.id, startsAt, clientName: 'A', clientEmail: 'a@example.com' }, mailer)
+    await createPublicBooking(
+      'prof3',
+      { serviceTypeId: serviceType.id, startsAt, clientName: 'A', clientEmail: 'a@example.com' },
+      mailer,
+    )
     await expect(
-      createPublicBooking('prof3', { serviceTypeId: serviceType.id, startsAt, clientName: 'B', clientEmail: 'b@example.com' }, mailer)
+      createPublicBooking(
+        'prof3',
+        { serviceTypeId: serviceType.id, startsAt, clientName: 'B', clientEmail: 'b@example.com' },
+        mailer,
+      ),
     ).rejects.toMatchObject({ statusCode: 409 })
   })
 })
@@ -2884,6 +3189,7 @@ Expected: FAIL — `bookings.service.ts` doesn't exist.
 - [ ] **Step 4: Implement the booking-creation service**
 
 `server/src/modules/bookings/bookings.service.ts`:
+
 ```ts
 import { Prisma } from '@prisma/client'
 import { addMinutes } from 'date-fns'
@@ -2904,11 +3210,7 @@ export interface CreateBookingInput {
 
 const SLOT_TAKEN_MESSAGE = 'Esse horário acabou de ser reservado, escolha outro.'
 
-export async function createPublicBooking(
-  slug: string,
-  input: CreateBookingInput,
-  mailer: Mailer = nodemailerMailer
-) {
+export async function createPublicBooking(slug: string, input: CreateBookingInput, mailer: Mailer = nodemailerMailer) {
   const user = await prisma.user.findUnique({ where: { slug } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
 
@@ -2927,7 +3229,7 @@ export async function createPublicBooking(
           ...f,
           options: Array.isArray(f.options) ? (f.options as string[]) : null,
         })),
-        input.formResponses ?? {}
+        input.formResponses ?? {},
       )
     : undefined
 
@@ -2940,9 +3242,12 @@ export async function createPublicBooking(
   try {
     booking = await prisma.booking.create({
       data: {
-        userId: user.id, serviceTypeId: serviceType.id,
-        clientName: input.clientName, clientEmail: input.clientEmail,
-        startsAt, endsAt,
+        userId: user.id,
+        serviceTypeId: serviceType.id,
+        clientName: input.clientName,
+        clientEmail: input.clientEmail,
+        startsAt,
+        endsAt,
         formResponses: validatedResponses as Prisma.InputJsonValue,
       },
     })
@@ -2966,7 +3271,9 @@ export async function createPublicBooking(
       html: `<p>${input.clientName} agendou "${serviceType.name}" para ${startsAt.toISOString()}.</p>`,
     }),
   ]).catch((err) => {
-    logger.error('Failed to send booking confirmation emails', { message: err instanceof Error ? err.message : String(err) })
+    logger.error('Failed to send booking confirmation emails', {
+      message: err instanceof Error ? err.message : String(err),
+    })
   })
 
   return booking
@@ -2976,6 +3283,7 @@ export async function createPublicBooking(
 - [ ] **Step 5: Add the route**
 
 Append to `server/src/modules/public/public.routes.ts` (add `createPublicBooking` to imports):
+
 ```ts
 import { createPublicBooking } from '../bookings/bookings.service'
 
@@ -2992,7 +3300,9 @@ publicRouter.post('/:slug/bookings', async (req, res, next) => {
     const input = createBookingSchema.parse(req.body)
     const booking = await createPublicBooking(req.params.slug, input)
     res.status(201).json({ id: booking.id, startsAt: booking.startsAt, endsAt: booking.endsAt, status: booking.status })
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 ```
 
@@ -3013,17 +3323,20 @@ git commit -m "feat: add race-safe public booking creation with email confirmati
 ## Task 19: Concurrency test + professional's agenda (list/cancel)
 
 **Files:**
+
 - Create: `server/test/booking-concurrency.test.ts`
 - Create: `server/src/modules/bookings/bookings.routes.ts`
 - Modify: `server/src/app.ts` — mount at `/api/bookings`
 - Test: `server/src/modules/bookings/bookings.agenda.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createPublicBooking` (Task 18), `requireAuth` (Task 9).
 
 - [ ] **Step 1: Write and run the concurrency test**
 
 `server/test/booking-concurrency.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '../src/lib/prisma'
@@ -3038,14 +3351,30 @@ describe('booking concurrency', () => {
 
   it('allows only one of two simultaneous bookings for the same slot to succeed', async () => {
     const user = await prisma.user.create({
-      data: { name: 'Joana', email: 'joana-conc@example.com', passwordHash: 'x', slug: 'joana-conc', timezone: 'America/Sao_Paulo' },
+      data: {
+        name: 'Joana',
+        email: 'joana-conc@example.com',
+        passwordHash: 'x',
+        slug: 'joana-conc',
+        timezone: 'America/Sao_Paulo',
+      },
     })
-    const serviceType = await prisma.serviceType.create({ data: { userId: user.id, name: 'Sessão', durationMinutes: 50 } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
     const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
-    const attempt = () => createPublicBooking('joana-conc', {
-      serviceTypeId: serviceType.id, startsAt, clientName: 'Cliente', clientEmail: 'cliente@example.com',
-    }, fakeMailer)
+    const attempt = () =>
+      createPublicBooking(
+        'joana-conc',
+        {
+          serviceTypeId: serviceType.id,
+          startsAt,
+          clientName: 'Cliente',
+          clientEmail: 'cliente@example.com',
+        },
+        fakeMailer,
+      )
 
     const results = await Promise.allSettled([attempt(), attempt()])
     expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1)
@@ -3063,6 +3392,7 @@ Expected: PASS immediately — this test exercises code that already exists (Tas
 - [ ] **Step 2: Write the failing agenda test**
 
 `server/src/modules/bookings/bookings.agenda.test.ts`:
+
 ```ts
 import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
@@ -3073,13 +3403,19 @@ import { prisma } from '../../lib/prisma'
 describe('professional agenda', () => {
   beforeEach(cleanDatabase)
 
-  it('lists only the professional\'s own bookings and can cancel one', async () => {
+  it("lists only the professional's own bookings and can cancel one", async () => {
     const { user, accessToken } = await createTestUser({ email: 'agenda@example.com', slug: 'agenda-slug' })
-    const serviceType = await prisma.serviceType.create({ data: { userId: user.id, name: 'Sessão', durationMinutes: 50 } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
     const booking = await prisma.booking.create({
       data: {
-        userId: user.id, serviceTypeId: serviceType.id, clientName: 'Cliente', clientEmail: 'c@example.com',
-        startsAt: new Date('2026-09-10T13:00:00Z'), endsAt: new Date('2026-09-10T13:50:00Z'),
+        userId: user.id,
+        serviceTypeId: serviceType.id,
+        clientName: 'Cliente',
+        clientEmail: 'c@example.com',
+        startsAt: new Date('2026-09-10T13:00:00Z'),
+        endsAt: new Date('2026-09-10T13:50:00Z'),
       },
     })
     const app = createApp()
@@ -3093,7 +3429,8 @@ describe('professional agenda', () => {
     expect(cancelRes.body.status).toBe('CANCELLED')
 
     const other = await createTestUser({ email: 'other-agenda@example.com', slug: 'other-agenda' })
-    const forbiddenRes = await request(app).patch(`/api/bookings/${booking.id}/cancel`)
+    const forbiddenRes = await request(app)
+      .patch(`/api/bookings/${booking.id}/cancel`)
       .set('Authorization', `Bearer ${other.accessToken}`)
     expect(forbiddenRes.status).toBe(404)
   })
@@ -3106,6 +3443,7 @@ Expected: FAIL — `bookings.routes.ts` doesn't exist.
 - [ ] **Step 3: Implement the agenda routes**
 
 `server/src/modules/bookings/bookings.routes.ts`:
+
 ```ts
 import { Router } from 'express'
 import { z } from 'zod'
@@ -3135,7 +3473,9 @@ bookingsRouter.get('/', async (req, res, next) => {
       orderBy: { startsAt: 'asc' },
     })
     res.json(bookings)
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 bookingsRouter.patch('/:id/cancel', async (req, res, next) => {
@@ -3144,11 +3484,14 @@ bookingsRouter.patch('/:id/cancel', async (req, res, next) => {
     if (!booking) throw new AppError(404, 'Agendamento não encontrado')
     const updated = await prisma.booking.update({ where: { id: booking.id }, data: { status: 'CANCELLED' } })
     res.json(updated)
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 ```
 
 Modify `server/src/app.ts`:
+
 ```ts
 import { bookingsRouter } from './modules/bookings/bookings.routes'
 // ...

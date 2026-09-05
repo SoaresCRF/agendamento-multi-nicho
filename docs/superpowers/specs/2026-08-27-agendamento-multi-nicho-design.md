@@ -21,7 +21,7 @@ professionals, styling per `DESIGN.md`.
 **Non-goals (this spec):** social/OAuth login, password reset, email
 verification, payments, SMS notifications, recurring bookings,
 multi-professional teams/orgs, a native mobile app, production deploy
-execution (deploy *instructions* are a deliverable; actually provisioning
+execution (deploy _instructions_ are a deliverable; actually provisioning
 hosted infra is not part of this implementation pass).
 
 ## 3. Tech Stack
@@ -48,30 +48,32 @@ Resend for now.
 
 All monetary/duration/date reasoning in this system happens in UTC at the
 storage layer; local time only appears at the display layer and when
-resolving a professional's *recurring* weekly availability (see §6).
+resolving a professional's _recurring_ weekly availability (see §6).
 
 ### User (the professional)
-| Field | Type | Notes |
-|---|---|---|
-| id | String (cuid) | PK |
-| name | String | |
-| email | String | unique |
-| passwordHash | String | bcrypt |
-| slug | String | unique, used in the public URL `/:slug` |
-| timezone | String | IANA tz name, e.g. `America/Sao_Paulo` |
-| niche | String? | e.g. "Psicologia", "Personal Trainer" — display-only, drives the public page's niche badge / category-accent color per `DESIGN.md`. **Addition beyond the source prompt's literal model** — justified because the product is explicitly "multi-nicho" and the two seed professionals are differentiated by exactly this. |
-| createdAt / updatedAt | DateTime | |
+
+| Field                 | Type          | Notes                                                                                                                                                                                                                                                                                                                    |
+| --------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| id                    | String (cuid) | PK                                                                                                                                                                                                                                                                                                                       |
+| name                  | String        |                                                                                                                                                                                                                                                                                                                          |
+| email                 | String        | unique                                                                                                                                                                                                                                                                                                                   |
+| passwordHash          | String        | bcrypt                                                                                                                                                                                                                                                                                                                   |
+| slug                  | String        | unique, used in the public URL `/:slug`                                                                                                                                                                                                                                                                                  |
+| timezone              | String        | IANA tz name, e.g. `America/Sao_Paulo`                                                                                                                                                                                                                                                                                   |
+| niche                 | String?       | e.g. "Psicologia", "Personal Trainer" — display-only, drives the public page's niche badge / category-accent color per `DESIGN.md`. **Addition beyond the source prompt's literal model** — justified because the product is explicitly "multi-nicho" and the two seed professionals are differentiated by exactly this. |
+| createdAt / updatedAt | DateTime      |                                                                                                                                                                                                                                                                                                                          |
 
 ### ServiceType
-| Field | Type | Notes |
-|---|---|---|
-| id | String (cuid) | PK |
-| userId | String | FK → User, `onDelete: Cascade` |
-| name | String | |
-| durationMinutes | Int | |
-| description | String? | |
-| requiresCustomForm | Boolean | default false |
-| createdAt / updatedAt | DateTime | |
+
+| Field                 | Type          | Notes                          |
+| --------------------- | ------------- | ------------------------------ |
+| id                    | String (cuid) | PK                             |
+| userId                | String        | FK → User, `onDelete: Cascade` |
+| name                  | String        |                                |
+| durationMinutes       | Int           |                                |
+| description           | String?       |                                |
+| requiresCustomForm    | Boolean       | default false                  |
+| createdAt / updatedAt | DateTime      |                                |
 
 Deleting a `ServiceType` that has any `Booking` rows is rejected at the DB
 level (`onDelete: Restrict` from `Booking.serviceType`) — no soft-delete /
@@ -80,15 +82,16 @@ clear message ("cancele os agendamentos antes de remover este tipo de
 serviço").
 
 ### CustomFormField
-| Field | Type | Notes |
-|---|---|---|
-| id | String (cuid) | PK |
-| serviceTypeId | String | FK → ServiceType, `onDelete: Cascade` |
-| label | String | |
-| fieldType | Enum: `TEXT, NUMBER, SELECT, TEXTAREA` | |
-| required | Boolean | |
-| order | Int | display order |
-| options | Json? | **Addition beyond the source prompt's literal model** — required for `SELECT` fields to have choices; a select field with nowhere to store its options is not implementable. `null`/unused for non-SELECT types. |
+
+| Field         | Type                                   | Notes                                                                                                                                                                                                            |
+| ------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id            | String (cuid)                          | PK                                                                                                                                                                                                               |
+| serviceTypeId | String                                 | FK → ServiceType, `onDelete: Cascade`                                                                                                                                                                            |
+| label         | String                                 |                                                                                                                                                                                                                  |
+| fieldType     | Enum: `TEXT, NUMBER, SELECT, TEXTAREA` |                                                                                                                                                                                                                  |
+| required      | Boolean                                |                                                                                                                                                                                                                  |
+| order         | Int                                    | display order                                                                                                                                                                                                    |
+| options       | Json?                                  | **Addition beyond the source prompt's literal model** — required for `SELECT` fields to have choices; a select field with nowhere to store its options is not implementable. `null`/unused for non-SELECT types. |
 
 Custom fields are managed as part of their parent `ServiceType`'s
 create/update payload (the API replaces the full array on update) rather
@@ -96,15 +99,17 @@ than through independent CRUD endpoints — there are only ever a handful per
 service type and they have no independent lifecycle.
 
 ### Availability (professional's general weekly schedule)
-| Field | Type | Notes |
-|---|---|---|
-| id | String (cuid) | PK |
-| userId | String | FK → User, `onDelete: Cascade` |
-| dayOfWeek | Int | 0 (Sunday) – 6 (Saturday) |
-| startTime | `@db.Time` | local wall-clock, relative to `User.timezone` |
-| endTime | `@db.Time` | local wall-clock, relative to `User.timezone` |
+
+| Field     | Type          | Notes                                         |
+| --------- | ------------- | --------------------------------------------- |
+| id        | String (cuid) | PK                                            |
+| userId    | String        | FK → User, `onDelete: Cascade`                |
+| dayOfWeek | Int           | 0 (Sunday) – 6 (Saturday)                     |
+| startTime | `@db.Time`    | local wall-clock, relative to `User.timezone` |
+| endTime   | `@db.Time`    | local wall-clock, relative to `User.timezone` |
 
 ### ServiceTypeAvailabilityRule
+
 Same shape as `Availability` but scoped to one `ServiceType` (FK
 `serviceTypeId`, `onDelete: Cascade`). When any rows exist for a given
 service type + weekday, they **override** (not add to) the general
@@ -112,27 +117,29 @@ service type + weekday, they **override** (not add to) the general
 — see §6 step 1.
 
 ### Booking
-| Field | Type | Notes |
-|---|---|---|
-| id | String (cuid) | PK |
-| userId | String | FK → User. Denormalized copy of `serviceType.userId` — needed so the anti-overlap DB constraint (§7) can scope efficiently without a join. |
-| serviceTypeId | String | FK → ServiceType, `onDelete: Restrict` |
-| clientName | String | |
-| clientEmail | String | |
-| startsAt | DateTime | UTC instant |
-| endsAt | DateTime | UTC instant |
-| status | Enum: `CONFIRMED, CANCELLED` | |
-| formResponses | Json? | answers keyed by `CustomFormField.id` |
-| createdAt | DateTime | |
+
+| Field         | Type                         | Notes                                                                                                                                      |
+| ------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| id            | String (cuid)                | PK                                                                                                                                         |
+| userId        | String                       | FK → User. Denormalized copy of `serviceType.userId` — needed so the anti-overlap DB constraint (§7) can scope efficiently without a join. |
+| serviceTypeId | String                       | FK → ServiceType, `onDelete: Restrict`                                                                                                     |
+| clientName    | String                       |                                                                                                                                            |
+| clientEmail   | String                       |                                                                                                                                            |
+| startsAt      | DateTime                     | UTC instant                                                                                                                                |
+| endsAt        | DateTime                     | UTC instant                                                                                                                                |
+| status        | Enum: `CONFIRMED, CANCELLED` |                                                                                                                                            |
+| formResponses | Json?                        | answers keyed by `CustomFormField.id`                                                                                                      |
+| createdAt     | DateTime                     |                                                                                                                                            |
 
 ### BlockedSlot
-| Field | Type | Notes |
-|---|---|---|
-| id | String (cuid) | PK |
-| userId | String | FK → User, `onDelete: Cascade` |
-| startsAt | DateTime | UTC instant |
-| endsAt | DateTime | UTC instant |
-| reason | String? | |
+
+| Field    | Type          | Notes                          |
+| -------- | ------------- | ------------------------------ |
+| id       | String (cuid) | PK                             |
+| userId   | String        | FK → User, `onDelete: Cascade` |
+| startsAt | DateTime      | UTC instant                    |
+| endsAt   | DateTime      | UTC instant                    |
+| reason   | String?       |                                |
 
 **Deviation from the source prompt's literal model**: the prompt described
 `data` + `horaInicio` + `horaFim`. This spec uses a single `startsAt`/`endsAt`
@@ -141,13 +148,14 @@ logic in §6 treats blocked slots and confirmed bookings uniformly instead of
 two different time representations.
 
 ### RefreshToken
-| Field | Type | Notes |
-|---|---|---|
-| id | String (cuid) | PK |
-| userId | String | FK → User, `onDelete: Cascade` |
-| tokenHash | String | SHA-256 of the refresh token, never store raw |
-| expiresAt | DateTime | |
-| revokedAt | DateTime? | null while active |
+
+| Field     | Type          | Notes                                         |
+| --------- | ------------- | --------------------------------------------- |
+| id        | String (cuid) | PK                                            |
+| userId    | String        | FK → User, `onDelete: Cascade`                |
+| tokenHash | String        | SHA-256 of the refresh token, never store raw |
+| expiresAt | DateTime      |                                               |
+| revokedAt | DateTime?     | null while active                             |
 
 **Addition beyond the source prompt's literal model** — required to satisfy
 the global rule that sessions must be revocable (logout, compromise), which
@@ -166,7 +174,7 @@ a bare stateless JWT can't provide on its own.
   point in time regardless of later DST changes.
 - Conversion between the two only happens in the availability engine (§6,
   step 2), using `date-fns-tz`.
-- The client (booking page) displays available slots in the *browser's*
+- The client (booking page) displays available slots in the _browser's_
   local timezone, not the professional's — conversion happens client-side
   from the UTC ISO strings the API returns.
 
@@ -185,7 +193,7 @@ A pure function `getAvailableSlots(professional, serviceType, date)`:
    `serviceType.durationMinutes` increments; a candidate slot must fit
    entirely inside the window (no partial trailing slot).
 4. **Subtract conflicts**: fetch all `Booking` rows with `status:
-   CONFIRMED` and all `BlockedSlot` rows for that professional whose
+CONFIRMED` and all `BlockedSlot` rows for that professional whose
    `[startsAt, endsAt)` overlaps the date's UTC range; drop any candidate
    slot that overlaps any of them.
 5. **Drop past slots**: if `date` is today (in the professional's
@@ -242,7 +250,7 @@ requirement without app-level row locking.
   routes (§9) require no auth.
 - CSRF: since the refresh flow is cookie-based and state-changing, refresh
   and logout are protected by `SameSite=Lax` (blocks cross-site POST) plus
-  requiring the access token for any *other* state-changing panel route
+  requiring the access token for any _other_ state-changing panel route
   (which isn't cookie-based, so it isn't CSRF-exposed).
 
 ## 9. API Surface
@@ -251,12 +259,14 @@ All JSON, prefixed `/api`. Panel routes require `Authorization: Bearer
 <access token>`.
 
 **Auth (public)**
+
 - `POST /auth/register` `{name, email, password, slug, timezone, niche?}`
 - `POST /auth/login` `{email, password}`
 - `POST /auth/refresh`
 - `POST /auth/logout`
 
 **Panel (protected)**
+
 - `GET /me`
 - `GET /service-types` · `POST /service-types` · `GET /service-types/:id` ·
   `PATCH /service-types/:id` · `DELETE /service-types/:id`
@@ -270,6 +280,7 @@ All JSON, prefixed `/api`. Panel routes require `Authorization: Bearer
 - `GET /bookings?from=&to=&status=` · `PATCH /bookings/:id/cancel`
 
 **Public (unauthenticated, by slug)**
+
 - `GET /public/:slug` → `{name, niche, timezone}`
 - `GET /public/:slug/service-types` → list, including `customFields` for
   any service type where `requiresCustomForm` is true
@@ -281,7 +292,7 @@ All JSON, prefixed `/api`. Panel routes require `Authorization: Bearer
 ## 10. Custom Form Validation
 
 `formResponses` submitted with a booking are re-validated server-side
-against the *current* `CustomFormField` rows for that service type
+against the _current_ `CustomFormField` rows for that service type
 (required fields present, values match `fieldType`, `SELECT` values are
 one of `options`) before the booking transaction runs. Client-side
 validation exists for UX but is never trusted alone.

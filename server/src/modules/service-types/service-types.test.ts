@@ -7,7 +7,9 @@ describe('service-type CRUD', () => {
   beforeEach(cleanDatabase)
 
   const payload = {
-    name: 'Primeira consulta', durationMinutes: 60, requiresCustomForm: true,
+    name: 'Primeira consulta',
+    durationMinutes: 60,
+    requiresCustomForm: true,
     customFields: [{ label: 'Queixa principal', fieldType: 'TEXTAREA', required: true, order: 0 }],
   }
 
@@ -27,22 +29,28 @@ describe('service-type CRUD', () => {
     const getRes = await request(app).get(`/api/service-types/${id}`).set(auth)
     expect(getRes.status).toBe(200)
 
-    const updateRes = await request(app).patch(`/api/service-types/${id}`).set(auth).send({ ...payload, name: 'Renamed' })
+    const updateRes = await request(app)
+      .patch(`/api/service-types/${id}`)
+      .set(auth)
+      .send({ ...payload, name: 'Renamed' })
     expect(updateRes.body.name).toBe('Renamed')
 
     const deleteRes = await request(app).delete(`/api/service-types/${id}`).set(auth)
     expect(deleteRes.status).toBe(204)
   })
 
-  it('never exposes another professional\'s service types (no IDOR)', async () => {
+  it("never exposes another professional's service types (no IDOR)", async () => {
     const owner = await createTestUser({ email: 'owner@example.com', slug: 'owner' })
     const other = await createTestUser({ email: 'other@example.com', slug: 'other' })
     const app = createApp()
 
-    const createRes = await request(app).post('/api/service-types')
-      .set('Authorization', `Bearer ${owner.accessToken}`).send(payload)
+    const createRes = await request(app)
+      .post('/api/service-types')
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send(payload)
 
-    const getRes = await request(app).get(`/api/service-types/${createRes.body.id}`)
+    const getRes = await request(app)
+      .get(`/api/service-types/${createRes.body.id}`)
       .set('Authorization', `Bearer ${other.accessToken}`)
     expect(getRes.status).toBe(404)
   })
@@ -52,14 +60,18 @@ describe('service-type CRUD', () => {
     const other = await createTestUser({ email: 'other2@example.com', slug: 'other2' })
     const app = createApp()
 
-    const createRes = await request(app).post('/api/service-types')
-      .set('Authorization', `Bearer ${owner.accessToken}`).send(payload)
+    const createRes = await request(app)
+      .post('/api/service-types')
+      .set('Authorization', `Bearer ${owner.accessToken}`)
+      .send(payload)
 
-    const deleteRes = await request(app).delete(`/api/service-types/${createRes.body.id}`)
+    const deleteRes = await request(app)
+      .delete(`/api/service-types/${createRes.body.id}`)
       .set('Authorization', `Bearer ${other.accessToken}`)
     expect(deleteRes.status).toBe(404)
 
-    const getRes = await request(app).get(`/api/service-types/${createRes.body.id}`)
+    const getRes = await request(app)
+      .get(`/api/service-types/${createRes.body.id}`)
       .set('Authorization', `Bearer ${owner.accessToken}`)
     expect(getRes.status).toBe(200)
   })

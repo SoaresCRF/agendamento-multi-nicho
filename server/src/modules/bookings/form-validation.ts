@@ -10,7 +10,7 @@ export interface CustomFieldDef {
 
 export function validateFormResponses(
   fields: CustomFieldDef[],
-  responses: Record<string, unknown>
+  responses: Record<string, unknown>,
 ): Record<string, unknown> {
   const validated: Record<string, unknown> = {}
   for (const field of fields) {

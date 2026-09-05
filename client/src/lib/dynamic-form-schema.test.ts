@@ -3,8 +3,13 @@ import { buildCustomFieldsSchema } from './dynamic-form-schema'
 import type { ServiceTypeCustomField } from './types'
 
 const baseField: ServiceTypeCustomField = {
-  id: 'f1', serviceTypeId: 'st1', label: 'Queixa principal',
-  fieldType: 'TEXT', required: true, order: 0, options: null,
+  id: 'f1',
+  serviceTypeId: 'st1',
+  label: 'Queixa principal',
+  fieldType: 'TEXT',
+  required: true,
+  order: 0,
+  options: null,
 }
 
 describe('buildCustomFieldsSchema', () => {

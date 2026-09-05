@@ -19,7 +19,9 @@ describe('GET/PUT /api/availability', () => {
     expect(putRes.status).toBe(200)
     expect(putRes.body).toHaveLength(2)
 
-    const replaceRes = await request(app).put('/api/availability').set(auth)
+    const replaceRes = await request(app)
+      .put('/api/availability')
+      .set(auth)
       .send([{ dayOfWeek: 3, startTime: '10:00', endTime: '16:00' }])
     expect(replaceRes.body).toHaveLength(1)
 

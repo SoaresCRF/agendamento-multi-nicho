@@ -26,14 +26,21 @@ bookingsRouter.get('/', async (req, res, next) => {
       orderBy: { startsAt: 'asc' },
     })
     res.json(bookings)
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 bookingsRouter.patch('/:id/cancel', async (req, res, next) => {
   try {
     const booking = await prisma.booking.findFirst({ where: { id: req.params.id, userId: req.userId! } })
     if (!booking) throw new AppError(404, 'Agendamento não encontrado')
-    const updated = await prisma.booking.update({ where: { id: booking.id, userId: req.userId! }, data: { status: 'CANCELLED' } })
+    const updated = await prisma.booking.update({
+      where: { id: booking.id, userId: req.userId! },
+      data: { status: 'CANCELLED' },
+    })
     res.json(updated)
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })

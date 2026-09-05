@@ -34,7 +34,11 @@ const serviceTypeFormSchema = z.object({
 type ServiceTypeFormValues = z.infer<typeof serviceTypeFormSchema>
 
 const EMPTY_FORM: ServiceTypeFormValues = {
-  name: '', durationMinutes: 30, description: '', requiresCustomForm: false, customFields: [],
+  name: '',
+  durationMinutes: 30,
+  description: '',
+  requiresCustomForm: false,
+  customFields: [],
 }
 
 export function ServiceTypeFormPage() {
@@ -74,7 +78,8 @@ export function ServiceTypeFormPage() {
   }
 
   const saveRules = useMutation({
-    mutationFn: (input: AvailabilityRule[]) => api.put<AvailabilityRule[]>(`/api/service-types/${id}/availability-rules`, input),
+    mutationFn: (input: AvailabilityRule[]) =>
+      api.put<AvailabilityRule[]>(`/api/service-types/${id}/availability-rules`, input),
     onSuccess: (saved) => {
       setRules(saved)
       setIsRulesDirty(false)
@@ -84,8 +89,14 @@ export function ServiceTypeFormPage() {
     onError: (err) => show(err instanceof ApiError ? err.message : 'Erro ao salvar', 'error'),
   })
 
-  const { register, control, handleSubmit, reset, watch, formState: { errors, isDirty } } =
-    useForm<ServiceTypeFormValues>({ resolver: zodResolver(serviceTypeFormSchema), defaultValues: EMPTY_FORM })
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    formState: { errors, isDirty },
+  } = useForm<ServiceTypeFormValues>({ resolver: zodResolver(serviceTypeFormSchema), defaultValues: EMPTY_FORM })
 
   const { fields, append, remove } = useFieldArray({ control, name: 'customFields' })
   const requiresCustomForm = watch('requiresCustomForm')
@@ -102,8 +113,11 @@ export function ServiceTypeFormPage() {
         description: existing.description ?? '',
         requiresCustomForm: existing.requiresCustomForm,
         customFields: existing.customFields.map((f) => ({
-          label: f.label, fieldType: f.fieldType, required: f.required,
-          order: f.order, options: f.options?.join(', ') ?? '',
+          label: f.label,
+          fieldType: f.fieldType,
+          required: f.required,
+          order: f.order,
+          options: f.options?.join(', ') ?? '',
         })),
       })
     }
@@ -124,9 +138,13 @@ export function ServiceTypeFormPage() {
         fieldType: f.fieldType,
         required: f.required,
         order,
-        options: f.fieldType === 'SELECT' && f.options
-          ? f.options.split(',').map((o) => o.trim()).filter(Boolean)
-          : undefined,
+        options:
+          f.fieldType === 'SELECT' && f.options
+            ? f.options
+                .split(',')
+                .map((o) => o.trim())
+                .filter(Boolean)
+            : undefined,
       })),
     }
     try {
@@ -144,7 +162,9 @@ export function ServiceTypeFormPage() {
 
   return (
     <Card className="max-w-2xl">
-      <h1 className="mb-lg font-display text-display-sm">{isEdit ? 'Editar tipo de serviço' : 'Novo tipo de serviço'}</h1>
+      <h1 className="mb-lg font-display text-display-sm">
+        {isEdit ? 'Editar tipo de serviço' : 'Novo tipo de serviço'}
+      </h1>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-md">
         <Input label="Nome" id="name" error={errors.name?.message} {...register('name')} />
         <Input
@@ -174,14 +194,21 @@ export function ServiceTypeFormPage() {
                 />
                 <label className="font-sans text-body-sm text-body">
                   Tipo
-                  <select className="ml-xs rounded-md border border-hairline p-xs" {...register(`customFields.${index}.fieldType` as const)}>
+                  <select
+                    className="ml-xs rounded-md border border-hairline p-xs"
+                    {...register(`customFields.${index}.fieldType` as const)}
+                  >
                     <option value="TEXT">Texto</option>
                     <option value="NUMBER">Número</option>
                     <option value="SELECT">Seleção</option>
                     <option value="TEXTAREA">Texto longo</option>
                   </select>
                 </label>
-                <Input label="Opções (separadas por vírgula, só para Seleção)" id={`customFields.${index}.options`} {...register(`customFields.${index}.options` as const)} />
+                <Input
+                  label="Opções (separadas por vírgula, só para Seleção)"
+                  id={`customFields.${index}.options`}
+                  {...register(`customFields.${index}.options` as const)}
+                />
                 <label className="flex items-center gap-xs font-sans text-body-sm text-body">
                   <input type="checkbox" {...register(`customFields.${index}.required` as const)} />
                   Obrigatório
@@ -194,7 +221,9 @@ export function ServiceTypeFormPage() {
             <Button
               type="button"
               variant="secondary"
-              onClick={() => append({ label: '', fieldType: 'TEXT', required: false, order: fields.length, options: '' })}
+              onClick={() =>
+                append({ label: '', fieldType: 'TEXT', required: false, order: fields.length, options: '' })
+              }
             >
               Adicionar campo
             </Button>
@@ -202,7 +231,9 @@ export function ServiceTypeFormPage() {
         )}
 
         <div className="flex gap-sm">
-          <Button type="submit" disabled={createServiceType.isPending || updateServiceType.isPending}>Salvar</Button>
+          <Button type="submit" disabled={createServiceType.isPending || updateServiceType.isPending}>
+            Salvar
+          </Button>
           <Button type="button" variant="secondary" onClick={() => navigate('/painel/tipos-de-servico')}>
             Cancelar
           </Button>

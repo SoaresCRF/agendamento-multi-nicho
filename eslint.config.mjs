@@ -58,5 +58,5 @@ export default tseslint.config(
     files: ['*.{js,mjs,ts}', 'client/*.{js,ts}'],
     languageOptions: { globals: globals.node },
   },
-  eslintConfigPrettier
+  eslintConfigPrettier,
 )

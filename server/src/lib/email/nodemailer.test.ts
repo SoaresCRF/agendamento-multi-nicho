@@ -26,7 +26,9 @@ describe('nodemailerMailer', () => {
     const { nodemailerMailer } = await import('./nodemailer')
     await nodemailerMailer.sendMail({ to: 'a@example.com', subject: 'Hi', html: '<p>Hi</p>' })
     expect(createTestAccountMock).toHaveBeenCalledOnce()
-    expect(sendMailMock).toHaveBeenCalledWith(expect.objectContaining({ to: 'a@example.com', subject: 'Hi', html: '<p>Hi</p>' }))
+    expect(sendMailMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'a@example.com', subject: 'Hi', html: '<p>Hi</p>' }),
+    )
   })
 
   it('reuses the same transport across multiple sends', async () => {

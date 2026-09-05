@@ -9,8 +9,12 @@ describe('POST /api/auth/register', () => {
   it('creates a professional and returns an access token + refresh cookie', async () => {
     const app = createApp()
     const res = await request(app).post('/api/auth/register').send({
-      name: 'Joana Silva', email: 'joana@example.com', password: 'password123',
-      slug: 'joana-psicologa', timezone: 'America/Sao_Paulo', niche: 'Psicologia',
+      name: 'Joana Silva',
+      email: 'joana@example.com',
+      password: 'password123',
+      slug: 'joana-psicologa',
+      timezone: 'America/Sao_Paulo',
+      niche: 'Psicologia',
     })
     expect(res.status).toBe(201)
     expect(res.body.user).toMatchObject({ email: 'joana@example.com', slug: 'joana-psicologa' })
@@ -21,11 +25,16 @@ describe('POST /api/auth/register', () => {
   it('rejects a duplicate email with 409', async () => {
     const app = createApp()
     const payload = {
-      name: 'A', email: 'dup@example.com', password: 'password123',
-      slug: 'slug-a', timezone: 'America/Sao_Paulo',
+      name: 'A',
+      email: 'dup@example.com',
+      password: 'password123',
+      slug: 'slug-a',
+      timezone: 'America/Sao_Paulo',
     }
     await request(app).post('/api/auth/register').send(payload)
-    const res = await request(app).post('/api/auth/register').send({ ...payload, slug: 'slug-b' })
+    const res = await request(app)
+      .post('/api/auth/register')
+      .send({ ...payload, slug: 'slug-b' })
     expect(res.status).toBe(409)
   })
 })

@@ -7,7 +7,14 @@ import { PublicBookingPage } from './PublicBookingPage'
 
 const profile = { name: 'Joana Silva', niche: 'Psicologia', timezone: 'America/Sao_Paulo' }
 const serviceTypes = [
-  { id: 'st1', name: 'Primeira consulta', durationMinutes: 60, description: null, requiresCustomForm: false, customFields: [] },
+  {
+    id: 'st1',
+    name: 'Primeira consulta',
+    durationMinutes: 60,
+    description: null,
+    requiresCustomForm: false,
+    customFields: [],
+  },
 ]
 
 function renderPage() {
@@ -19,7 +26,7 @@ function renderPage() {
           <Route path="/:slug" element={<PublicBookingPage />} />
         </Routes>
       </MemoryRouter>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -62,7 +69,15 @@ describe('PublicBookingPage', () => {
           clientEmail: 'cliente@example.com',
         })
         return Promise.resolve(
-          new Response(JSON.stringify({ id: 'b1', startsAt: '2026-09-20T13:00:00.000Z', endsAt: '2026-09-20T14:00:00.000Z', status: 'CONFIRMED' }), { status: 201 })
+          new Response(
+            JSON.stringify({
+              id: 'b1',
+              startsAt: '2026-09-20T13:00:00.000Z',
+              endsAt: '2026-09-20T14:00:00.000Z',
+              status: 'CONFIRMED',
+            }),
+            { status: 201 },
+          ),
         )
       }
       return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))

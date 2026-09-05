@@ -9,12 +9,16 @@ availabilityRouter.use(requireAuth)
 availabilityRouter.get('/', async (req, res, next) => {
   try {
     res.json(await service.getGeneralAvailability(req.userId!))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 availabilityRouter.put('/', async (req, res, next) => {
   try {
     const rules = availabilityListSchema.parse(req.body)
     res.json(await service.replaceGeneralAvailability(req.userId!, rules))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })

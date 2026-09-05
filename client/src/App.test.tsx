@@ -32,9 +32,16 @@ describe('App', () => {
         if (meCallCount === 1) return Promise.resolve(new Response('{}', { status: 401 }))
         return Promise.resolve(
           new Response(
-            JSON.stringify({ id: '1', name: 'Joana', email: 'j@x.com', slug: 'joana', timezone: 'America/Sao_Paulo', niche: null }),
-            { status: 200 }
-          )
+            JSON.stringify({
+              id: '1',
+              name: 'Joana',
+              email: 'j@x.com',
+              slug: 'joana',
+              timezone: 'America/Sao_Paulo',
+              niche: null,
+            }),
+            { status: 200 },
+          ),
         )
       }
       return Promise.resolve(new Response('{}', { status: 200 }))

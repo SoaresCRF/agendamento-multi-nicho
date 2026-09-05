@@ -15,7 +15,11 @@ interface BookingFormProps {
 export function BookingForm({ serviceType, onSubmit, isSubmitting }: BookingFormProps) {
   const schema = buildBookingFormSchema(serviceType.customFields)
   type FormValues = z.infer<typeof schema>
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver: zodResolver(schema) })
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({ resolver: zodResolver(schema) })
 
   function handle(values: FormValues) {
     const { clientName, clientEmail, ...formResponses } = values as {
@@ -28,8 +32,19 @@ export function BookingForm({ serviceType, onSubmit, isSubmitting }: BookingForm
 
   return (
     <form onSubmit={handleSubmit(handle)} className="flex flex-col gap-md">
-      <Input label="Nome" id="clientName" error={errors.clientName?.message as string | undefined} {...register('clientName' as never)} />
-      <Input label="E-mail" id="clientEmail" type="email" error={errors.clientEmail?.message as string | undefined} {...register('clientEmail' as never)} />
+      <Input
+        label="Nome"
+        id="clientName"
+        error={errors.clientName?.message as string | undefined}
+        {...register('clientName' as never)}
+      />
+      <Input
+        label="E-mail"
+        id="clientEmail"
+        type="email"
+        error={errors.clientEmail?.message as string | undefined}
+        {...register('clientEmail' as never)}
+      />
 
       {serviceType.customFields.map((field) =>
         field.fieldType === 'SELECT' ? (
@@ -66,7 +81,7 @@ export function BookingForm({ serviceType, onSubmit, isSubmitting }: BookingForm
             error={errors[field.id]?.message as string | undefined}
             {...register(field.id as never)}
           />
-        )
+        ),
       )}
 
       <Button type="submit" disabled={isSubmitting}>

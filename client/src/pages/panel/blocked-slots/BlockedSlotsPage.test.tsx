@@ -12,7 +12,7 @@ function renderPage() {
       <ToastProvider>
         <BlockedSlotsPage />
       </ToastProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -52,9 +52,16 @@ describe('BlockedSlotsPage', () => {
       if (typeof url === 'string' && url.includes('/api/me')) {
         return Promise.resolve(
           new Response(
-            JSON.stringify({ id: 'u1', name: 'Pro', email: 'pro@example.com', slug: 'pro', timezone: 'America/Sao_Paulo', niche: null }),
-            { status: 200 }
-          )
+            JSON.stringify({
+              id: 'u1',
+              name: 'Pro',
+              email: 'pro@example.com',
+              slug: 'pro',
+              timezone: 'America/Sao_Paulo',
+              niche: null,
+            }),
+            { status: 200 },
+          ),
         )
       }
       if (opts?.method === 'POST') {
@@ -71,7 +78,9 @@ describe('BlockedSlotsPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Adicionar bloqueio' }))
 
     // 09:00 in America/Sao_Paulo (UTC-3, no DST since 2019) is 12:00 UTC.
-    await waitFor(() => expect(posted).toMatchObject({ startsAt: '2026-12-25T12:00:00.000Z', endsAt: '2026-12-25T13:00:00.000Z' }))
+    await waitFor(() =>
+      expect(posted).toMatchObject({ startsAt: '2026-12-25T12:00:00.000Z', endsAt: '2026-12-25T13:00:00.000Z' }),
+    )
   })
 
   it('displays blocked-slot times converted to the professional timezone, not UTC', async () => {
@@ -79,19 +88,32 @@ describe('BlockedSlotsPage', () => {
       if (typeof url === 'string' && url.includes('/api/me')) {
         return Promise.resolve(
           new Response(
-            JSON.stringify({ id: 'u1', name: 'Pro', email: 'pro@example.com', slug: 'pro', timezone: 'America/Sao_Paulo', niche: null }),
-            { status: 200 }
-          )
+            JSON.stringify({
+              id: 'u1',
+              name: 'Pro',
+              email: 'pro@example.com',
+              slug: 'pro',
+              timezone: 'America/Sao_Paulo',
+              niche: null,
+            }),
+            { status: 200 },
+          ),
         )
       }
       if (typeof url === 'string' && url.includes('/api/blocked-slots')) {
         return Promise.resolve(
           new Response(
             JSON.stringify([
-              { id: 'b1', userId: 'u1', startsAt: '2026-12-25T03:00:00.000Z', endsAt: '2026-12-25T04:00:00.000Z', reason: 'Feriado' },
+              {
+                id: 'b1',
+                userId: 'u1',
+                startsAt: '2026-12-25T03:00:00.000Z',
+                endsAt: '2026-12-25T04:00:00.000Z',
+                reason: 'Feriado',
+              },
             ]),
-            { status: 200 }
-          )
+            { status: 200 },
+          ),
         )
       }
       return Promise.resolve(new Response('{}', { status: 200 }))

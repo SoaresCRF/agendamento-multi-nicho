@@ -24,7 +24,11 @@ interface LoginResponse {
 
 export function LoginPage() {
   useDocumentTitle('Entrar')
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   })
   const { login } = useAuth()
@@ -48,12 +52,21 @@ export function LoginPage() {
         <h1 className="mb-lg font-display text-display-sm">Entrar</h1>
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-md">
           <Input label="E-mail" id="email" type="email" error={errors.email?.message} {...register('email')} />
-          <Input label="Senha" id="password" type="password" error={errors.password?.message} {...register('password')} />
+          <Input
+            label="Senha"
+            id="password"
+            type="password"
+            error={errors.password?.message}
+            {...register('password')}
+          />
           {serverError && <p className="font-sans text-body-sm text-error">{serverError}</p>}
           <Button type="submit">Entrar</Button>
         </form>
         <p className="mt-md font-sans text-body-sm text-muted">
-          Não tem conta? <Link to="/registro" className="text-primary">Cadastre-se</Link>
+          Não tem conta?{' '}
+          <Link to="/registro" className="text-primary">
+            Cadastre-se
+          </Link>
         </p>
       </div>
     </div>

@@ -6,14 +6,21 @@ import type { serviceTypeInputSchema } from './service-types.schemas'
 export type ServiceTypeInput = z.infer<typeof serviceTypeInputSchema>
 
 export function listServiceTypes(userId: string) {
-  return prisma.serviceType.findMany({ where: { userId }, include: { customFields: true }, orderBy: { createdAt: 'asc' } })
+  return prisma.serviceType.findMany({
+    where: { userId },
+    include: { customFields: true },
+    orderBy: { createdAt: 'asc' },
+  })
 }
 
 export function createServiceType(userId: string, input: ServiceTypeInput) {
   return prisma.serviceType.create({
     data: {
-      userId, name: input.name, durationMinutes: input.durationMinutes,
-      description: input.description, requiresCustomForm: input.requiresCustomForm,
+      userId,
+      name: input.name,
+      durationMinutes: input.durationMinutes,
+      description: input.description,
+      requiresCustomForm: input.requiresCustomForm,
       customFields: { create: input.customFields.map((f) => ({ ...f, options: f.options ?? undefined })) },
     },
     include: { customFields: true },
@@ -32,8 +39,10 @@ export async function updateServiceType(userId: string, id: string, input: Servi
   return prisma.serviceType.update({
     where: { id, userId },
     data: {
-      name: input.name, durationMinutes: input.durationMinutes,
-      description: input.description, requiresCustomForm: input.requiresCustomForm,
+      name: input.name,
+      durationMinutes: input.durationMinutes,
+      description: input.description,
+      requiresCustomForm: input.requiresCustomForm,
       customFields: { create: input.customFields.map((f) => ({ ...f, options: f.options ?? undefined })) },
     },
     include: { customFields: true },

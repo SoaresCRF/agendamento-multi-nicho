@@ -29,7 +29,13 @@ async function main() {
             customFields: {
               create: [
                 { label: 'Queixa principal', fieldType: 'TEXTAREA', required: true, order: 0 },
-                { label: 'Já fez terapia antes?', fieldType: 'SELECT', required: true, order: 1, options: ['Sim', 'Não'] },
+                {
+                  label: 'Já fez terapia antes?',
+                  fieldType: 'SELECT',
+                  required: true,
+                  order: 1,
+                  options: ['Sim', 'Não'],
+                },
                 { label: 'Está em uso de medicação?', fieldType: 'TEXT', required: false, order: 2 },
               ],
             },
@@ -64,7 +70,10 @@ async function main() {
                 { label: 'Objetivo', fieldType: 'TEXT', required: true, order: 0 },
                 { label: 'Lesões ou restrições', fieldType: 'TEXTAREA', required: false, order: 1 },
                 {
-                  label: 'Nível de atividade atual', fieldType: 'SELECT', required: true, order: 2,
+                  label: 'Nível de atividade atual',
+                  fieldType: 'SELECT',
+                  required: true,
+                  order: 2,
                   options: ['Sedentário', 'Leve', 'Moderado', 'Intenso'],
                 },
               ],

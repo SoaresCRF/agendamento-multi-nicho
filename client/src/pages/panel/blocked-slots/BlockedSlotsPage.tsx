@@ -32,8 +32,12 @@ export function BlockedSlotsPage() {
   const createBlockedSlot = useCreateBlockedSlot()
   const deleteBlockedSlot = useDeleteBlockedSlot()
   const { show } = useToast()
-  const { register, handleSubmit, reset, formState: { errors } } =
-    useForm<BlockedSlotFormValues>({ resolver: zodResolver(blockedSlotSchema) })
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<BlockedSlotFormValues>({ resolver: zodResolver(blockedSlotSchema) })
 
   async function onSubmit(values: BlockedSlotFormValues) {
     try {
@@ -64,10 +68,18 @@ export function BlockedSlotsPage() {
 
       <Card className="max-w-xl">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-md">
-          <Input label="Início" id="startsAt" type="datetime-local" error={errors.startsAt?.message} {...register('startsAt')} />
+          <Input
+            label="Início"
+            id="startsAt"
+            type="datetime-local"
+            error={errors.startsAt?.message}
+            {...register('startsAt')}
+          />
           <Input label="Fim" id="endsAt" type="datetime-local" error={errors.endsAt?.message} {...register('endsAt')} />
           <Input label="Motivo (opcional)" id="reason" {...register('reason')} />
-          <Button type="submit" disabled={!profile || createBlockedSlot.isPending}>Adicionar bloqueio</Button>
+          <Button type="submit" disabled={!profile || createBlockedSlot.isPending}>
+            Adicionar bloqueio
+          </Button>
         </form>
       </Card>
 
@@ -79,8 +91,8 @@ export function BlockedSlotsPage() {
             <Card key={b.id} className="flex items-center justify-between">
               <div>
                 <p className="font-sans text-body-md text-ink">
-                  {formatInTimeZone(new Date(b.startsAt), profile?.timezone ?? 'UTC', "dd/MM/yyyy HH:mm")} —{' '}
-                  {formatInTimeZone(new Date(b.endsAt), profile?.timezone ?? 'UTC', "dd/MM/yyyy HH:mm")}
+                  {formatInTimeZone(new Date(b.startsAt), profile?.timezone ?? 'UTC', 'dd/MM/yyyy HH:mm')} —{' '}
+                  {formatInTimeZone(new Date(b.endsAt), profile?.timezone ?? 'UTC', 'dd/MM/yyyy HH:mm')}
                 </p>
                 {b.reason && <p className="font-sans text-body-sm text-muted">{b.reason}</p>}
               </div>

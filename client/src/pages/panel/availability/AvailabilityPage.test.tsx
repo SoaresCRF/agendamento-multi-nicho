@@ -13,7 +13,7 @@ function renderPage(queryClient: QueryClient) {
       <ToastProvider>
         <AvailabilityPage />
       </ToastProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -21,9 +21,11 @@ describe('AvailabilityPage', () => {
   afterEach(() => vi.restoreAllMocks())
 
   it('does not let a background refetch clobber an in-progress edit', async () => {
-    global.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify([{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }]), { status: 200 })
-    ) as unknown as typeof fetch
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(JSON.stringify([{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }]), { status: 200 }),
+      ) as unknown as typeof fetch
 
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     renderPage(queryClient)

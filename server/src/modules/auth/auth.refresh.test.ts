@@ -14,8 +14,11 @@ describe('POST /api/auth/refresh and /logout', () => {
   it('issues a new access token and rotates the refresh cookie', async () => {
     const app = createApp()
     const registerRes = await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'refresh@example.com', password: 'password123',
-      slug: 'refresh-slug', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'refresh@example.com',
+      password: 'password123',
+      slug: 'refresh-slug',
+      timezone: 'America/Sao_Paulo',
     })
     const cookie = extractCookie(registerRes)
 
@@ -35,8 +38,11 @@ describe('POST /api/auth/refresh and /logout', () => {
   it('revokes the refresh token on logout', async () => {
     const app = createApp()
     const registerRes = await request(app).post('/api/auth/register').send({
-      name: 'Joana', email: 'logout@example.com', password: 'password123',
-      slug: 'logout-slug', timezone: 'America/Sao_Paulo',
+      name: 'Joana',
+      email: 'logout@example.com',
+      password: 'password123',
+      slug: 'logout-slug',
+      timezone: 'America/Sao_Paulo',
     })
     const cookie = extractCookie(registerRes)
 

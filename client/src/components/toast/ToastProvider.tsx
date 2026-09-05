@@ -31,7 +31,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             key={t.id}
             className={cx(
               'rounded-lg px-md py-sm font-sans text-body-sm shadow-elevated',
-              t.tone === 'success' ? 'bg-ink text-on-primary' : 'bg-error text-on-primary'
+              t.tone === 'success' ? 'bg-ink text-on-primary' : 'bg-error text-on-primary',
             )}
           >
             {t.message}

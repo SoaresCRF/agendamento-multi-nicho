@@ -13,7 +13,8 @@ async function assertOwnership(userId: string, serviceTypeId: string) {
 export async function getServiceTypeRules(userId: string, serviceTypeId: string) {
   await assertOwnership(userId, serviceTypeId)
   return prisma.serviceTypeAvailabilityRule.findMany({
-    where: { serviceTypeId }, orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+    where: { serviceTypeId },
+    orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
   })
 }
 

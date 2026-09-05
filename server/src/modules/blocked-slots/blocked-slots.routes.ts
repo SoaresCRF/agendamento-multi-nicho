@@ -16,19 +16,25 @@ blockedSlotsRouter.get('/', async (req, res, next) => {
   try {
     const { from, to } = listQuerySchema.parse(req.query)
     res.json(await service.listBlockedSlots(req.userId!, from, to))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 blockedSlotsRouter.post('/', async (req, res, next) => {
   try {
     const input = createBlockedSlotSchema.parse(req.body)
     res.status(201).json(await service.createBlockedSlot(req.userId!, input))
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })
 
 blockedSlotsRouter.delete('/:id', async (req, res, next) => {
   try {
     await service.deleteBlockedSlot(req.userId!, req.params.id)
     res.status(204).send()
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })

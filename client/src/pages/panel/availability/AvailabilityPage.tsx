@@ -10,7 +10,10 @@ import type { AvailabilityRule } from '../../../lib/types'
 
 export function AvailabilityPage() {
   useDocumentTitle('Disponibilidade')
-  const { data } = useQuery({ queryKey: ['availability'], queryFn: () => api.get<AvailabilityRule[]>('/api/availability') })
+  const { data } = useQuery({
+    queryKey: ['availability'],
+    queryFn: () => api.get<AvailabilityRule[]>('/api/availability'),
+  })
   const [rules, setRules] = useState<AvailabilityRule[]>([])
   const [isRulesDirty, setIsRulesDirty] = useState(false)
   const { show } = useToast()

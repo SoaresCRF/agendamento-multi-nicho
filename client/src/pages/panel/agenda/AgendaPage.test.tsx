@@ -6,11 +6,17 @@ import { AgendaPage } from './AgendaPage'
 import { ToastProvider } from '../../../components/toast/ToastProvider'
 
 const booking = {
-  id: 'b1', userId: 'u1', serviceTypeId: 'st1',
+  id: 'b1',
+  userId: 'u1',
+  serviceTypeId: 'st1',
   serviceType: { id: 'st1', name: 'Sessão', durationMinutes: 50 },
-  clientName: 'Cliente Teste', clientEmail: 'c@x.com',
-  startsAt: '2026-09-10T13:00:00.000Z', endsAt: '2026-09-10T13:50:00.000Z',
-  status: 'CONFIRMED', formResponses: null, createdAt: '2026-09-01T00:00:00.000Z',
+  clientName: 'Cliente Teste',
+  clientEmail: 'c@x.com',
+  startsAt: '2026-09-10T13:00:00.000Z',
+  endsAt: '2026-09-10T13:50:00.000Z',
+  status: 'CONFIRMED',
+  formResponses: null,
+  createdAt: '2026-09-01T00:00:00.000Z',
 }
 
 function renderPage() {
@@ -20,7 +26,7 @@ function renderPage() {
       <ToastProvider>
         <AgendaPage />
       </ToastProvider>
-    </QueryClientProvider>
+    </QueryClientProvider>,
   )
 }
 
@@ -37,9 +43,16 @@ describe('AgendaPage', () => {
       if (typeof url === 'string' && url.includes('/api/me')) {
         return Promise.resolve(
           new Response(
-            JSON.stringify({ id: 'u1', name: 'Pro', email: 'pro@example.com', slug: 'pro', timezone: 'UTC', niche: null }),
-            { status: 200 }
-          )
+            JSON.stringify({
+              id: 'u1',
+              name: 'Pro',
+              email: 'pro@example.com',
+              slug: 'pro',
+              timezone: 'UTC',
+              niche: null,
+            }),
+            { status: 200 },
+          ),
         )
       }
       return Promise.resolve(new Response(JSON.stringify([booking]), { status: 200 }))
@@ -59,14 +72,23 @@ describe('AgendaPage', () => {
     let resolvePatch: (res: Response) => void
     global.fetch = vi.fn().mockImplementation((url: string, opts?: RequestInit) => {
       if (opts?.method === 'PATCH') {
-        return new Promise<Response>((resolve) => { resolvePatch = resolve })
+        return new Promise<Response>((resolve) => {
+          resolvePatch = resolve
+        })
       }
       if (typeof url === 'string' && url.includes('/api/me')) {
         return Promise.resolve(
           new Response(
-            JSON.stringify({ id: 'u1', name: 'Pro', email: 'pro@example.com', slug: 'pro', timezone: 'UTC', niche: null }),
-            { status: 200 }
-          )
+            JSON.stringify({
+              id: 'u1',
+              name: 'Pro',
+              email: 'pro@example.com',
+              slug: 'pro',
+              timezone: 'UTC',
+              niche: null,
+            }),
+            { status: 200 },
+          ),
         )
       }
       return Promise.resolve(new Response(JSON.stringify([booking]), { status: 200 }))
@@ -79,7 +101,9 @@ describe('AgendaPage', () => {
 
     expect(confirmButton).toBeDisabled()
     resolvePatch!(new Response(JSON.stringify({ ...booking, status: 'CANCELLED' }), { status: 200 }))
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Confirmar cancelamento' })).not.toBeInTheDocument())
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Confirmar cancelamento' })).not.toBeInTheDocument(),
+    )
   })
 
   it('displays booking times converted to the professional timezone, not UTC', async () => {
@@ -87,9 +111,16 @@ describe('AgendaPage', () => {
       if (typeof url === 'string' && url.includes('/api/me')) {
         return Promise.resolve(
           new Response(
-            JSON.stringify({ id: 'u1', name: 'Pro', email: 'pro@example.com', slug: 'pro', timezone: 'America/Sao_Paulo', niche: null }),
-            { status: 200 }
-          )
+            JSON.stringify({
+              id: 'u1',
+              name: 'Pro',
+              email: 'pro@example.com',
+              slug: 'pro',
+              timezone: 'America/Sao_Paulo',
+              niche: null,
+            }),
+            { status: 200 },
+          ),
         )
       }
       if (typeof url === 'string' && url.includes('/api/bookings')) {

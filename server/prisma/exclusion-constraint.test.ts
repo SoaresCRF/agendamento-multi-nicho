@@ -11,8 +11,11 @@ describe('no_overlapping_confirmed_bookings constraint', () => {
     await prisma.user.deleteMany()
     const user = await prisma.user.create({
       data: {
-        name: 'Test', email: `t-${Date.now()}@example.com`, passwordHash: 'x',
-        slug: `t-${Date.now()}`, timezone: 'America/Sao_Paulo',
+        name: 'Test',
+        email: `t-${Date.now()}@example.com`,
+        passwordHash: 'x',
+        slug: `t-${Date.now()}`,
+        timezone: 'America/Sao_Paulo',
       },
     })
     userId = user.id
@@ -29,17 +32,25 @@ describe('no_overlapping_confirmed_bookings constraint', () => {
   it('rejects a second CONFIRMED booking that overlaps an existing one', async () => {
     await prisma.booking.create({
       data: {
-        userId, serviceTypeId, clientName: 'A', clientEmail: 'a@example.com',
-        startsAt: new Date('2026-09-01T13:00:00Z'), endsAt: new Date('2026-09-01T13:50:00Z'),
+        userId,
+        serviceTypeId,
+        clientName: 'A',
+        clientEmail: 'a@example.com',
+        startsAt: new Date('2026-09-01T13:00:00Z'),
+        endsAt: new Date('2026-09-01T13:50:00Z'),
       },
     })
     await expect(
       prisma.booking.create({
         data: {
-          userId, serviceTypeId, clientName: 'B', clientEmail: 'b@example.com',
-          startsAt: new Date('2026-09-01T13:25:00Z'), endsAt: new Date('2026-09-01T14:15:00Z'),
+          userId,
+          serviceTypeId,
+          clientName: 'B',
+          clientEmail: 'b@example.com',
+          startsAt: new Date('2026-09-01T13:25:00Z'),
+          endsAt: new Date('2026-09-01T14:15:00Z'),
         },
-      })
+      }),
     ).rejects.toThrow()
   })
 
@@ -48,14 +59,19 @@ describe('no_overlapping_confirmed_bookings constraint', () => {
     const endsAt = new Date('2026-09-02T13:50:00Z')
     await prisma.booking.create({
       data: {
-        userId, serviceTypeId, clientName: 'A', clientEmail: 'a@example.com',
-        startsAt, endsAt, status: 'CANCELLED',
+        userId,
+        serviceTypeId,
+        clientName: 'A',
+        clientEmail: 'a@example.com',
+        startsAt,
+        endsAt,
+        status: 'CANCELLED',
       },
     })
     await expect(
       prisma.booking.create({
         data: { userId, serviceTypeId, clientName: 'B', clientEmail: 'b@example.com', startsAt, endsAt },
-      })
+      }),
     ).resolves.toBeDefined()
   })
 })

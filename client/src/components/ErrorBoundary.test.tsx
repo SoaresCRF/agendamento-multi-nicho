@@ -13,7 +13,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <div>conteúdo normal</div>
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('conteúdo normal')).toBeInTheDocument()
   })
@@ -23,7 +23,7 @@ describe('ErrorBoundary', () => {
     render(
       <ErrorBoundary>
         <Bomb />
-      </ErrorBoundary>
+      </ErrorBoundary>,
     )
     expect(screen.getByText('Algo deu errado')).toBeInTheDocument()
   })
