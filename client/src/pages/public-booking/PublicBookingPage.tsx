@@ -11,6 +11,7 @@ import { ApiError } from '../../lib/api'
 import { formatInTimeZone } from 'date-fns-tz'
 import { EmptyState } from '../../components/EmptyState'
 import { Badge, toneForNiche } from '../../components/Badge'
+import { Button } from '../../components/Button'
 import { useDocumentTitle } from '../../lib/useDocumentTitle'
 import { useCanonicalUrl } from '../../lib/useCanonicalUrl'
 
@@ -119,6 +120,9 @@ export function PublicBookingPage() {
 
         {step === 'pick-slot' && selectedServiceType && profile && (
           <div>
+            <Button variant="text-link" onClick={() => setStep('select-service')} className="mb-xs">
+              ‹ Voltar
+            </Button>
             <h2 className="mb-md font-display text-display-md">Escolha um horário</h2>
             <div className="flex flex-col gap-lg sm:flex-row">
               <CalendarPicker selectedDate={effectiveDate} onSelectDate={setSelectedDate} timezone={profile.timezone} />
@@ -144,6 +148,9 @@ export function PublicBookingPage() {
 
         {step === 'form' && selectedServiceType && selectedSlot && (
           <div>
+            <Button variant="text-link" onClick={() => setStep('pick-slot')} className="mb-xs">
+              ‹ Voltar
+            </Button>
             <h2 className="mb-md font-display text-display-md">Seus dados</h2>
             <BookingSummary
               serviceName={selectedServiceType.name}

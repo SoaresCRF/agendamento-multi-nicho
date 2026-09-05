@@ -139,6 +139,35 @@ describe('PublicBookingPage', () => {
     expect(screen.getByText(/20 de setembro de 2026/)).toBeInTheDocument()
   })
 
+  it('lets the client go back from slot-picking to service selection, and from the form back to slot-picking', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/slots')) {
+        return Promise.resolve(new Response(JSON.stringify({ slots: ['2026-09-20T13:00:00.000Z'] }), { status: 200 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    await userEvent.click(await screen.findByText('Primeira consulta'))
+    expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '‹ Voltar' }))
+    expect(await screen.findByText(/Escolha um tipo de serviço/)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByText('Primeira consulta'))
+    const slotButton = await screen.findByRole('button', { name: '10:00' })
+    await userEvent.click(slotButton)
+    expect(await screen.findByText('Seus dados')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: '‹ Voltar' }))
+    expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '10:00' })).toHaveClass('bg-primary')
+  })
+
   it('shows the conflict error and returns to the slot picker when booking gets a 409', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.endsWith('/service-types')) {
