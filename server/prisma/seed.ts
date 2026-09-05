@@ -4,7 +4,15 @@ import { prisma } from '../src/lib/prisma'
 const SALT_ROUNDS = 12
 
 async function main() {
-  const passwordHash = await bcrypt.hash('demo1234', SALT_ROUNDS)
+  // Local/dev default is the public 'demo1234' documented in the README. Production
+  // must set SEED_DEMO_PASSWORD to a value that is never committed or documented,
+  // since these two demo profiles are publicly bookable and their panel would
+  // otherwise be editable by anyone who read the README.
+  if (process.env.NODE_ENV === 'production' && !process.env.SEED_DEMO_PASSWORD) {
+    throw new Error('SEED_DEMO_PASSWORD must be set before seeding production — do not reuse demo1234 there')
+  }
+  const demoPassword = process.env.SEED_DEMO_PASSWORD ?? 'demo1234'
+  const passwordHash = await bcrypt.hash(demoPassword, SALT_ROUNDS)
 
   const psicologa = await prisma.user.upsert({
     where: { email: 'joana@example.com' },
