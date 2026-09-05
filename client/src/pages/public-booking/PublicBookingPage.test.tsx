@@ -97,6 +97,48 @@ describe('PublicBookingPage', () => {
     expect(bookingPosted).toBe(true)
   })
 
+  it('carries a summary of the chosen service, date and time from the form step through confirmation', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/slots')) {
+        return Promise.resolve(new Response(JSON.stringify({ slots: ['2026-09-20T13:00:00.000Z'] }), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/bookings')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              id: 'b1',
+              startsAt: '2026-09-20T13:00:00.000Z',
+              endsAt: '2026-09-20T14:00:00.000Z',
+              status: 'CONFIRMED',
+            }),
+            { status: 201 },
+          ),
+        )
+      }
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    await userEvent.click(await screen.findByText('Primeira consulta'))
+    await userEvent.click(await screen.findByRole('button', { name: '10:00' })) // 13:00 UTC = 10:00 -03:00
+
+    expect(await screen.findByText('60 min')).toBeInTheDocument()
+    expect(screen.getByText(/20 de setembro de 2026/)).toBeInTheDocument()
+    expect(screen.getByText(/10:00/)).toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText('Nome'), 'Cliente Teste')
+    await userEvent.type(screen.getByLabelText('E-mail'), 'cliente@example.com')
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar agendamento' }))
+
+    expect(await screen.findByText('Agendamento confirmado!')).toBeInTheDocument()
+    expect(screen.getByText('60 min')).toBeInTheDocument()
+    expect(screen.getByText(/20 de setembro de 2026/)).toBeInTheDocument()
+  })
+
   it('shows the conflict error and returns to the slot picker when booking gets a 409', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.endsWith('/service-types')) {

@@ -6,6 +6,7 @@ import { ServiceTypeSelector } from './ServiceTypeSelector'
 import { CalendarPicker } from './CalendarPicker'
 import { SlotGrid } from './SlotGrid'
 import { BookingForm } from './BookingForm'
+import { BookingSummary } from './BookingSummary'
 import { ApiError } from '../../lib/api'
 import { formatInTimeZone } from 'date-fns-tz'
 import { EmptyState } from '../../components/EmptyState'
@@ -141,9 +142,15 @@ export function PublicBookingPage() {
           </div>
         )}
 
-        {step === 'form' && selectedServiceType && (
+        {step === 'form' && selectedServiceType && selectedSlot && (
           <div>
             <h2 className="mb-md font-display text-display-md">Seus dados</h2>
+            <BookingSummary
+              serviceName={selectedServiceType.name}
+              durationMinutes={selectedServiceType.durationMinutes}
+              startsAt={selectedSlot}
+              timezone={profile.timezone}
+            />
             <BookingForm
               serviceType={selectedServiceType}
               professionalName={profile.name}
@@ -153,10 +160,16 @@ export function PublicBookingPage() {
           </div>
         )}
 
-        {step === 'confirmed' && (
+        {step === 'confirmed' && selectedServiceType && selectedSlot && (
           <div className="text-center">
             <h2 className="mb-sm font-display text-display-md">Agendamento confirmado!</h2>
-            <p className="font-sans text-body-md text-muted">Você receberá um e-mail de confirmação em breve.</p>
+            <p className="mb-lg font-sans text-body-md text-muted">Você receberá um e-mail de confirmação em breve.</p>
+            <BookingSummary
+              serviceName={selectedServiceType.name}
+              durationMinutes={selectedServiceType.durationMinutes}
+              startsAt={selectedSlot}
+              timezone={profile.timezone}
+            />
           </div>
         )}
       </main>
