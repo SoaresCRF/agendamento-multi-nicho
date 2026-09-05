@@ -3,6 +3,7 @@ import { addMinutes } from 'date-fns'
 import { formatInTimeZone } from 'date-fns-tz'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
+import { escapeHtml } from '../../lib/escapeHtml'
 import { logger } from '../../lib/logger'
 import type { Mailer } from '../../lib/email'
 import { nodemailerMailer } from '../../lib/email/nodemailer'
@@ -71,16 +72,20 @@ export async function createPublicBooking(slug: string, input: CreateBookingInpu
     throw err
   }
 
-  await Promise.all([
+  // Fire-and-forget: the client is already waiting on this HTTP response for
+  // confirmation that the slot is theirs — don't make them wait on SMTP too.
+  const safeClientName = escapeHtml(input.clientName)
+  const safeServiceTypeName = escapeHtml(serviceType.name)
+  Promise.all([
     mailer.sendMail({
       to: input.clientEmail,
       subject: `Agendamento confirmado com ${user.name}`,
-      html: `<p>Seu agendamento de "${serviceType.name}" foi confirmado para ${startsAt.toISOString()}.</p>`,
+      html: `<p>Seu agendamento de "${safeServiceTypeName}" foi confirmado para ${startsAt.toISOString()}.</p>`,
     }),
     mailer.sendMail({
       to: user.email,
       subject: `Novo agendamento: ${input.clientName}`,
-      html: `<p>${input.clientName} agendou "${serviceType.name}" para ${startsAt.toISOString()}.</p>`,
+      html: `<p>${safeClientName} agendou "${safeServiceTypeName}" para ${startsAt.toISOString()}.</p>`,
     }),
   ]).catch((err) => {
     logger.error('Failed to send booking confirmation emails', {

@@ -136,6 +136,59 @@ describe('createPublicBooking', () => {
     ).rejects.toMatchObject({ statusCode: 409 })
   })
 
+  it('escapes HTML in the client name before putting it in the confirmation emails', async () => {
+    const { user } = await createTestUser({ email: 'prof7@example.com', slug: 'prof7' })
+    await prisma.availability.create({
+      data: { userId: user.id, dayOfWeek: THURSDAY, startTime: '10:00', endTime: '18:00' },
+    })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
+    const { mailer, sent } = fakeMailer()
+
+    await createPublicBooking(
+      'prof7',
+      {
+        serviceTypeId: serviceType.id,
+        startsAt: '2026-09-10T13:00:00.000Z',
+        clientName: '<img src=x onerror=alert(1)>',
+        clientEmail: 'a@example.com',
+      },
+      mailer,
+    )
+
+    const professionalEmail = sent.find((s) => s.to === 'prof7@example.com')
+    expect(professionalEmail?.html).not.toContain('<img src=x onerror=alert(1)>')
+    expect(professionalEmail?.html).toContain('&lt;img src=x onerror=alert(1)&gt;')
+  })
+
+  it('does not wait for email delivery before resolving', async () => {
+    const { user } = await createTestUser({ email: 'prof6@example.com', slug: 'prof6' })
+    await prisma.availability.create({
+      data: { userId: user.id, dayOfWeek: THURSDAY, startTime: '10:00', endTime: '18:00' },
+    })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
+    const hangingMailer: Mailer = { sendMail: () => new Promise(() => {}) } // never resolves
+
+    const result = await Promise.race([
+      createPublicBooking(
+        'prof6',
+        {
+          serviceTypeId: serviceType.id,
+          startsAt: '2026-09-10T13:00:00.000Z',
+          clientName: 'A',
+          clientEmail: 'a@example.com',
+        },
+        hangingMailer,
+      ),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('timed out waiting on email')), 1000)),
+    ])
+
+    expect((result as { status: string }).status).toBe('CONFIRMED')
+  })
+
   it('rejects a booking that falls inside a blocked slot', async () => {
     const { user } = await createTestUser({ email: 'prof5@example.com', slug: 'prof5' })
     await prisma.availability.create({
