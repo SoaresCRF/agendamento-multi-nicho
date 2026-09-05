@@ -39,6 +39,8 @@ model ServiceType {
   customFields      CustomFormField[]
   availabilityRules ServiceTypeAvailabilityRule[]
   bookings          Booking[]
+
+  @@index([userId])
 }
 
 enum FieldType {
@@ -57,6 +59,8 @@ model CustomFormField {
   required      Boolean
   order         Int
   options       Json?
+
+  @@index([serviceTypeId])
 }
 
 model Availability {
@@ -66,6 +70,8 @@ model Availability {
   dayOfWeek Int
   startTime String
   endTime   String
+
+  @@index([userId])
 }
 
 model ServiceTypeAvailabilityRule {
@@ -75,6 +81,8 @@ model ServiceTypeAvailabilityRule {
   dayOfWeek     Int
   startTime     String
   endTime       String
+
+  @@index([serviceTypeId])
 }
 
 enum BookingStatus {
@@ -117,4 +125,6 @@ model RefreshToken {
   tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
+
+  @@index([userId])
 }
