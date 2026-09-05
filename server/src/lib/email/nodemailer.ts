@@ -4,6 +4,9 @@ import type { Mailer, SendMailInput } from './index'
 
 let transporter: Transporter | null = null
 
+// TODO: always uses an Ethereal preview account — no real email is sent, even in
+// production. Wire SMTP_HOST/PORT/USER/PASS (already declared in lib/env.ts, unused)
+// into a real nodemailer.createTransport() before this matters for real users.
 async function getTransporter(): Promise<Transporter> {
   if (transporter) return transporter
   const testAccount = await nodemailer.createTestAccount()
