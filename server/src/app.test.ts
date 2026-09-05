@@ -1,6 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import request from 'supertest'
 import { createApp } from './app'
+import { prisma } from './lib/prisma'
+import { cleanDatabase, createTestUser } from '../test/helpers'
 
 describe('GET /health', () => {
   it('returns ok: true', async () => {
@@ -18,6 +20,27 @@ describe('GET /health', () => {
     // helmet defaults this to 'same-origin', which would block the separately-hosted
     // frontend from reading responses even though CORS allows it — must stay 'cross-origin'.
     expect(res.headers['cross-origin-resource-policy']).toBe('cross-origin')
+  })
+
+  it("trusts exactly one reverse-proxy hop, so express-rate-limit reads the real client IP behind Render's proxy", () => {
+    const app = createApp()
+    expect(app.get('trust proxy')).toBe(1)
+  })
+})
+
+describe('response compression', () => {
+  beforeEach(cleanDatabase)
+
+  it('gzips a large JSON response when the client accepts it', async () => {
+    const { user } = await createTestUser({ email: 'compress@example.com', slug: 'compress-slug' })
+    await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50, description: 'x'.repeat(5000) },
+    })
+    const app = createApp()
+
+    const res = await request(app).get('/api/public/compress-slug/service-types').set('Accept-Encoding', 'gzip')
+
+    expect(res.headers['content-encoding']).toBe('gzip')
   })
 })
 
