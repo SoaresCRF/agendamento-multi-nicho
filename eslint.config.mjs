@@ -11,10 +11,7 @@ export default tseslint.config(
       '**/dist/**',
       '**/build/**',
       '**/coverage/**',
-      '**/vite.config.js',
-      '**/vite.config.d.ts',
-      '**/vitest.config.js',
-      '**/vitest.config.d.ts',
+      '**/.tsc-out/**',
       // Claude Code's own local tooling (gitignored, not project source) — its
       // skill scripts live outside this project's TS/lint conventions.
       '.claude/**',

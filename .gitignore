@@ -8,10 +8,7 @@ build/
 .claude/
 .impeccable/
 *.tsbuildinfo
-client/vite.config.js
-client/vite.config.d.ts
-client/vitest.config.js
-client/vitest.config.d.ts
+client/.tsc-out/
 
 # Meta/planning docs — not needed to run, build, or deploy the app
 DESIGN.md
