@@ -1,7 +1,20 @@
+import { useState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { Modal } from './Modal'
+
+function OpenableModal() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button onClick={() => setOpen(true)}>Abrir</button>
+      <Modal open={open} onClose={() => setOpen(false)} title="Confirmar">
+        conteúdo
+      </Modal>
+    </>
+  )
+}
 
 describe('Modal', () => {
   it('renders nothing when closed', () => {
@@ -55,5 +68,15 @@ describe('Modal', () => {
 
     await userEvent.tab({ shift: true })
     expect(confirmButton).toHaveFocus() // wraps from first back to last, shift+tab
+  })
+
+  it('restores focus to the element that opened it when closed via the close button', async () => {
+    render(<OpenableModal />)
+    const openButton = screen.getByRole('button', { name: 'Abrir' })
+
+    await userEvent.click(openButton)
+    await userEvent.click(screen.getByRole('button', { name: 'Fechar' }))
+
+    expect(openButton).toHaveFocus()
   })
 })
