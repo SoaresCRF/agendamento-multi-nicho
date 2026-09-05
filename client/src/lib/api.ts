@@ -1,3 +1,7 @@
+if (import.meta.env.PROD && !import.meta.env.VITE_API_URL) {
+  throw new Error('VITE_API_URL must be set in production builds')
+}
+
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 let accessToken: string | null = null
