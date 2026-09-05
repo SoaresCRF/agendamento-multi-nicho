@@ -19,7 +19,6 @@ final agenda por esse link público, **sem precisar criar conta**.
 - [CI](#ci)
 - [Visão geral da API](#visão-geral-da-api)
 - [Deploy](#deploy)
-- [Pendências conhecidas](#pendências-conhecidas)
 
 ## O que o projeto faz
 
@@ -43,9 +42,11 @@ final agenda por esse link público, **sem precisar criar conta**.
 - Prisma ORM + PostgreSQL
 - Autenticação: `jsonwebtoken` (access token) + `bcryptjs` (hash de senha)
 - Validação de entrada: Zod
-- `helmet` (security headers), `cors`, `cookie-parser`, `express-rate-limit`
+- `helmet` (security headers), `cors`, `cookie-parser`, `express-rate-limit`,
+  `compression` (gzip nas respostas)
 - `date-fns` / `date-fns-tz` para cálculo de horários com fuso horário
-- `nodemailer` para e-mail (ver [Pendências conhecidas](#pendências-conhecidas))
+- `nodemailer` para e-mail (SMTP real se `SMTP_*` estiver setado, senão
+  Ethereal em dev)
 - Testes: Vitest + Supertest
 
 **Frontend** (`client/`):
@@ -143,7 +144,7 @@ Pra logar no painel deles, use a página de login com o e-mail
 | `JWT_SECRET`                                          | **sim**     | —                       | 32+ caracteres aleatórios. Assina/verifica o access token. Nunca reaproveitar entre ambientes.                                           |
 | `PORT`                                                | não         | `3000`                  | Porta em que a API escuta.                                                                                                               |
 | `CLIENT_ORIGIN`                                       | não         | `http://localhost:5173` | Origin liberada no CORS — precisa ser a URL pública do frontend em produção.                                                             |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | não         | —                       | Declaradas mas **não usadas hoje** — ver [Pendências conhecidas](#pendências-conhecidas).                                                |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | não         | —                       | Se as 4 estiverem setadas, e-mail de confirmação sai por SMTP real; senão cai numa conta de teste Ethereal (dev).                        |
 | `SEED_DEMO_PASSWORD`                                  | não*        | `demo1234`              | Senha usada por `prisma:seed` para os 2 profissionais de exemplo. *Obrigatória se `NODE_ENV=production` — o script recusa rodar sem ela. |
 
 **`client/.env`** (referência em `client/.env.example`):
@@ -179,23 +180,24 @@ Todas as rotas abaixo, exceto `/health`, `/api/auth/*` e `/api/public/*`,
 exigem o access token (`Authorization: Bearer <token>`) e são
 automaticamente restritas ao profissional dono do token.
 
-| Rota                                                   | Autenticação       | Descrição                             |
-| ------------------------------------------------------ | ------------------ | ------------------------------------- |
-| `GET /health`                                          | não                | Health check.                         |
-| `POST /api/auth/register`                              | não                | Cria conta de profissional.           |
-| `POST /api/auth/login`                                 | não                | Login, define cookie de refresh.      |
-| `POST /api/auth/refresh`                               | não (usa cookie)   | Renova o access token.                |
-| `POST /api/auth/logout`                                | não                | Revoga o refresh token.               |
-| `GET /api/me`                                          | sim                | Dados do profissional autenticado.    |
-| `GET/POST/PATCH/DELETE /api/service-types`             | sim                | CRUD de tipos de atendimento.         |
-| `GET/PUT /api/service-types/:id/availability-rules`    | sim                | Regras de disponibilidade por tipo.   |
-| `GET/PUT /api/availability`                            | sim                | Disponibilidade semanal geral.        |
-| `GET/POST/DELETE /api/blocked-slots`                   | sim                | Bloqueios manuais de horário.         |
-| `GET /api/bookings` / `PATCH /api/bookings/:id/cancel` | sim                | Agenda e cancelamento.                |
-| `GET /api/public/:slug`                                | não                | Perfil público do profissional.       |
-| `GET /api/public/:slug/service-types`                  | não                | Tipos de atendimento do profissional. |
-| `GET /api/public/:slug/service-types/:id/slots`        | não                | Horários livres para aquele tipo.     |
-| `POST /api/public/:slug/bookings`                      | não (rate-limited) | Cria agendamento.                     |
+| Rota                                                   | Autenticação       | Descrição                                                                             |
+| ------------------------------------------------------ | ------------------ | ------------------------------------------------------------------------------------- |
+| `GET /health`                                          | não                | Health check.                                                                         |
+| `POST /api/auth/register`                              | não                | Cria conta de profissional.                                                           |
+| `POST /api/auth/login`                                 | não                | Login, define cookie de refresh.                                                      |
+| `POST /api/auth/refresh`                               | não (usa cookie)   | Renova o access token.                                                                |
+| `POST /api/auth/logout`                                | não                | Revoga o refresh token.                                                               |
+| `GET /api/me`                                          | sim                | Dados do profissional autenticado.                                                    |
+| `GET/POST/PATCH/DELETE /api/service-types`             | sim                | CRUD de tipos de atendimento.                                                         |
+| `GET/PUT /api/service-types/:id/availability-rules`    | sim                | Regras de disponibilidade por tipo.                                                   |
+| `GET/PUT /api/availability`                            | sim                | Disponibilidade semanal geral.                                                        |
+| `GET/POST/DELETE /api/blocked-slots`                   | sim                | Bloqueios manuais de horário.                                                         |
+| `GET /api/bookings` / `PATCH /api/bookings/:id/cancel` | sim                | Agenda (paginada: `cursor`/`limit`, resposta `{ items, nextCursor }`) e cancelamento. |
+| `GET /api/public/:slug`                                | não                | Perfil público do profissional (`Cache-Control: public, max-age=30`).                 |
+| `GET /api/public/:slug/service-types`                  | não                | Tipos de atendimento do profissional (`Cache-Control: public, max-age=30`).           |
+| `GET /api/public/:slug/service-types/:id/slots`        | não                | Horários livres para aquele tipo (nunca cacheado — muda a cada agendamento).          |
+| `POST /api/public/:slug/bookings`                      | não (rate-limited) | Cria agendamento.                                                                     |
+| `GET /api/public/sitemap-slugs`                        | não                | Slugs + `updatedAt` de todos os profissionais, para o `sitemap.xml` dinâmico.         |
 
 ## Deploy
 
@@ -215,12 +217,29 @@ funcionarem em acesso direto/refresh, ex. `/joana-psicologa` ou
 `/painel/agenda`) já vêm de `client/vercel.json` — nenhuma configuração
 extra no painel da Vercel é necessária além do toggle acima.
 
+Também definir `API_URL` (mesma URL pública da API, mas como variável de
+ambiente do projeto Vercel — não confundir com `VITE_API_URL`, que é
+embutida no bundle do cliente no build). `API_URL` é lida em runtime por
+`client/middleware.ts` (Vercel Routing Middleware), que detecta bots de
+busca/redes sociais em `/:slug` e devolve HTML com título, meta description
+e Open Graph corretos — sem essa variável, o middleware deixa a rota seguir
+para o SPA normal (visitante humano não é afetado; só o crawler perde o
+HTML pré-renderizado). O mesmo `client/middleware.ts` também gera
+`/sitemap.xml` dinamicamente (uma URL por profissional, buscando a lista em
+`GET /api/public/sitemap-slugs`) e `client/public/robots.txt` é estático,
+liberando `/` e bloqueando `/login`, `/registro` e `/painel` (sem valor de
+indexação). O `robots.txt` ainda não referencia o sitemap — falta decidir o
+domínio final de produção; adicione `Sitemap: https://<seu-domínio>/sitemap.xml`
+nele quando tiver.
+
 **Backend (Render ou Railway):** conectar o repositório, _root directory_
 `server/`, build command `npm install && npx prisma migrate deploy && npm run build`,
 start command `npm start`. Provisionar um banco Postgres gerenciado na
 mesma plataforma e apontar `DATABASE_URL` para ele. Definir `JWT_SECRET`
 (gerado, nunca reaproveitado de dev) e `CLIENT_ORIGIN` com a URL pública do
-frontend na Vercel.
+frontend na Vercel. Definir também `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`
+com as credenciais do provedor de e-mail — sem elas o e-mail de confirmação
+de agendamento não sai de verdade (cai numa conta de teste Ethereal).
 
 Os 2 profissionais demo (`/joana-psicologa`, `/carlos-personal`) também vão
 existir em produção como vitrine pública. Antes de rodar
@@ -230,10 +249,29 @@ usada em dev, que está documentada neste README e daria a qualquer visitante
 acesso de edição ao painel deles. Os perfis continuam públicos/agendáveis
 normalmente; só o login no painel fica fechado.
 
-## Pendências conhecidas
+### Checklist pós-deploy
 
-- **E-mail de confirmação não é enviado de verdade.** `server/src/lib/email/nodemailer.ts`
-  sempre usa uma conta de teste Ethereal — as variáveis `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`
-  (`server/.env.example`) estão declaradas mas não são lidas. Precisa trocar o
-  transporter por um `nodemailer.createTransport` real antes disso valer para
-  usuários de verdade. Adiado a pedido do usuário em 2026-09-04.
+Itens que só dá para fechar depois que as duas plataformas estiverem no ar:
+
+- [ ] **SMTP real:** definir `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`
+      no backend com um provedor de e-mail de verdade — sem isso a
+      confirmação de agendamento continua caindo numa conta de teste
+      Ethereal (nenhum e-mail real sai).
+- [ ] **`CLIENT_ORIGIN` e `API_URL` cruzados:** depois do primeiro deploy de
+      cada lado, apontar um pro outro — `CLIENT_ORIGIN` no backend (Render)
+      para a URL pública da Vercel, e `API_URL` no projeto Vercel para a URL
+      pública do backend.
+- [ ] **`robots.txt`:** adicionar `Sitemap: https://<seu-domínio>/sitemap.xml`
+      em `client/public/robots.txt` assim que o domínio final de produção
+      estiver definido.
+- [ ] **`trust proxy` (`server/src/app.ts`):** o app assume exatamente 1 hop
+      de proxy reverso na frente (`app.set('trust proxy', 1)`), com base no
+      comportamento documentado do Render/Railway. Depois de escolher e
+      configurar a plataforma de fato, confirmar quantos hops existem de
+      verdade entre o cliente e o processo Node (pode mudar se um CDN/WAF for
+      adicionado depois) — se o número real for diferente de 1, ajustar o
+      valor. Um valor errado permite spoofar `X-Forwarded-For` (contorna o
+      rate limit por IP em login/registro/criação de agendamento) ou agrupa
+      todos os visitantes reais num único IP (bloqueio coletivo). Achado do
+      `/code-review` de 2026-09-05, adiado por não haver infraestrutura
+      provisionada ainda para confirmar a topologia real.
