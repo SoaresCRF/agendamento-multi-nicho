@@ -11,6 +11,7 @@ import { formatInTimeZone } from 'date-fns-tz'
 import { EmptyState } from '../../components/EmptyState'
 import { Badge, toneForNiche } from '../../components/Badge'
 import { useDocumentTitle } from '../../lib/useDocumentTitle'
+import { useCanonicalUrl } from '../../lib/useCanonicalUrl'
 
 type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
 
@@ -19,6 +20,7 @@ export function PublicBookingPage() {
   const queryClient = useQueryClient()
   const { data: profile, isLoading: isProfileLoading, isError: isProfileError } = usePublicProfile(slug!)
   useDocumentTitle(profile?.name ?? 'Agendar horário')
+  useCanonicalUrl(`${window.location.origin}/${slug}`)
   const {
     data: serviceTypes,
     isLoading: isServiceTypesLoading,
@@ -91,16 +93,16 @@ export function PublicBookingPage() {
 
   return (
     <div className="min-h-screen bg-canvas">
-      <div className="bg-secondary-dark px-lg py-section text-center text-on-secondary-dark">
+      <header className="bg-secondary-dark px-lg py-section text-center text-on-secondary-dark">
         <h1 className="font-display text-display-lg">{profile?.name}</h1>
         {profile?.niche && (
           <Badge tone={toneForNiche(profile.niche)} className="mt-xs">
             {profile.niche}
           </Badge>
         )}
-      </div>
+      </header>
 
-      <div className="mx-auto max-w-[720px] px-lg py-xl">
+      <main className="mx-auto max-w-[720px] px-lg py-xl">
         {bookingError && <p className="mb-md font-sans text-body-sm text-error">{bookingError}</p>}
 
         {step === 'select-service' && serviceTypes && (
@@ -156,7 +158,7 @@ export function PublicBookingPage() {
             <p className="font-sans text-body-md text-muted">Você receberá um e-mail de confirmação em breve.</p>
           </div>
         )}
-      </div>
+      </main>
     </div>
   )
 }
