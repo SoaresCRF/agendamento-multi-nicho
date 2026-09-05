@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { env } from '../../lib/env'
 import { strictLimiter } from '../../middleware/rateLimit'
+import { requireSameOrigin } from '../../middleware/requireSameOrigin'
 import { registerSchema, loginSchema } from './auth.schemas'
 import { registerUser, loginUser, refreshSession, logoutUser } from './auth.service'
 
@@ -39,7 +40,7 @@ authRouter.post('/login', strictLimiter, async (req, res, next) => {
   }
 })
 
-authRouter.post('/refresh', async (req, res, next) => {
+authRouter.post('/refresh', requireSameOrigin, async (req, res, next) => {
   try {
     const token = req.cookies[REFRESH_COOKIE]
     if (!token) {
@@ -54,7 +55,7 @@ authRouter.post('/refresh', async (req, res, next) => {
   }
 })
 
-authRouter.post('/logout', async (req, res, next) => {
+authRouter.post('/logout', requireSameOrigin, async (req, res, next) => {
   try {
     const token = req.cookies[REFRESH_COOKIE]
     if (token) await logoutUser(token)

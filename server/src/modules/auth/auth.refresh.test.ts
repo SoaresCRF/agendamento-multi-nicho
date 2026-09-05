@@ -52,4 +52,35 @@ describe('POST /api/auth/refresh and /logout', () => {
     const refreshRes = await request(app).post('/api/auth/refresh').set('Cookie', cookie)
     expect(refreshRes.status).toBe(401)
   })
+
+  it('rejects /refresh and /logout when the Origin header is a site other than the frontend (CSRF)', async () => {
+    const app = createApp()
+    const registerRes = await request(app).post('/api/auth/register').send({
+      name: 'Joana',
+      email: 'csrf@example.com',
+      password: 'password123',
+      slug: 'csrf-slug',
+      timezone: 'America/Sao_Paulo',
+    })
+    const cookie = extractCookie(registerRes)
+
+    const refreshRes = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', cookie)
+      .set('Origin', 'https://attacker.example.com')
+    expect(refreshRes.status).toBe(403)
+
+    const logoutRes = await request(app)
+      .post('/api/auth/logout')
+      .set('Cookie', cookie)
+      .set('Origin', 'https://attacker.example.com')
+    expect(logoutRes.status).toBe(403)
+
+    // the legitimate frontend origin still works
+    const okRes = await request(app)
+      .post('/api/auth/refresh')
+      .set('Cookie', cookie)
+      .set('Origin', 'http://localhost:5173')
+    expect(okRes.status).toBe(200)
+  })
 })
