@@ -20,6 +20,44 @@ describe('public booking-page endpoints', () => {
     expect(res.status).toBe(404)
   })
 
+  it('does not cache a 404 for an unknown slug', async () => {
+    const res = await request(createApp()).get('/api/public/does-not-exist')
+    expect(res.headers['cache-control'] ?? '').not.toMatch(/public, max-age/)
+  })
+
+  it('sets a short public cache on the profile, since it rarely changes', async () => {
+    await createTestUser({ email: 'cache@example.com', slug: 'cache-slug' })
+    const res = await request(createApp()).get('/api/public/cache-slug')
+    expect(res.headers['cache-control']).toMatch(/public, max-age=\d+/)
+  })
+
+  it('sets a short public cache on the service-type list', async () => {
+    const { user } = await createTestUser({ email: 'cache2@example.com', slug: 'cache2-slug' })
+    await prisma.serviceType.create({ data: { userId: user.id, name: 'Sessão', durationMinutes: 30 } })
+    const res = await request(createApp()).get('/api/public/cache2-slug/service-types')
+    expect(res.headers['cache-control']).toMatch(/public, max-age=\d+/)
+  })
+
+  it('lists every professional slug for the sitemap, without requiring auth', async () => {
+    await createTestUser({ email: 'sm1@example.com', slug: 'sm1-slug' })
+    await createTestUser({ email: 'sm2@example.com', slug: 'sm2-slug' })
+    const res = await request(createApp()).get('/api/public/sitemap-slugs')
+    expect(res.status).toBe(200)
+    expect(res.body.map((r: { slug: string }) => r.slug).sort()).toEqual(['sm1-slug', 'sm2-slug'])
+    expect(res.body[0]).toHaveProperty('updatedAt')
+  })
+
+  it('never caches available slots, since they change on every booking/cancellation', async () => {
+    const { user } = await createTestUser({ email: 'cache3@example.com', slug: 'cache3-slug' })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 60 },
+    })
+    const res = await request(createApp()).get(
+      `/api/public/cache3-slug/service-types/${serviceType.id}/slots?date=2026-09-07`,
+    )
+    expect(res.headers['cache-control'] ?? '').not.toMatch(/max-age/)
+  })
+
   it('lists service types, including custom fields only when required', async () => {
     const { user } = await createTestUser({ email: 'st@example.com', slug: 'st-slug' })
     await prisma.serviceType.create({ data: { userId: user.id, name: 'Sem form', durationMinutes: 30 } })

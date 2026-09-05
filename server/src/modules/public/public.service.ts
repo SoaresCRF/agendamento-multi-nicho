@@ -4,6 +4,14 @@ import { getAvailableSlots } from '../availability/engine'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+// Feeds the frontend's dynamically-generated sitemap.xml (client/middleware.ts) —
+// crawlers have no other way to discover a professional's page than an external
+// link, since the app itself has no directory/listing of professionals.
+export async function listPublicSlugs() {
+  const users = await prisma.user.findMany({ select: { slug: true, updatedAt: true } })
+  return users.map((u) => ({ slug: u.slug, updatedAt: u.updatedAt }))
+}
+
 export async function getPublicProfile(slug: string) {
   const user = await prisma.user.findUnique({ where: { slug } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
