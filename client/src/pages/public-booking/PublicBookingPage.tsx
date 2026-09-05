@@ -146,6 +146,7 @@ export function PublicBookingPage() {
             <h2 className="mb-md font-display text-display-md">Seus dados</h2>
             <BookingForm
               serviceType={selectedServiceType}
+              professionalName={profile.name}
               onSubmit={handleBookingSubmit}
               isSubmitting={createBooking.isPending}
             />

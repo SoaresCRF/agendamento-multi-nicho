@@ -26,7 +26,9 @@ const serviceType: PublicServiceType = {
 describe('BookingForm', () => {
   it('validates fixed fields and dynamic custom fields together before calling onSubmit', async () => {
     const onSubmit = vi.fn()
-    render(<BookingForm serviceType={serviceType} onSubmit={onSubmit} isSubmitting={false} />)
+    render(
+      <BookingForm serviceType={serviceType} professionalName="Joana Silva" onSubmit={onSubmit} isSubmitting={false} />,
+    )
 
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar agendamento' }))
     expect(await screen.findByText('Nome é obrigatório')).toBeInTheDocument()
@@ -61,7 +63,14 @@ describe('BookingForm', () => {
         },
       ],
     }
-    render(<BookingForm serviceType={selectServiceType} onSubmit={onSubmit} isSubmitting={false} />)
+    render(
+      <BookingForm
+        serviceType={selectServiceType}
+        professionalName="Joana Silva"
+        onSubmit={onSubmit}
+        isSubmitting={false}
+      />,
+    )
 
     await userEvent.type(screen.getByLabelText('Nome'), 'Cliente Teste')
     await userEvent.type(screen.getByLabelText('E-mail'), 'cliente@example.com')
@@ -73,5 +82,50 @@ describe('BookingForm', () => {
       clientEmail: 'cliente@example.com',
       formResponses: { f1: 'Unimed' },
     })
+  })
+
+  it('shows a confidentiality note naming the professional before clinical custom fields, and not otherwise', () => {
+    const { rerender } = render(
+      <BookingForm serviceType={serviceType} professionalName="Joana Silva" onSubmit={vi.fn()} isSubmitting={false} />,
+    )
+    expect(screen.getByText(/Joana Silva/)).toBeInTheDocument()
+    expect(screen.getByText(/confidencia/i)).toBeInTheDocument()
+
+    const noCustomFieldsServiceType: PublicServiceType = { ...serviceType, customFields: [] }
+    rerender(
+      <BookingForm
+        serviceType={noCustomFieldsServiceType}
+        professionalName="Joana Silva"
+        onSubmit={vi.fn()}
+        isSubmitting={false}
+      />,
+    )
+    expect(screen.queryByText(/confidencia/i)).not.toBeInTheDocument()
+  })
+
+  it('renders a TEXTAREA custom field as an actual <textarea>, not a single-line input', () => {
+    const textareaServiceType: PublicServiceType = {
+      ...serviceType,
+      customFields: [
+        {
+          id: 'f1',
+          serviceTypeId: 'st1',
+          label: 'Queixa principal',
+          fieldType: 'TEXTAREA',
+          required: true,
+          order: 0,
+          options: null,
+        },
+      ],
+    }
+    render(
+      <BookingForm
+        serviceType={textareaServiceType}
+        professionalName="Joana Silva"
+        onSubmit={vi.fn()}
+        isSubmitting={false}
+      />,
+    )
+    expect(screen.getByLabelText('Queixa principal').tagName).toBe('TEXTAREA')
   })
 })
