@@ -7,10 +7,13 @@ import { registerUser, loginUser, refreshSession, logoutUser } from './auth.serv
 export const authRouter = Router()
 
 export const REFRESH_COOKIE = 'refreshToken'
+// Frontend (Vercel) and backend (Render) are deployed on different domains, making
+// every refresh request cross-site — SameSite=Lax would silently drop the cookie on
+// that fetch, so this needs 'none' (which requires secure:true, already tied below).
 export const refreshCookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
+  sameSite: env.NODE_ENV === 'production' ? ('none' as const) : ('lax' as const),
   maxAge: 7 * 24 * 60 * 60 * 1000,
 }
 
