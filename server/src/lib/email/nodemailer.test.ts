@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 const sendMailMock = vi.fn().mockResolvedValue({ messageId: 'abc' })
 const createTestAccountMock = vi.fn().mockResolvedValue({
@@ -15,6 +15,8 @@ vi.mock('nodemailer', () => ({
     getTestMessageUrl: () => 'https://ethereal.email/preview/abc',
   },
 }))
+
+vi.mock('../env', () => ({ env: {} }))
 
 describe('nodemailerMailer', () => {
   beforeEach(() => {
@@ -37,5 +39,28 @@ describe('nodemailerMailer', () => {
     await nodemailerMailer.sendMail({ to: 'b@example.com', subject: 'Two', html: '<p>2</p>' })
     expect(createTestAccountMock).toHaveBeenCalledOnce()
     expect(sendMailMock).toHaveBeenCalledTimes(2)
+  })
+
+  describe('with SMTP_* configured', () => {
+    afterEach(() => {
+      vi.doUnmock('../env')
+    })
+
+    it('uses a real SMTP transport instead of Ethereal', async () => {
+      vi.doMock('../env', () => ({
+        env: { SMTP_HOST: 'smtp.example.com', SMTP_PORT: 465, SMTP_USER: 'u', SMTP_PASS: 'p' },
+      }))
+      const { nodemailerMailer } = await import('./nodemailer')
+      await nodemailerMailer.sendMail({ to: 'a@example.com', subject: 'Hi', html: '<p>Hi</p>' })
+      expect(createTestAccountMock).not.toHaveBeenCalled()
+      expect(createTransportMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          host: 'smtp.example.com',
+          port: 465,
+          secure: true,
+          auth: { user: 'u', pass: 'p' },
+        }),
+      )
+    })
   })
 })
