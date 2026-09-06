@@ -58,6 +58,20 @@ publicRouter.get('/:slug/service-types/:id/slots', async (req, res, next) => {
   }
 })
 
+const monthQuerySchema = z.object({ month: z.string().regex(/^\d{4}-\d{2}$/) })
+
+// Never cached — same reasoning as /slots: a booking or cancellation can change
+// which days have availability at any moment.
+publicRouter.get('/:slug/service-types/:id/available-days', async (req, res, next) => {
+  try {
+    const { month } = monthQuerySchema.parse(req.query)
+    const availableDates = await service.getAvailableDaysForMonth(req.params.slug, req.params.id, month)
+    res.json({ availableDates })
+  } catch (err) {
+    next(err)
+  }
+})
+
 const createBookingSchema = z.object({
   serviceTypeId: z.string().min(1),
   startsAt: z.string().datetime(),

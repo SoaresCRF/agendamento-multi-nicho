@@ -126,7 +126,13 @@ export function PublicBookingPage() {
             </Button>
             <h2 className="mb-md font-display text-display-md">Escolha um horário</h2>
             <div className="flex flex-col gap-lg sm:flex-row">
-              <CalendarPicker selectedDate={effectiveDate} onSelectDate={setSelectedDate} timezone={profile.timezone} />
+              <CalendarPicker
+                selectedDate={effectiveDate}
+                onSelectDate={setSelectedDate}
+                timezone={profile.timezone}
+                slug={slug!}
+                serviceTypeId={selectedServiceType.id}
+              />
               <div className="flex-1">
                 {slots && slots.length === 0 && (
                   <p className="font-sans text-body-sm text-muted">Nenhum horário disponível neste dia.</p>

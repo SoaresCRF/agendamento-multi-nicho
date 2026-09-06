@@ -91,4 +91,57 @@ describe('public booking-page endpoints', () => {
     expect(res.status).toBe(200)
     expect(res.body.slots).toEqual(['2026-09-07T12:00:00.000Z'])
   })
+
+  it('lists days with available slots for a month, respecting weekly availability', async () => {
+    const { user } = await createTestUser({ email: 'avail@example.com', slug: 'avail-slug' })
+    await prisma.availability.create({ data: { userId: user.id, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 60 },
+    })
+
+    const res = await request(createApp()).get(
+      `/api/public/avail-slug/service-types/${serviceType.id}/available-days?month=2026-12`,
+    )
+    expect(res.status).toBe(200)
+    expect(res.body.availableDates.length).toBeGreaterThan(0)
+    for (const dateStr of res.body.availableDates as string[]) {
+      expect(dateStr).toMatch(/^2026-12-\d{2}$/)
+      expect(new Date(`${dateStr}T00:00:00Z`).getUTCDay()).toBe(1) // Monday, per the rule above
+    }
+  })
+
+  it('excludes a day from available-days once its only slot is booked', async () => {
+    const { user } = await createTestUser({ email: 'avail2@example.com', slug: 'avail2-slug' })
+    await prisma.availability.create({ data: { userId: user.id, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 60 },
+    })
+    await prisma.booking.create({
+      data: {
+        userId: user.id,
+        serviceTypeId: serviceType.id,
+        clientName: 'Cliente',
+        clientEmail: 'cliente@example.com',
+        startsAt: new Date('2026-12-07T12:00:00.000Z'),
+        endsAt: new Date('2026-12-07T13:00:00.000Z'),
+      },
+    })
+
+    const res = await request(createApp()).get(
+      `/api/public/avail2-slug/service-types/${serviceType.id}/available-days?month=2026-12`,
+    )
+    expect(res.body.availableDates).not.toContain('2026-12-07')
+    expect(res.body.availableDates).toContain('2026-12-14')
+  })
+
+  it('never caches available-days, since they change on every booking/cancellation', async () => {
+    const { user } = await createTestUser({ email: 'avail3@example.com', slug: 'avail3-slug' })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 60 },
+    })
+    const res = await request(createApp()).get(
+      `/api/public/avail3-slug/service-types/${serviceType.id}/available-days?month=2026-12`,
+    )
+    expect(res.headers['cache-control'] ?? '').not.toMatch(/max-age/)
+  })
 })

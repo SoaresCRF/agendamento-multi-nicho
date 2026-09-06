@@ -29,6 +29,18 @@ export function usePublicSlots(slug: string, serviceTypeId: string | null, date:
   })
 }
 
+export function usePublicAvailableDays(slug: string, serviceTypeId: string, month: string) {
+  return useQuery({
+    queryKey: ['public', slug, 'available-days', serviceTypeId, month],
+    queryFn: async () => {
+      const result = await api.get<{ availableDates: string[] }>(
+        `/api/public/${slug}/service-types/${serviceTypeId}/available-days?month=${month}`,
+      )
+      return result.availableDates
+    },
+  })
+}
+
 export interface CreateBookingInput {
   serviceTypeId: string
   startsAt: string

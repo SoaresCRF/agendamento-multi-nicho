@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatInTimeZone } from 'date-fns-tz'
 import { ptBR } from 'date-fns/locale'
 import { cx } from '../../lib/cx'
+import { usePublicAvailableDays } from './usePublicBooking'
 
 function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
@@ -11,11 +12,22 @@ interface CalendarPickerProps {
   selectedDate: string
   onSelectDate: (date: string) => void
   timezone: string
+  slug: string
+  serviceTypeId: string
   now?: Date
 }
 
-export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new Date() }: CalendarPickerProps) {
+export function CalendarPicker({
+  selectedDate,
+  onSelectDate,
+  timezone,
+  slug,
+  serviceTypeId,
+  now = new Date(),
+}: CalendarPickerProps) {
   const [viewMonth, setViewMonth] = useState(() => selectedDate.slice(0, 7)) // "YYYY-MM"
+  const { data: availableDates } = usePublicAvailableDays(slug, serviceTypeId, viewMonth)
+  const availableDateSet = new Set(availableDates)
   const todayStr = formatInTimeZone(now, timezone, 'yyyy-MM-dd')
 
   const [year, month] = viewMonth.split('-').map(Number)
@@ -52,10 +64,17 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
           if (!cell) return <div key={`empty-${i}`} />
           const isPast = cell.dateStr < todayStr
           const isSelected = cell.dateStr === selectedDate
+          const isAvailable = !isPast && !isSelected && availableDateSet.has(cell.dateStr)
           const fullDateLabel = capitalize(
             formatInTimeZone(new Date(`${cell.dateStr}T00:00:00Z`), 'UTC', "d 'de' MMMM 'de' yyyy", { locale: ptBR }),
           )
-          const stateSuffix = isPast ? ' (indisponível)' : isSelected ? ' (selecionado)' : ''
+          const stateSuffix = isPast
+            ? ' (indisponível)'
+            : isSelected
+              ? ' (selecionado)'
+              : isAvailable
+                ? ' (com horários disponíveis)'
+                : ''
           return (
             <button
               key={cell.dateStr}
@@ -66,7 +85,8 @@ export function CalendarPicker({ selectedDate, onSelectDate, timezone, now = new
               className={cx(
                 'h-11 w-11 rounded-full font-sans text-body-sm',
                 isSelected && 'bg-primary text-on-primary',
-                !isSelected && !isPast && 'text-ink hover:bg-surface-soft',
+                isAvailable && 'bg-primary-soft text-primary hover:bg-primary-soft',
+                !isSelected && !isAvailable && !isPast && 'text-ink hover:bg-surface-soft',
                 isPast && 'cursor-not-allowed text-muted-soft',
               )}
             >
