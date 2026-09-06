@@ -106,7 +106,11 @@ export function PublicBookingPage() {
       </header>
 
       <main className="mx-auto max-w-[720px] px-lg py-xl">
-        {bookingError && <p className="mb-md font-sans text-body-sm text-error">{bookingError}</p>}
+        {bookingError && (
+          <p role="alert" className="mb-md font-sans text-body-sm text-error">
+            {bookingError}
+          </p>
+        )}
 
         {step === 'select-service' && serviceTypes && (
           <>

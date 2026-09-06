@@ -202,6 +202,7 @@ describe('PublicBookingPage', () => {
 
     expect(await screen.findByText('Esse horário acabou de ser reservado — escolha outro.')).toBeInTheDocument()
     expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('Esse horário acabou de ser reservado')
   })
 
   it('shows a loading message while slots are being fetched, instead of a blank area', async () => {

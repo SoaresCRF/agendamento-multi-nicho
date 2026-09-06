@@ -68,6 +68,7 @@ export function BookingForm({ serviceType, professionalName, onSubmit, isSubmitt
                   id={field.id}
                   defaultValue=""
                   aria-invalid={errors[field.id] ? 'true' : undefined}
+                  aria-describedby={errors[field.id] ? `${field.id}-error` : undefined}
                   className="h-11 rounded-md border border-hairline bg-surface px-[14px] font-sans text-body-md text-ink focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
                   {...register(field.id as never)}
                 >
@@ -81,7 +82,9 @@ export function BookingForm({ serviceType, professionalName, onSubmit, isSubmitt
                   ))}
                 </select>
                 {errors[field.id] && (
-                  <span className="font-sans text-body-sm text-error">{errors[field.id]?.message as string}</span>
+                  <span id={`${field.id}-error`} className="font-sans text-body-sm text-error">
+                    {errors[field.id]?.message as string}
+                  </span>
                 )}
               </div>
             ) : field.fieldType === 'TEXTAREA' ? (
