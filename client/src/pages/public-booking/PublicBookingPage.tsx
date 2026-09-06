@@ -40,7 +40,7 @@ export function PublicBookingPage() {
     (profile
       ? formatInTimeZone(new Date(), profile.timezone, 'yyyy-MM-dd')
       : formatInTimeZone(new Date(), 'UTC', 'yyyy-MM-dd'))
-  const { data: slots } = usePublicSlots(slug!, selectedServiceTypeId, effectiveDate)
+  const { data: slots, isLoading: isSlotsLoading } = usePublicSlots(slug!, selectedServiceTypeId, effectiveDate)
 
   function handleSelectServiceType(id: string) {
     setSelectedServiceTypeId(id)
@@ -134,10 +134,11 @@ export function PublicBookingPage() {
                 serviceTypeId={selectedServiceType.id}
               />
               <div className="flex-1">
-                {slots && slots.length === 0 && (
+                {isSlotsLoading && <p className="font-sans text-body-sm text-muted">Carregando horários…</p>}
+                {!isSlotsLoading && slots && slots.length === 0 && (
                   <p className="font-sans text-body-sm text-muted">Nenhum horário disponível neste dia.</p>
                 )}
-                {slots && slots.length > 0 && (
+                {!isSlotsLoading && slots && slots.length > 0 && (
                   <SlotGrid
                     slots={slots}
                     selectedSlot={selectedSlot}

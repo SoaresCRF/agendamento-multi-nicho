@@ -202,6 +202,32 @@ describe('PublicBookingPage', () => {
     expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
   })
 
+  it('shows a loading message while slots are being fetched, instead of a blank area', async () => {
+    let resolveSlots: (value: Response) => void = () => {}
+    const slotsPromise = new Promise<Response>((resolve) => {
+      resolveSlots = resolve
+    })
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/slots')) {
+        return slotsPromise
+      }
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    await userEvent.click(await screen.findByText('Primeira consulta'))
+    expect(await screen.findByText('Carregando horários…')).toBeInTheDocument()
+
+    resolveSlots(new Response(JSON.stringify({ slots: ['2026-09-20T13:00:00.000Z'] }), { status: 200 }))
+
+    expect(await screen.findByRole('button', { name: '10:00' })).toBeInTheDocument()
+    expect(screen.queryByText('Carregando horários…')).not.toBeInTheDocument()
+  })
+
   it('shows a not-found message instead of a blank page for an invalid slug', async () => {
     global.fetch = vi.fn().mockImplementation(() => {
       return Promise.resolve(new Response(JSON.stringify({ error: 'Not found' }), { status: 404 }))
