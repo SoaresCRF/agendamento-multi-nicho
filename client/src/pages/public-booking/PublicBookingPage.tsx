@@ -18,6 +18,8 @@ import { useCanonicalUrl } from '../../lib/useCanonicalUrl'
 
 type Step = 'select-service' | 'pick-slot' | 'form' | 'confirmed'
 
+const STEP_ORDER: Step[] = ['select-service', 'pick-slot', 'form']
+
 export function PublicBookingPage() {
   const { slug } = useParams<{ slug: string }>()
   const queryClient = useQueryClient()
@@ -106,6 +108,12 @@ export function PublicBookingPage() {
       </header>
 
       <main className="mx-auto max-w-[720px] px-lg py-xl">
+        {step !== 'confirmed' && (
+          <p className="mb-sm font-sans text-caption text-muted">
+            Passo {STEP_ORDER.indexOf(step) + 1} de {STEP_ORDER.length}
+          </p>
+        )}
+
         {bookingError && (
           <p role="alert" className="mb-md font-sans text-body-sm text-error">
             {bookingError}

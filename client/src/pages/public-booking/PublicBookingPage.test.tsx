@@ -51,6 +51,48 @@ describe('PublicBookingPage', () => {
     expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
   })
 
+  it('shows which step the client is on, out of 3, and drops the indicator once confirmed', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/slots')) {
+        return Promise.resolve(new Response(JSON.stringify({ slots: ['2026-09-20T13:00:00.000Z'] }), { status: 200 }))
+      }
+      if (typeof url === 'string' && url.includes('/bookings')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              id: 'b1',
+              startsAt: '2026-09-20T13:00:00.000Z',
+              endsAt: '2026-09-20T14:00:00.000Z',
+              status: 'CONFIRMED',
+            }),
+            { status: 201 },
+          ),
+        )
+      }
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    expect(await screen.findByText('Passo 1 de 3')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByText('Primeira consulta'))
+    expect(await screen.findByText('Passo 2 de 3')).toBeInTheDocument()
+
+    await userEvent.click(await screen.findByRole('button', { name: '10:00' }))
+    expect(await screen.findByText('Passo 3 de 3')).toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText('Nome'), 'Cliente Teste')
+    await userEvent.type(screen.getByLabelText('E-mail'), 'cliente@example.com')
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar agendamento' }))
+
+    expect(await screen.findByText('Agendamento confirmado!')).toBeInTheDocument()
+    expect(screen.queryByText(/Passo \d de 3/)).not.toBeInTheDocument()
+  })
+
   it('walks the client from slot selection through a successful booking submission', async () => {
     let bookingPosted = false
     global.fetch = vi.fn().mockImplementation((url: string, init?: RequestInit) => {
