@@ -177,8 +177,26 @@ export function PublicBookingPage() {
 
         {step === 'confirmed' && selectedServiceType && selectedSlot && (
           <div className="text-center">
+            <svg
+              role="img"
+              aria-label="Confirmado"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="mx-auto mb-sm h-12 w-12 text-success"
+            >
+              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+              <path
+                d="M8 12.5l2.5 2.5L16 9.5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             <h2 className="mb-sm font-display text-display-md">Agendamento confirmado!</h2>
-            <p className="mb-lg font-sans text-body-md text-muted">Você receberá um e-mail de confirmação em breve.</p>
+            <p className="mb-lg font-sans text-body-md text-muted">
+              Você receberá um e-mail de confirmação em breve. Adicione ao calendário abaixo para não esquecer.
+            </p>
             <BookingSummary
               serviceName={selectedServiceType.name}
               durationMinutes={selectedServiceType.durationMinutes}

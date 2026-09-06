@@ -95,6 +95,8 @@ describe('PublicBookingPage', () => {
 
     expect(await screen.findByText('Agendamento confirmado!')).toBeInTheDocument()
     expect(bookingPosted).toBe(true)
+    expect(screen.getByRole('img', { name: 'Confirmado' })).toBeInTheDocument()
+    expect(screen.getByText(/adicione ao calendário/i)).toBeInTheDocument()
 
     const calendarLink = screen.getByRole('link', { name: 'Adicionar ao calendário' })
     expect(calendarLink).toHaveAttribute('download', 'agendamento.ics')
