@@ -7,6 +7,7 @@ import { CalendarPicker } from './CalendarPicker'
 import { SlotGrid } from './SlotGrid'
 import { BookingForm } from './BookingForm'
 import { BookingSummary } from './BookingSummary'
+import { buildBookingIcs } from './calendarEvent'
 import { ApiError } from '../../lib/api'
 import { formatInTimeZone } from 'date-fns-tz'
 import { EmptyState } from '../../components/EmptyState'
@@ -177,6 +178,20 @@ export function PublicBookingPage() {
               startsAt={selectedSlot}
               timezone={profile.timezone}
             />
+            <a
+              href={`data:text/calendar;charset=utf-8,${encodeURIComponent(
+                buildBookingIcs({
+                  serviceName: selectedServiceType.name,
+                  professionalName: profile.name,
+                  startsAt: selectedSlot,
+                  durationMinutes: selectedServiceType.durationMinutes,
+                }),
+              )}`}
+              download="agendamento.ics"
+              className="mt-lg inline-block font-sans text-body-md text-primary hover:underline"
+            >
+              Adicionar ao calendário
+            </a>
           </div>
         )}
       </main>

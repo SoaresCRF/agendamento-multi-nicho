@@ -95,6 +95,12 @@ describe('PublicBookingPage', () => {
 
     expect(await screen.findByText('Agendamento confirmado!')).toBeInTheDocument()
     expect(bookingPosted).toBe(true)
+
+    const calendarLink = screen.getByRole('link', { name: 'Adicionar ao calendário' })
+    expect(calendarLink).toHaveAttribute('download', 'agendamento.ics')
+    expect(decodeURIComponent(calendarLink.getAttribute('href') ?? '')).toContain(
+      'SUMMARY:Primeira consulta com Joana Silva',
+    )
   })
 
   it('carries a summary of the chosen service, date and time from the form step through confirmation', async () => {
