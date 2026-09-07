@@ -87,10 +87,7 @@ describe('PanelLayout', () => {
     const drawer = document.getElementById('painel-mobile-nav')!
     await userEvent.click(within(drawer).getByText('Perfil'))
 
-    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    )
+    expect(screen.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.getAllByText('Tipos de Serviço')).toHaveLength(1)
   })
 

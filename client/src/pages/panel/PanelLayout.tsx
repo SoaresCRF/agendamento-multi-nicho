@@ -64,11 +64,7 @@ export function PanelLayout() {
           strokeWidth="2"
           strokeLinecap="round"
         >
-          {mobileNavOpen ? (
-            <path d="M6 6l12 12M18 6l-12 12" />
-          ) : (
-            <path d="M4 7h16M4 12h16M4 17h16" />
-          )}
+          {mobileNavOpen ? <path d="M6 6l12 12M18 6l-12 12" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
         </svg>
       </button>
 

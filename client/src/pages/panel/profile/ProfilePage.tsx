@@ -109,8 +109,8 @@ export function ProfilePage() {
         </div>
         {oversizedPhoto && (
           <p className="-mt-xs font-sans text-body-sm text-warning">
-            Imagem grande ({oversizedPhoto.width}×{oversizedPhoto.height}px) pode deixar sua página lenta para
-            carregar. Recomendamos uma imagem de até {PHOTO_MAX_DIMENSION_PX}px.
+            Imagem grande ({oversizedPhoto.width}×{oversizedPhoto.height}px) pode deixar sua página lenta para carregar.
+            Recomendamos uma imagem de até {PHOTO_MAX_DIMENSION_PX}px.
           </p>
         )}
         <div>
