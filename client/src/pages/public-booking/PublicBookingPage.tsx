@@ -99,11 +99,24 @@ export function PublicBookingPage() {
   return (
     <div className="min-h-screen bg-canvas">
       <header className="bg-secondary-dark px-lg py-section text-center text-on-secondary-dark">
+        {profile?.profilePhotoUrl && (
+          <img
+            src={profile.profilePhotoUrl}
+            alt={profile.name}
+            className="mx-auto mb-sm h-24 w-24 rounded-full border border-white/20 object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none'
+            }}
+          />
+        )}
         <h1 className="font-display text-display-lg">{profile?.name}</h1>
         {profile?.niche && (
           <Badge tone={toneForNiche(profile.niche)} className="mt-xs">
             {profile.niche}
           </Badge>
+        )}
+        {profile?.bio && (
+          <p className="mx-auto mt-sm max-w-[560px] font-sans text-body-md text-on-secondary-dark/80">{profile.bio}</p>
         )}
       </header>
 

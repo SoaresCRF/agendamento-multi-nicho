@@ -51,6 +51,42 @@ describe('PublicBookingPage', () => {
     expect(await screen.findByText(/Escolha um horário/)).toBeInTheDocument()
   })
 
+  it('shows the profile photo and bio in the hero band when present', async () => {
+    const profileWithPhoto = {
+      ...profile,
+      profilePhotoUrl: 'https://example.com/foto.jpg',
+      bio: 'Psicóloga clínica há 10 anos.',
+    }
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(profileWithPhoto), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    expect(await screen.findByRole('img', { name: 'Joana Silva' })).toHaveAttribute(
+      'src',
+      'https://example.com/foto.jpg',
+    )
+    expect(screen.getByText('Psicóloga clínica há 10 anos.')).toBeInTheDocument()
+  })
+
+  it('omits the avatar and bio paragraph when absent', async () => {
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    await screen.findByText('Joana Silva')
+    expect(screen.queryByRole('img', { name: 'Joana Silva' })).not.toBeInTheDocument()
+  })
+
   it('shows which step the client is on, out of 3, and drops the indicator once confirmed', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.endsWith('/service-types')) {
