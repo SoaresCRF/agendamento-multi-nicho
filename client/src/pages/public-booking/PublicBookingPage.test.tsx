@@ -66,11 +66,29 @@ describe('PublicBookingPage', () => {
 
     renderPage()
 
-    expect(await screen.findByRole('img', { name: 'Joana Silva' })).toHaveAttribute(
-      'src',
-      'https://example.com/foto.jpg',
-    )
+    const avatar = await screen.findByRole('img', { name: 'Joana Silva' })
+    expect(avatar).toHaveAttribute('src', 'https://example.com/foto.jpg')
     expect(screen.getByText('Psicóloga clínica há 10 anos.')).toBeInTheDocument()
+  })
+
+  it('shades the hero avatar with a design-token shadow, not an arbitrary one-off value', async () => {
+    const profileWithPhoto = {
+      ...profile,
+      profilePhotoUrl: 'https://example.com/foto.jpg',
+      bio: 'Psicóloga clínica há 10 anos.',
+    }
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(profileWithPhoto), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    renderPage()
+
+    const avatar = await screen.findByRole('img', { name: 'Joana Silva' })
+    expect(avatar.className).toContain('shadow-avatar-dark')
+    expect(avatar.className).not.toMatch(/shadow-\[/)
   })
 
   it('omits the avatar and bio paragraph when absent', async () => {
