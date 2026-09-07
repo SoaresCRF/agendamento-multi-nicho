@@ -64,9 +64,10 @@ describe('PublicBookingPage', () => {
       return Promise.resolve(new Response(JSON.stringify(profileWithPhoto), { status: 200 }))
     }) as unknown as typeof fetch
 
-    renderPage()
+    const { container } = renderPage()
 
-    const avatar = await screen.findByRole('img', { name: 'Joana Silva' })
+    await screen.findByText('Joana Silva')
+    const avatar = container.querySelector('img')
     expect(avatar).toHaveAttribute('src', 'https://example.com/foto.jpg')
     expect(screen.getByText('Psicóloga clínica há 10 anos.')).toBeInTheDocument()
   })
@@ -84,11 +85,31 @@ describe('PublicBookingPage', () => {
       return Promise.resolve(new Response(JSON.stringify(profileWithPhoto), { status: 200 }))
     }) as unknown as typeof fetch
 
-    renderPage()
+    const { container } = renderPage()
 
-    const avatar = await screen.findByRole('img', { name: 'Joana Silva' })
-    expect(avatar.className).toContain('shadow-avatar-dark')
-    expect(avatar.className).not.toMatch(/shadow-\[/)
+    await screen.findByText('Joana Silva')
+    const avatar = container.querySelector('img')
+    expect(avatar?.className).toContain('shadow-avatar-dark')
+    expect(avatar?.className).not.toMatch(/shadow-\[/)
+  })
+
+  it('renders the hero avatar as decorative, since its name duplicates the adjacent heading', async () => {
+    const profileWithPhoto = {
+      ...profile,
+      profilePhotoUrl: 'https://example.com/foto.jpg',
+      bio: 'Psicóloga clínica há 10 anos.',
+    }
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(profileWithPhoto), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    const { container } = renderPage()
+
+    await screen.findByText('Joana Silva')
+    expect(container.querySelector('img')).toHaveAttribute('alt', '')
   })
 
   it('omits the avatar and bio paragraph when absent', async () => {
@@ -99,10 +120,10 @@ describe('PublicBookingPage', () => {
       return Promise.resolve(new Response(JSON.stringify(profile), { status: 200 }))
     }) as unknown as typeof fetch
 
-    renderPage()
+    const { container } = renderPage()
 
     await screen.findByText('Joana Silva')
-    expect(screen.queryByRole('img', { name: 'Joana Silva' })).not.toBeInTheDocument()
+    expect(container.querySelector('img')).not.toBeInTheDocument()
   })
 
   it('shows which step the client is on, out of 3, and drops the indicator once confirmed', async () => {
