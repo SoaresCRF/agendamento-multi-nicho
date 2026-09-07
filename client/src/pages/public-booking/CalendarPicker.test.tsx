@@ -13,7 +13,7 @@ function renderCalendar({
     .fn()
     .mockResolvedValue(new Response(JSON.stringify({ availableDates }), { status: 200 })) as unknown as typeof fetch
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(
+  const result = render(
     <QueryClientProvider client={queryClient}>
       <CalendarPicker
         selectedDate="2026-09-15"
@@ -25,7 +25,7 @@ function renderCalendar({
       />
     </QueryClientProvider>,
   )
-  return { onSelectDate }
+  return { onSelectDate, ...result }
 }
 
 describe('CalendarPicker', () => {
@@ -44,6 +44,13 @@ describe('CalendarPicker', () => {
     const pastDay = screen.getByRole('button', { name: '1 de setembro de 2026 (indisponível)' })
     await userEvent.click(pastDay)
     expect(onSelectDate).not.toHaveBeenCalled()
+  })
+
+  it('shows weekday abbreviations above the day grid, starting on Sunday', () => {
+    const { container } = renderCalendar()
+
+    const labels = Array.from(container.querySelectorAll('[data-weekday-header] span')).map((el) => el.textContent)
+    expect(labels).toEqual(['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'])
   })
 
   it('shows a localized month header and marks the selected day for assistive tech', () => {

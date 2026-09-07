@@ -8,6 +8,9 @@ function capitalize(text: string) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
+// Sunday-first, matching startWeekday below (Date#getUTCDay(): 0 = Sunday).
+const WEEKDAY_LABELS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB']
+
 interface CalendarPickerProps {
   selectedDate: string
   onSelectDate: (date: string) => void
@@ -58,6 +61,13 @@ export function CalendarPicker({
         <button onClick={() => shiftMonth(1)} aria-label="Próximo mês" className="text-muted hover:text-ink">
           ›
         </button>
+      </div>
+      <div data-weekday-header aria-hidden="true" className="mb-xxs grid grid-cols-7 gap-xxs">
+        {WEEKDAY_LABELS.map((label) => (
+          <span key={label} className="text-center font-sans text-caption text-muted-soft">
+            {label}
+          </span>
+        ))}
       </div>
       <div className="grid grid-cols-7 gap-xxs">
         {cells.map((cell, i) => {
