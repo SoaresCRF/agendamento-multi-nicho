@@ -101,9 +101,10 @@ export function ProfilePage() {
             id="bio"
             maxLength={BIO_MAX_LENGTH}
             error={errors.bio?.message}
+            descriptionId="bio-count"
             {...register('bio')}
           />
-          <p className="mt-xxs text-right font-sans text-caption text-muted">
+          <p id="bio-count" className="mt-xxs text-right font-sans text-caption text-muted">
             {bio.length}/{BIO_MAX_LENGTH}
           </p>
         </div>

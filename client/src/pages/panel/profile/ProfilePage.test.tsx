@@ -98,6 +98,19 @@ describe('ProfilePage', () => {
     expect(screen.getByText('3/280')).toBeInTheDocument()
   })
 
+  it('associates the bio counter with the textarea via aria-describedby, for screen readers', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+
+    renderPage()
+
+    const bio = await screen.findByLabelText('Biografia (opcional)')
+    const describedBy = bio.getAttribute('aria-describedby')
+    expect(describedBy).toBeTruthy()
+    expect(screen.getByText('0/280')).toHaveAttribute('id', describedBy!)
+  })
+
   it('rejects a non-https photo URL client-side', async () => {
     global.fetch = vi
       .fn()
