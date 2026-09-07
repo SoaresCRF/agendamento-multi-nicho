@@ -15,7 +15,13 @@ export async function listPublicSlugs() {
 export async function getPublicProfile(slug: string) {
   const user = await prisma.user.findUnique({ where: { slug } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
-  return { name: user.name, niche: user.niche, timezone: user.timezone }
+  return {
+    name: user.name,
+    niche: user.niche,
+    timezone: user.timezone,
+    profilePhotoUrl: user.profilePhotoUrl,
+    bio: user.bio,
+  }
 }
 
 export async function listPublicServiceTypes(slug: string) {

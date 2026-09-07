@@ -15,6 +15,20 @@ describe('public booking-page endpoints', () => {
     expect(res.body).toMatchObject({ niche: 'Psicologia', timezone: 'America/Sao_Paulo' })
   })
 
+  it('includes profilePhotoUrl and bio in the public profile', async () => {
+    const { user } = await createTestUser({ email: 'photo-pub@example.com', slug: 'photo-pub-slug' })
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { profilePhotoUrl: 'https://example.com/photo.jpg', bio: 'Psicóloga clínica há 10 anos.' },
+    })
+    const res = await request(createApp()).get('/api/public/photo-pub-slug')
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({
+      profilePhotoUrl: 'https://example.com/photo.jpg',
+      bio: 'Psicóloga clínica há 10 anos.',
+    })
+  })
+
   it('returns 404 for an unknown slug', async () => {
     const res = await request(createApp()).get('/api/public/does-not-exist')
     expect(res.status).toBe(404)
