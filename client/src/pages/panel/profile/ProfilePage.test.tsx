@@ -68,6 +68,36 @@ describe('ProfilePage', () => {
     )
   })
 
+  it('shows a live avatar preview as the photo URL is typed', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+
+    renderPage()
+
+    await screen.findByLabelText('Biografia (opcional)')
+    expect(screen.queryByAltText('Pré-visualização da foto')).not.toBeInTheDocument()
+
+    await userEvent.type(screen.getByLabelText('URL da foto (opcional)'), 'https://example.com/foto.jpg')
+
+    expect(screen.getByAltText('Pré-visualização da foto')).toHaveAttribute('src', 'https://example.com/foto.jpg')
+  })
+
+  it('shows a character counter for the bio field', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+
+    renderPage()
+
+    const bio = await screen.findByLabelText('Biografia (opcional)')
+    expect(screen.getByText('0/280')).toBeInTheDocument()
+
+    await userEvent.type(bio, 'Olá')
+
+    expect(screen.getByText('3/280')).toBeInTheDocument()
+  })
+
   it('rejects a non-https photo URL client-side', async () => {
     global.fetch = vi
       .fn()

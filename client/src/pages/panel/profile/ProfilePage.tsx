@@ -38,8 +38,12 @@ export function ProfilePage() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({ resolver: zodResolver(profileFormSchema), defaultValues: EMPTY_FORM })
+
+  const profilePhotoUrl = watch('profilePhotoUrl')
+  const bio = watch('bio')
 
   // Only re-seed from the server while the user hasn't started editing —
   // otherwise a background refetch silently discards an in-progress edit.
@@ -70,14 +74,39 @@ export function ProfilePage() {
     <Card className="max-w-2xl">
       <h1 className="mb-lg font-display text-display-sm">Perfil</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-md">
-        <Input
-          label="URL da foto (opcional)"
-          id="profilePhotoUrl"
-          type="url"
-          error={errors.profilePhotoUrl?.message}
-          {...register('profilePhotoUrl')}
-        />
-        <Textarea label="Biografia (opcional)" id="bio" error={errors.bio?.message} {...register('bio')} />
+        <div className="flex items-end gap-sm">
+          {profilePhotoUrl && (
+            <img
+              src={profilePhotoUrl}
+              alt="Pré-visualização da foto"
+              className="h-11 w-11 shrink-0 rounded-full border border-hairline object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          )}
+          <div className="flex-1">
+            <Input
+              label="URL da foto (opcional)"
+              id="profilePhotoUrl"
+              type="url"
+              error={errors.profilePhotoUrl?.message}
+              {...register('profilePhotoUrl')}
+            />
+          </div>
+        </div>
+        <div>
+          <Textarea
+            label="Biografia (opcional)"
+            id="bio"
+            maxLength={BIO_MAX_LENGTH}
+            error={errors.bio?.message}
+            {...register('bio')}
+          />
+          <p className="mt-xxs text-right font-sans text-caption text-muted">
+            {bio.length}/{BIO_MAX_LENGTH}
+          </p>
+        </div>
         <div>
           <Button type="submit" disabled={updateProfile.isPending}>
             Salvar
