@@ -7,7 +7,7 @@ const NY = 'America/New_York'
 describe('getAvailableSlots', () => {
   it('generates slots that fit exactly within a general availability window', () => {
     const slots = getAvailableSlots({
-      date: '2026-09-07', // a Monday
+      date: '2026-09-14', // a Monday, not a holiday
       timezone: SP,
       durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '11:00' }],
@@ -16,13 +16,13 @@ describe('getAvailableSlots', () => {
       now: new Date('2026-09-01T00:00:00Z'),
     })
     expect(slots).toHaveLength(2)
-    expect(slots[0].toISOString()).toBe('2026-09-07T12:00:00.000Z') // 09:00 -03:00
-    expect(slots[1].toISOString()).toBe('2026-09-07T13:00:00.000Z') // 10:00 -03:00
+    expect(slots[0].toISOString()).toBe('2026-09-14T12:00:00.000Z') // 09:00 -03:00
+    expect(slots[1].toISOString()).toBe('2026-09-14T13:00:00.000Z') // 10:00 -03:00
   })
 
   it('drops a trailing slot that would not fully fit in the window', () => {
     const slots = getAvailableSlots({
-      date: '2026-09-07',
+      date: '2026-09-14',
       timezone: SP,
       durationMinutes: 50,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '10:30' }],
@@ -36,7 +36,7 @@ describe('getAvailableSlots', () => {
 
   it('service-type rules override, not add to, general availability for that weekday', () => {
     const slots = getAvailableSlots({
-      date: '2026-09-07',
+      date: '2026-09-14',
       timezone: SP,
       durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '18:00' }],
@@ -45,35 +45,61 @@ describe('getAvailableSlots', () => {
       now: new Date('2026-09-01T00:00:00Z'),
     })
     expect(slots).toHaveLength(1)
-    expect(slots[0].toISOString()).toBe('2026-09-07T17:00:00.000Z') // 14:00 -03:00
+    expect(slots[0].toISOString()).toBe('2026-09-14T17:00:00.000Z') // 14:00 -03:00
   })
 
   it('removes a slot that overlaps an existing conflict (booking or blocked slot)', () => {
     const slots = getAvailableSlots({
-      date: '2026-09-07',
+      date: '2026-09-14',
       timezone: SP,
       durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '11:00' }],
       serviceTypeRules: [],
-      conflicts: [{ startsAt: new Date('2026-09-07T12:00:00Z'), endsAt: new Date('2026-09-07T13:00:00Z') }],
+      conflicts: [{ startsAt: new Date('2026-09-14T12:00:00Z'), endsAt: new Date('2026-09-14T13:00:00Z') }],
       now: new Date('2026-09-01T00:00:00Z'),
     })
     expect(slots).toHaveLength(1)
-    expect(slots[0].toISOString()).toBe('2026-09-07T13:00:00.000Z')
+    expect(slots[0].toISOString()).toBe('2026-09-14T13:00:00.000Z')
   })
 
   it('drops slots that start before "now"', () => {
     const slots = getAvailableSlots({
-      date: '2026-09-07',
+      date: '2026-09-14',
       timezone: SP,
       durationMinutes: 60,
       generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '11:00' }],
       serviceTypeRules: [],
       conflicts: [],
-      now: new Date('2026-09-07T12:30:00Z'), // 09:30 local — after the 09:00 slot's start
+      now: new Date('2026-09-14T12:30:00Z'), // 09:30 local — after the 09:00 slot's start
     })
     expect(slots).toHaveLength(1)
-    expect(slots[0].toISOString()).toBe('2026-09-07T13:00:00.000Z')
+    expect(slots[0].toISOString()).toBe('2026-09-14T13:00:00.000Z')
+  })
+
+  it('returns no slots on a national holiday, even with a matching weekly availability rule', () => {
+    const slots = getAvailableSlots({
+      date: '2026-09-07', // Independência do Brasil — a Monday, would otherwise have slots
+      timezone: SP,
+      durationMinutes: 60,
+      generalRules: [{ dayOfWeek: 1, startTime: '09:00', endTime: '11:00' }],
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-09-01T00:00:00Z'),
+    })
+    expect(slots).toHaveLength(0)
+  })
+
+  it('returns no slots on a movable national holiday (Carnaval)', () => {
+    const slots = getAvailableSlots({
+      date: '2026-02-17', // Carnaval 2026 — a Tuesday
+      timezone: SP,
+      durationMinutes: 60,
+      generalRules: [{ dayOfWeek: 2, startTime: '09:00', endTime: '11:00' }],
+      serviceTypeRules: [],
+      conflicts: [],
+      now: new Date('2026-01-01T00:00:00Z'),
+    })
+    expect(slots).toHaveLength(0)
   })
 
   it('resolves a recurring 09:00 local slot to the same UTC hour in a fixed-offset zone', () => {

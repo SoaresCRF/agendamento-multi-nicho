@@ -94,10 +94,10 @@ describe('public booking-page endpoints', () => {
   })
 
   it('returns available slots for a date, respecting general availability', async () => {
-    // 2026-09-07 is a fixed Monday used as the test date; pin "now" to just
-    // before its 09:00 local slot so the engine doesn't exclude it as past
-    // once the real clock catches up to that date.
-    vi.setSystemTime(new Date('2026-09-07T08:00:00.000Z'))
+    // 2026-09-14 is a fixed Monday (not a national holiday) used as the test
+    // date; pin "now" to just before its 09:00 local slot so the engine
+    // doesn't exclude it as past once the real clock catches up to that date.
+    vi.setSystemTime(new Date('2026-09-14T08:00:00.000Z'))
     const { user } = await createTestUser({ email: 'slots@example.com', slug: 'slots-slug' })
     await prisma.availability.create({ data: { userId: user.id, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' } })
     const serviceType = await prisma.serviceType.create({
@@ -105,10 +105,24 @@ describe('public booking-page endpoints', () => {
     })
 
     const res = await request(createApp()).get(
-      `/api/public/slots-slug/service-types/${serviceType.id}/slots?date=2026-09-07`,
+      `/api/public/slots-slug/service-types/${serviceType.id}/slots?date=2026-09-14`,
     )
     expect(res.status).toBe(200)
-    expect(res.body.slots).toEqual(['2026-09-07T12:00:00.000Z'])
+    expect(res.body.slots).toEqual(['2026-09-14T12:00:00.000Z'])
+  })
+
+  it('returns no slots for a date that is a national holiday', async () => {
+    const { user } = await createTestUser({ email: 'holiday@example.com', slug: 'holiday-slug' })
+    await prisma.availability.create({ data: { userId: user.id, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' } })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 60 },
+    })
+
+    const res = await request(createApp()).get(
+      `/api/public/holiday-slug/service-types/${serviceType.id}/slots?date=2026-09-07`,
+    )
+    expect(res.status).toBe(200)
+    expect(res.body.slots).toEqual([])
   })
 
   it('lists days with available slots for a month, respecting weekly availability', async () => {

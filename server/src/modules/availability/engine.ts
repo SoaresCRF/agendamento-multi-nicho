@@ -1,5 +1,6 @@
 import { addMinutes, isBefore } from 'date-fns'
 import { fromZonedTime } from 'date-fns-tz'
+import { isNationalHoliday } from './holidays'
 
 export interface AvailabilityRuleRow {
   dayOfWeek: number
@@ -40,6 +41,8 @@ function rangesOverlap(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): bool
 }
 
 export function getAvailableSlots(input: GetAvailableSlotsInput): Date[] {
+  if (isNationalHoliday(input.date)) return []
+
   const dayOfWeek = dayOfWeekFor(input.date, input.timezone)
   const windows = windowsForDay(input, dayOfWeek)
   const now = input.now ?? new Date()
