@@ -112,6 +112,27 @@ describe('PublicBookingPage', () => {
     expect(container.querySelector('img')).toHaveAttribute('alt', '')
   })
 
+  it('borders the hero avatar with the semantic on-secondary-dark token, not a hard-coded white', async () => {
+    const profileWithPhoto = {
+      ...profile,
+      profilePhotoUrl: 'https://example.com/foto.jpg',
+      bio: 'Psicóloga clínica há 10 anos.',
+    }
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (typeof url === 'string' && url.endsWith('/service-types')) {
+        return Promise.resolve(new Response(JSON.stringify(serviceTypes), { status: 200 }))
+      }
+      return Promise.resolve(new Response(JSON.stringify(profileWithPhoto), { status: 200 }))
+    }) as unknown as typeof fetch
+
+    const { container } = renderPage()
+
+    await screen.findByText('Joana Silva')
+    const avatar = container.querySelector('img')
+    expect(avatar?.className).toContain('border-on-secondary-dark/40')
+    expect(avatar?.className).not.toMatch(/border-white/)
+  })
+
   it('omits the avatar and bio paragraph when absent', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) => {
       if (typeof url === 'string' && url.endsWith('/service-types')) {
