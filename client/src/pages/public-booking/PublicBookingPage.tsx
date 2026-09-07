@@ -103,7 +103,7 @@ export function PublicBookingPage() {
           <img
             src={profile.profilePhotoUrl}
             alt={profile.name}
-            className="mx-auto mb-sm h-24 w-24 rounded-full border border-white/20 object-cover"
+            className="mx-auto mb-sm h-24 w-24 rounded-full border-2 border-white/40 object-cover shadow-[0_4px_16px_rgba(0,0,0,0.35)]"
             onError={(e) => {
               e.currentTarget.style.display = 'none'
             }}
