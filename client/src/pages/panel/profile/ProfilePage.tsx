@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -14,6 +14,9 @@ import { useDocumentTitle } from '../../../lib/useDocumentTitle'
 import type { MeResponse } from '../../../lib/types'
 
 const BIO_MAX_LENGTH = 280
+// The avatar never renders larger than 96px (public hero) anywhere in the
+// product; anything well beyond that is needlessly large to download.
+const PHOTO_MAX_DIMENSION_PX = 1000
 
 // Mirrors server/src/modules/users/users.schemas.ts exactly.
 const profileFormSchema = z.object({
@@ -44,6 +47,7 @@ export function ProfilePage() {
 
   const profilePhotoUrl = watch('profilePhotoUrl')
   const bio = watch('bio')
+  const [oversizedPhoto, setOversizedPhoto] = useState<{ width: number; height: number } | null>(null)
 
   // Only re-seed from the server while the user hasn't started editing —
   // otherwise a background refetch silently discards an in-progress edit.
@@ -83,6 +87,14 @@ export function ProfilePage() {
               onError={(e) => {
                 e.currentTarget.style.display = 'none'
               }}
+              onLoad={(e) => {
+                const { naturalWidth, naturalHeight } = e.currentTarget
+                setOversizedPhoto(
+                  naturalWidth > PHOTO_MAX_DIMENSION_PX || naturalHeight > PHOTO_MAX_DIMENSION_PX
+                    ? { width: naturalWidth, height: naturalHeight }
+                    : null,
+                )
+              }}
             />
           )}
           <div className="flex-1">
@@ -95,6 +107,12 @@ export function ProfilePage() {
             />
           </div>
         </div>
+        {oversizedPhoto && (
+          <p className="-mt-xs font-sans text-body-sm text-warning">
+            Imagem grande ({oversizedPhoto.width}×{oversizedPhoto.height}px) pode deixar sua página lenta para
+            carregar. Recomendamos uma imagem de até {PHOTO_MAX_DIMENSION_PX}px.
+          </p>
+        )}
         <div>
           <Textarea
             label="Biografia (opcional)"

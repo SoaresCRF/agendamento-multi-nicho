@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -109,6 +109,40 @@ describe('ProfilePage', () => {
     const describedBy = bio.getAttribute('aria-describedby')
     expect(describedBy).toBeTruthy()
     expect(screen.getByText('0/280')).toHaveAttribute('id', describedBy!)
+  })
+
+  it('warns when the pasted photo is much larger than needed for the avatar', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+
+    renderPage()
+
+    await screen.findByLabelText('Biografia (opcional)')
+    await userEvent.type(screen.getByLabelText('URL da foto (opcional)'), 'https://example.com/foto.jpg')
+    const preview = screen.getByAltText('Pré-visualização da foto')
+    Object.defineProperty(preview, 'naturalWidth', { value: 3000, configurable: true })
+    Object.defineProperty(preview, 'naturalHeight', { value: 2000, configurable: true })
+    fireEvent.load(preview)
+
+    expect(await screen.findByText(/imagem grande/i)).toBeInTheDocument()
+  })
+
+  it('does not warn when the pasted photo is a reasonable size', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+
+    renderPage()
+
+    await screen.findByLabelText('Biografia (opcional)')
+    await userEvent.type(screen.getByLabelText('URL da foto (opcional)'), 'https://example.com/foto.jpg')
+    const preview = screen.getByAltText('Pré-visualização da foto')
+    Object.defineProperty(preview, 'naturalWidth', { value: 400, configurable: true })
+    Object.defineProperty(preview, 'naturalHeight', { value: 400, configurable: true })
+    fireEvent.load(preview)
+
+    expect(screen.queryByText(/imagem grande/i)).not.toBeInTheDocument()
   })
 
   it('rejects a non-https photo URL client-side', async () => {
