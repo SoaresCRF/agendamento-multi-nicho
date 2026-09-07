@@ -174,6 +174,12 @@ O workflow `.github/workflows/ci.yml` roda em todo push/PR para `main`:
 lint, `format:check`, typecheck e testes de `client/` e `server/` (com um
 Postgres de serviço), e o build de produção do `client/`.
 
+**Pendência conhecida (não bloqueia, só aviso no run):** `actions/checkout@v4`
+e `actions/setup-node@v4` ainda miram Node 20, que o GitHub Actions já
+descontinuou nos runners — hoje são forçados a rodar em Node 24 por trás,
+sem quebrar nada, mas o aviso aparece em toda run. Bumpar as duas para `@v5`
+quando der.
+
 ## Visão geral da API
 
 Todas as rotas abaixo, exceto `/health`, `/api/auth/*` e `/api/public/*`,
