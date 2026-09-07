@@ -1,0 +1,89 @@
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Input } from '../../../components/Input'
+import { Textarea } from '../../../components/Textarea'
+import { Button } from '../../../components/Button'
+import { Card } from '../../../components/Card'
+import { useMe } from '../../../lib/useMe'
+import { useToast } from '../../../components/toast/useToast'
+import { api, ApiError } from '../../../lib/api'
+import { useDocumentTitle } from '../../../lib/useDocumentTitle'
+import type { MeResponse } from '../../../lib/types'
+
+const BIO_MAX_LENGTH = 280
+
+// Mirrors server/src/modules/users/users.schemas.ts exactly.
+const profileFormSchema = z.object({
+  profilePhotoUrl: z.union([
+    z.literal(''),
+    z.string().url('URL inválida').startsWith('https://', 'A URL da foto deve começar com https://'),
+  ]),
+  bio: z.string().max(BIO_MAX_LENGTH, `Biografia deve ter no máximo ${BIO_MAX_LENGTH} caracteres`),
+})
+
+type ProfileFormValues = z.infer<typeof profileFormSchema>
+
+const EMPTY_FORM: ProfileFormValues = { profilePhotoUrl: '', bio: '' }
+
+export function ProfilePage() {
+  useDocumentTitle('Perfil')
+  const { show } = useToast()
+  const { data: me } = useMe()
+  const queryClient = useQueryClient()
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isDirty },
+  } = useForm<ProfileFormValues>({ resolver: zodResolver(profileFormSchema), defaultValues: EMPTY_FORM })
+
+  // Only re-seed from the server while the user hasn't started editing —
+  // otherwise a background refetch silently discards an in-progress edit.
+  useEffect(() => {
+    if (me && !isDirty) {
+      reset({ profilePhotoUrl: me.profilePhotoUrl ?? '', bio: me.bio ?? '' })
+    }
+  }, [me, reset, isDirty])
+
+  const updateProfile = useMutation({
+    mutationFn: (input: { profilePhotoUrl: string | null; bio: string | null }) =>
+      api.patch<MeResponse>('/api/me', input),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['me'], updated)
+      show('Perfil salvo')
+    },
+    onError: (err) => show(err instanceof ApiError ? err.message : 'Erro ao salvar', 'error'),
+  })
+
+  function onSubmit(values: ProfileFormValues) {
+    updateProfile.mutate({
+      profilePhotoUrl: values.profilePhotoUrl || null,
+      bio: values.bio || null,
+    })
+  }
+
+  return (
+    <Card className="max-w-2xl">
+      <h1 className="mb-lg font-display text-display-sm">Perfil</h1>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-md">
+        <Input
+          label="URL da foto (opcional)"
+          id="profilePhotoUrl"
+          type="url"
+          error={errors.profilePhotoUrl?.message}
+          {...register('profilePhotoUrl')}
+        />
+        <Textarea label="Biografia (opcional)" id="bio" error={errors.bio?.message} {...register('bio')} />
+        <div>
+          <Button type="submit" disabled={updateProfile.isPending}>
+            Salvar
+          </Button>
+        </div>
+      </form>
+    </Card>
+  )
+}

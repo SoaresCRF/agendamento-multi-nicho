@@ -29,6 +29,7 @@ const BlockedSlotsPage = lazy(() =>
   import('./pages/panel/blocked-slots/BlockedSlotsPage').then((m) => ({ default: m.BlockedSlotsPage })),
 )
 const AgendaPage = lazy(() => import('./pages/panel/agenda/AgendaPage').then((m) => ({ default: m.AgendaPage })))
+const ProfilePage = lazy(() => import('./pages/panel/profile/ProfilePage').then((m) => ({ default: m.ProfilePage })))
 
 export function App() {
   return (
@@ -56,6 +57,7 @@ export function App() {
                     <Route path="tipos-de-servico/:id" element={<ServiceTypeFormPage />} />
                     <Route path="disponibilidade" element={<AvailabilityPage />} />
                     <Route path="bloqueios" element={<BlockedSlotsPage />} />
+                    <Route path="perfil" element={<ProfilePage />} />
                     <Route path="*" element={<NotFoundPage />} />
                   </Route>
                   <Route path="/" element={<Navigate to="/login" replace />} />

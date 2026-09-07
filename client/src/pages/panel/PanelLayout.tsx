@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/painel/disponibilidade', label: 'Disponibilidade' },
   { to: '/painel/bloqueios', label: 'Bloqueios' },
   { to: '/painel/agenda', label: 'Agenda' },
+  { to: '/painel/perfil', label: 'Perfil' },
 ]
 
 export function PanelLayout() {

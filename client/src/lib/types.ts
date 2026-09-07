@@ -74,12 +74,16 @@ export interface AuthUser {
 export interface MeResponse extends AuthUser {
   timezone: string
   niche: string | null
+  profilePhotoUrl: string | null
+  bio: string | null
 }
 
 export interface PublicProfile {
   name: string
   niche: string | null
   timezone: string
+  profilePhotoUrl: string | null
+  bio: string | null
 }
 
 export interface PublicServiceType {
