@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import request from 'supertest'
 import { createApp } from '../../app'
 import { cleanDatabase, createTestUser } from '../../../test/helpers'
@@ -6,6 +6,7 @@ import { prisma } from '../../lib/prisma'
 
 describe('public booking-page endpoints', () => {
   beforeEach(cleanDatabase)
+  afterEach(() => vi.useRealTimers())
 
   it('returns the public profile by slug', async () => {
     const { user } = await createTestUser({ email: 'pub@example.com', slug: 'pub-slug' })
@@ -93,6 +94,10 @@ describe('public booking-page endpoints', () => {
   })
 
   it('returns available slots for a date, respecting general availability', async () => {
+    // 2026-09-07 is a fixed Monday used as the test date; pin "now" to just
+    // before its 09:00 local slot so the engine doesn't exclude it as past
+    // once the real clock catches up to that date.
+    vi.setSystemTime(new Date('2026-09-07T08:00:00.000Z'))
     const { user } = await createTestUser({ email: 'slots@example.com', slug: 'slots-slug' })
     await prisma.availability.create({ data: { userId: user.id, dayOfWeek: 1, startTime: '09:00', endTime: '10:00' } })
     const serviceType = await prisma.serviceType.create({
