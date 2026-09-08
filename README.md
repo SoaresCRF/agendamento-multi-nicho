@@ -118,7 +118,16 @@ npm run --workspace server prisma:migrate
 # 5. (opcional) popular o banco com 2 profissionais de exemplo
 npm run --workspace server prisma:seed
 
-# 6. subir os dois serviços (em terminais separados)
+# 6. banco de teste — `npm run test:server` trunca tabelas entre testes
+# (server/test/helpers.ts), então usa um banco Postgres separado para nunca
+# apagar os dados do passo 5. docker/init-test-db.sql cria esse banco
+# automaticamente num volume novo (passo 2); num volume já existente, crie à
+# mão:
+docker exec <container_do_postgres> psql -U agendamento -d agendamento -c "CREATE DATABASE agendamento_test OWNER agendamento;"
+cp server/.env.test.example server/.env.test
+npm run --workspace server prisma:migrate:test
+
+# 7. subir os dois serviços (em terminais separados)
 npm run dev:server   # API em http://localhost:3000
 npm run dev:client   # SPA em http://localhost:5173
 ```

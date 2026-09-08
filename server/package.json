@@ -9,6 +9,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:test": "node scripts/prisma-migrate-test.cjs",
     "prisma:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {

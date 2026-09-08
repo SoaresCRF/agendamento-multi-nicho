@@ -20,6 +20,12 @@ cp client/.env.example client/.env
 npm run --workspace server prisma:migrate
 npm run --workspace server prisma:seed   # optional: seeds 2 demo professionals
 
+# test:server truncates tables between tests (server/test/helpers.ts) — point it at
+# its own database, never the one above, or it wipes prisma:seed's data on every run
+docker exec <postgres_container> psql -U agendamento -d agendamento -c "CREATE DATABASE agendamento_test OWNER agendamento;"
+cp server/.env.test.example server/.env.test
+npm run --workspace server prisma:migrate:test
+
 npm run dev:server     # API on :3000
 npm run dev:client     # SPA on :5173
 
