@@ -55,12 +55,18 @@ describe('bot-only dynamic rendering middleware', () => {
   it('uses the professional photo as og:image/twitter:image when one is set', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia', profilePhotoUrl: 'https://cdn.example.com/joana.jpg' }),
-          { status: 200 },
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              name: 'Joana Silva',
+              niche: 'Psicologia',
+              profilePhotoUrl: 'https://cdn.example.com/joana.jpg',
+            }),
+            { status: 200 },
+          ),
         ),
-      ),
     )
     const { default: middleware } = await import('./middleware')
 
@@ -75,12 +81,14 @@ describe('bot-only dynamic rendering middleware', () => {
   it('falls back to the app icon as og:image when the photo is a data URI (social crawlers cannot fetch it)', async () => {
     vi.stubGlobal(
       'fetch',
-      vi.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia', profilePhotoUrl: 'data:image/jpeg;base64,abc' }),
-          { status: 200 },
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia', profilePhotoUrl: 'data:image/jpeg;base64,abc' }),
+            { status: 200 },
+          ),
         ),
-      ),
     )
     const { default: middleware } = await import('./middleware')
 
@@ -94,9 +102,7 @@ describe('bot-only dynamic rendering middleware', () => {
   it('falls back to the app icon as og:image when no photo is set', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(new Response(JSON.stringify({ name: 'Joana Silva', niche: null }), { status: 200 })),
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ name: 'Joana Silva', niche: null }), { status: 200 })),
     )
     const { default: middleware } = await import('./middleware')
 
@@ -111,9 +117,7 @@ describe('bot-only dynamic rendering middleware', () => {
       'fetch',
       vi
         .fn()
-        .mockResolvedValue(
-          new Response(JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia' }), { status: 200 }),
-        ),
+        .mockResolvedValue(new Response(JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia' }), { status: 200 })),
     )
     const { default: middleware } = await import('./middleware')
 
