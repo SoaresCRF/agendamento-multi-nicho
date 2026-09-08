@@ -22,11 +22,11 @@ export function BookingSummary({ serviceName, durationMinutes, startsAt, timezon
 
   return (
     <Card className="mb-lg flex items-center justify-between gap-md text-left">
-      <div>
-        <p className="font-sans text-title-sm text-ink">{serviceName}</p>
+      <div className="min-w-0">
+        <p className="truncate font-sans text-title-sm text-ink">{serviceName}</p>
         <p className="font-sans text-body-sm text-muted">{durationMinutes} min</p>
       </div>
-      <p className="font-sans text-body-md text-ink text-right">
+      <p className="shrink-0 font-sans text-body-md text-ink text-right">
         {date}
         <br />
         {time}
