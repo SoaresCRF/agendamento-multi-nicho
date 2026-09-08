@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../lib/auth-context'
+import { useMe } from '../../lib/useMe'
 import { cx } from '../../lib/cx'
 import { Button } from '../../components/Button'
 
@@ -11,6 +12,26 @@ const NAV_ITEMS = [
   { to: '/painel/agenda', label: 'Agenda' },
   { to: '/painel/perfil', label: 'Perfil' },
 ]
+
+function UserHeader({ name }: { name?: string }) {
+  const { data: me } = useMe()
+
+  return (
+    <div className="mb-lg flex items-center gap-sm">
+      {me?.profilePhotoUrl && (
+        <img
+          src={me.profilePhotoUrl}
+          alt=""
+          className="h-9 w-9 shrink-0 rounded-full border border-hairline object-cover"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none'
+          }}
+        />
+      )}
+      <p className="font-sans text-title-sm text-ink">{name}</p>
+    </div>
+  )
+}
 
 function NavList({ onNavigate }: { onNavigate?: () => void }) {
   return (
@@ -74,7 +95,7 @@ export function PanelLayout() {
           className="fixed inset-0 z-10 flex flex-col justify-between bg-surface p-md pt-[72px] sm:hidden"
         >
           <div>
-            <p className="mb-lg font-sans text-title-sm text-ink">{user?.name}</p>
+            <UserHeader name={user?.name} />
             <NavList onNavigate={() => setMobileNavOpen(false)} />
           </div>
           <Button variant="secondary" onClick={handleLogout}>
@@ -85,7 +106,7 @@ export function PanelLayout() {
 
       <aside className="hidden w-60 flex-col justify-between border-r border-hairline bg-surface p-md sm:flex">
         <div>
-          <p className="mb-lg font-sans text-title-sm text-ink">{user?.name}</p>
+          <UserHeader name={user?.name} />
           <NavList />
         </div>
         <Button variant="secondary" onClick={handleLogout}>
