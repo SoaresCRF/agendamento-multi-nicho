@@ -58,8 +58,24 @@ describe('public booking-page endpoints', () => {
     await createTestUser({ email: 'sm2@example.com', slug: 'sm2-slug' })
     const res = await request(createApp()).get('/api/public/sitemap-slugs')
     expect(res.status).toBe(200)
-    expect(res.body.map((r: { slug: string }) => r.slug).sort()).toEqual(['sm1-slug', 'sm2-slug'])
-    expect(res.body[0]).toHaveProperty('updatedAt')
+    expect(res.body.items.map((r: { slug: string }) => r.slug).sort()).toEqual(['sm1-slug', 'sm2-slug'])
+    expect(res.body.items[0]).toHaveProperty('updatedAt')
+    expect(res.body.nextCursor).toBeNull()
+  })
+
+  it('paginates the sitemap slug list via cursor, so the professional count never forces one unbounded query', async () => {
+    await createTestUser({ email: 'sm3@example.com', slug: 'sm3-slug' })
+    await createTestUser({ email: 'sm4@example.com', slug: 'sm4-slug' })
+    const page1 = await request(createApp()).get('/api/public/sitemap-slugs?limit=1')
+    expect(page1.body.items).toHaveLength(1)
+    expect(page1.body.nextCursor).not.toBeNull()
+
+    const page2 = await request(createApp()).get(`/api/public/sitemap-slugs?limit=1&cursor=${page1.body.nextCursor}`)
+    expect(page2.body.items).toHaveLength(1)
+    expect(page2.body.nextCursor).toBeNull()
+
+    const allSlugs = [...page1.body.items, ...page2.body.items].map((r: { slug: string }) => r.slug).sort()
+    expect(allSlugs).toEqual(['sm3-slug', 'sm4-slug'])
   })
 
   it('never caches available slots, since they change on every booking/cancellation', async () => {

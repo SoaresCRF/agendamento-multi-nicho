@@ -88,9 +88,21 @@ export default async function middleware(request: Request): Promise<Response> {
     const apiUrl = process.env.API_URL
     if (!apiUrl) return next()
     try {
-      const res = await fetch(`${apiUrl}/api/public/sitemap-slugs`)
-      if (!res.ok) return next()
-      const slugs = (await res.json()) as { slug: string; updatedAt: string }[]
+      const slugs: { slug: string; updatedAt: string }[] = []
+      let cursor: string | null = null
+      // /api/public/sitemap-slugs is cursor-paginated so the professional count
+      // growing large never makes this one unbounded query — this loop just
+      // walks every page. ponytail: hard cap, split into a sitemap index (per the
+      // 50k-URL-per-file protocol limit) if the professional base ever gets there.
+      for (let page = 0; page < 1000; page++) {
+        const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''
+        const res = await fetch(`${apiUrl}/api/public/sitemap-slugs${qs}`)
+        if (!res.ok) return next()
+        const body = (await res.json()) as { items: { slug: string; updatedAt: string }[]; nextCursor: string | null }
+        slugs.push(...body.items)
+        cursor = body.nextCursor
+        if (!cursor) break
+      }
       return new Response(renderSitemapXml(slugs, url.origin), {
         headers: { 'content-type': 'application/xml; charset=utf-8' },
       })

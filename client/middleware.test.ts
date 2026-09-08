@@ -224,10 +224,13 @@ describe('dynamic sitemap.xml', () => {
       'fetch',
       vi.fn().mockResolvedValue(
         new Response(
-          JSON.stringify([
-            { slug: 'joana-psicologa', updatedAt: '2026-09-01T00:00:00.000Z' },
-            { slug: 'carlos-personal', updatedAt: '2026-09-02T00:00:00.000Z' },
-          ]),
+          JSON.stringify({
+            items: [
+              { slug: 'joana-psicologa', updatedAt: '2026-09-01T00:00:00.000Z' },
+              { slug: 'carlos-personal', updatedAt: '2026-09-02T00:00:00.000Z' },
+            ],
+            nextCursor: null,
+          }),
           { status: 200 },
         ),
       ),
@@ -246,14 +249,15 @@ describe('dynamic sitemap.xml', () => {
   it('escapes each slug before writing it into the XML, as defense-in-depth', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(
-            JSON.stringify([{ slug: '"><script>alert(1)</script>', updatedAt: '2026-09-01T00:00:00.000Z' }]),
-            { status: 200 },
-          ),
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            items: [{ slug: '"><script>alert(1)</script>', updatedAt: '2026-09-01T00:00:00.000Z' }],
+            nextCursor: null,
+          }),
+          { status: 200 },
         ),
+      ),
     )
     const { default: middleware } = await import('./middleware')
 
@@ -262,6 +266,37 @@ describe('dynamic sitemap.xml', () => {
 
     expect(body).not.toContain('<script>alert(1)</script>')
     expect(body).toContain('&lt;script&gt;')
+  })
+
+  it('walks every page when the API paginates the slug list', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockImplementationOnce(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({ items: [{ slug: 'page-one', updatedAt: '2026-09-01T00:00:00.000Z' }], nextCursor: 'u1' }),
+            { status: 200 },
+          ),
+        ),
+      )
+      .mockImplementationOnce((input: string) => {
+        expect(input).toContain('cursor=u1')
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({ items: [{ slug: 'page-two', updatedAt: '2026-09-02T00:00:00.000Z' }], nextCursor: null }),
+            { status: 200 },
+          ),
+        )
+      })
+    vi.stubGlobal('fetch', fetchMock)
+    const { default: middleware } = await import('./middleware')
+
+    const res = await middleware(makeRequest('/sitemap.xml', BROWSER_UA))
+    const body = await res.text()
+
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(body).toContain('<loc>https://agendamento.example.com/page-one</loc>')
+    expect(body).toContain('<loc>https://agendamento.example.com/page-two</loc>')
   })
 
   it('falls back to next() when the backend is unreachable', async () => {

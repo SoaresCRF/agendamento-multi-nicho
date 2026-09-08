@@ -14,13 +14,19 @@ publicRouter.use(publicReadLimiter)
 // after someone else just took it.
 const PUBLIC_CACHE_HEADER = 'public, max-age=30'
 
+const sitemapQuerySchema = z.object({
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().positive().max(1000).optional(),
+})
+
 // Must stay registered before GET /:slug — otherwise Express would match this
 // path as a (nonexistent) professional slug instead.
-publicRouter.get('/sitemap-slugs', async (_req, res, next) => {
+publicRouter.get('/sitemap-slugs', async (req, res, next) => {
   try {
-    const slugs = await service.listPublicSlugs()
+    const { cursor, limit } = sitemapQuerySchema.parse(req.query)
+    const page = await service.listPublicSlugs(cursor, limit)
     res.set('Cache-Control', PUBLIC_CACHE_HEADER)
-    res.json(slugs)
+    res.json(page)
   } catch (err) {
     next(err)
   }

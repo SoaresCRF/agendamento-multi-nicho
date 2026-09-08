@@ -4,28 +4,38 @@ import { getAvailableSlots } from '../availability/engine'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+const SITEMAP_PAGE_SIZE = 500
+
 // Feeds the frontend's dynamically-generated sitemap.xml (client/middleware.ts) —
 // crawlers have no other way to discover a professional's page than an external
 // link, since the app itself has no directory/listing of professionals.
-export async function listPublicSlugs() {
-  const users = await prisma.user.findMany({ select: { slug: true, updatedAt: true } })
-  return users.map((u) => ({ slug: u.slug, updatedAt: u.updatedAt }))
-}
-
-export async function getPublicProfile(slug: string) {
-  const user = await prisma.user.findUnique({ where: { slug } })
-  if (!user) throw new AppError(404, 'Profissional não encontrado')
+// Cursor-paginated (same shape as bookings.routes.ts) so the professional count
+// growing large never turns this into one unbounded query.
+export async function listPublicSlugs(cursor?: string, limit = SITEMAP_PAGE_SIZE) {
+  const users = await prisma.user.findMany({
+    select: { id: true, slug: true, updatedAt: true },
+    orderBy: { id: 'asc' },
+    take: limit + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+  })
+  const hasMore = users.length > limit
+  const items = hasMore ? users.slice(0, limit) : users
   return {
-    name: user.name,
-    niche: user.niche,
-    timezone: user.timezone,
-    profilePhotoUrl: user.profilePhotoUrl,
-    bio: user.bio,
+    items: items.map((u) => ({ slug: u.slug, updatedAt: u.updatedAt })),
+    nextCursor: hasMore ? items[items.length - 1].id : null,
   }
 }
 
+const PUBLIC_PROFILE_SELECT = { name: true, niche: true, timezone: true, profilePhotoUrl: true, bio: true } as const
+
+export async function getPublicProfile(slug: string) {
+  const user = await prisma.user.findUnique({ where: { slug }, select: PUBLIC_PROFILE_SELECT })
+  if (!user) throw new AppError(404, 'Profissional não encontrado')
+  return user
+}
+
 export async function listPublicServiceTypes(slug: string) {
-  const user = await prisma.user.findUnique({ where: { slug } })
+  const user = await prisma.user.findUnique({ where: { slug }, select: { id: true } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
   const serviceTypes = await prisma.serviceType.findMany({
     where: { userId: user.id },
@@ -125,7 +135,7 @@ export async function computeAvailableDaysInMonth(
 }
 
 export async function getSlotsForDate(slug: string, serviceTypeId: string, date: string) {
-  const user = await prisma.user.findUnique({ where: { slug } })
+  const user = await prisma.user.findUnique({ where: { slug }, select: { id: true, timezone: true } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
   const serviceType = await prisma.serviceType.findFirst({ where: { id: serviceTypeId, userId: user.id } })
   if (!serviceType) throw new AppError(404, 'Tipo de serviço não encontrado')
@@ -134,7 +144,7 @@ export async function getSlotsForDate(slug: string, serviceTypeId: string, date:
 }
 
 export async function getAvailableDaysForMonth(slug: string, serviceTypeId: string, month: string) {
-  const user = await prisma.user.findUnique({ where: { slug } })
+  const user = await prisma.user.findUnique({ where: { slug }, select: { id: true, timezone: true } })
   if (!user) throw new AppError(404, 'Profissional não encontrado')
   const serviceType = await prisma.serviceType.findFirst({ where: { id: serviceTypeId, userId: user.id } })
   if (!serviceType) throw new AppError(404, 'Tipo de serviço não encontrado')
