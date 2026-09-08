@@ -2,7 +2,13 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
-    "moduleResolution": "Node",
+    "moduleResolution": "Node10",
+    // TS 7.0 removes node10; silences the deprecation warning (installed 5.9.3
+    // only accepts "5.0" here, despite the warning text suggesting "6.0") until
+    // this project migrates module/moduleResolution to NodeNext — that needs
+    // .js extensions added to every relative import across server/src, a real,
+    // separate migration.
+    "ignoreDeprecations": "5.0",
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
