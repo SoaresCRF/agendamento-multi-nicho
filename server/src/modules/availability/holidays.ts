@@ -1,3 +1,5 @@
+import { addDays } from 'date-fns'
+
 const FIXED_HOLIDAYS = [
   '01-01', // Confraternização Universal
   '04-21', // Tiradentes
@@ -39,10 +41,9 @@ function easterSunday(year: number): { month: number; day: number } {
 
 function movableHolidaysForYear(year: number): Set<string> {
   const easter = easterSunday(year)
-  const easterUtc = Date.UTC(year, easter.month - 1, easter.day)
-  const DAY_MS = 24 * 60 * 60 * 1000
+  const easterUtc = new Date(Date.UTC(year, easter.month - 1, easter.day))
   const offset = (days: number) => {
-    const d = new Date(easterUtc + days * DAY_MS)
+    const d = addDays(easterUtc, days)
     return toDateStr(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate())
   }
   return new Set([
