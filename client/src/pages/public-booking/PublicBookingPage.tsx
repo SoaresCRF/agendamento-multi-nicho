@@ -231,6 +231,7 @@ export function PublicBookingPage() {
             <a
               href={`data:text/calendar;charset=utf-8,${encodeURIComponent(
                 buildBookingIcs({
+                  bookingId: createBooking.data!.id,
                   serviceName: selectedServiceType.name,
                   professionalName: profile.name,
                   startsAt: selectedSlot,

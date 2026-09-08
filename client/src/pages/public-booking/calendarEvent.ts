@@ -1,6 +1,7 @@
 import { addMinutes } from 'date-fns'
 
 interface BookingIcsInput {
+  bookingId: string
   serviceName: string
   professionalName: string
   startsAt: string
@@ -13,7 +14,13 @@ function toIcsUtc(date: Date): string {
 
 // RFC 5545 requires CRLF line endings — some calendar apps reject a file that uses
 // bare \n, so this can't just be a template literal with normal newlines.
-export function buildBookingIcs({ serviceName, professionalName, startsAt, durationMinutes }: BookingIcsInput): string {
+export function buildBookingIcs({
+  bookingId,
+  serviceName,
+  professionalName,
+  startsAt,
+  durationMinutes,
+}: BookingIcsInput): string {
   const start = new Date(startsAt)
   const end = addMinutes(start, durationMinutes)
   return [
@@ -21,7 +28,7 @@ export function buildBookingIcs({ serviceName, professionalName, startsAt, durat
     'VERSION:2.0',
     'PRODID:-//Agendamento Multi-Nicho//PT-BR',
     'BEGIN:VEVENT',
-    `UID:${start.getTime()}@agendamento`,
+    `UID:${bookingId}@agendamento`,
     `DTSTAMP:${toIcsUtc(new Date())}`,
     `DTSTART:${toIcsUtc(start)}`,
     `DTEND:${toIcsUtc(end)}`,

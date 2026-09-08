@@ -241,6 +241,7 @@ describe('PublicBookingPage', () => {
     expect(decodeURIComponent(calendarLink.getAttribute('href') ?? '')).toContain(
       'SUMMARY:Primeira consulta com Joana Silva',
     )
+    expect(decodeURIComponent(calendarLink.getAttribute('href') ?? '')).toContain('UID:b1@agendamento')
   })
 
   it('carries a summary of the chosen service, date and time from the form step through confirmation', async () => {
