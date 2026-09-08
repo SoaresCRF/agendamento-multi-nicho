@@ -31,7 +31,7 @@ describe('bot-only dynamic rendering middleware', () => {
     expect(result).toBe(NEXT_SENTINEL)
   })
 
-  it('serves a prerendered page with title, description and Open Graph tags to a bot', async () => {
+  it('serves a prerendered page with title, description, viewport and Open Graph tags to a bot', async () => {
     vi.stubGlobal(
       'fetch',
       vi
@@ -47,8 +47,89 @@ describe('bot-only dynamic rendering middleware', () => {
     const body = await res.text()
     expect(body).toContain('<title>Joana Silva · Agendamento</title>')
     expect(body).toContain('name="description" content="Agende um horário com Joana Silva — Psicologia')
+    expect(body).toContain('name="viewport" content="width=device-width, initial-scale=1.0"')
     expect(body).toContain('property="og:title" content="Joana Silva · Agendamento"')
     expect(body).toContain('<h1>Joana Silva</h1>')
+  })
+
+  it('uses the professional photo as og:image/twitter:image when one is set', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia', profilePhotoUrl: 'https://cdn.example.com/joana.jpg' }),
+          { status: 200 },
+        ),
+      ),
+    )
+    const { default: middleware } = await import('./middleware')
+
+    const res = await middleware(makeRequest('/joana-psicologa', GOOGLEBOT_UA))
+    const body = await res.text()
+
+    expect(body).toContain('property="og:image" content="https://cdn.example.com/joana.jpg"')
+    expect(body).toContain('name="twitter:image" content="https://cdn.example.com/joana.jpg"')
+    expect(body).toContain('name="twitter:card" content="summary_large_image"')
+  })
+
+  it('falls back to the app icon as og:image when the photo is a data URI (social crawlers cannot fetch it)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia', profilePhotoUrl: 'data:image/jpeg;base64,abc' }),
+          { status: 200 },
+        ),
+      ),
+    )
+    const { default: middleware } = await import('./middleware')
+
+    const res = await middleware(makeRequest('/joana-psicologa', GOOGLEBOT_UA))
+    const body = await res.text()
+
+    expect(body).toContain('property="og:image" content="https://agendamento.example.com/android-chrome-512x512.png"')
+    expect(body).not.toContain('data:image/jpeg;base64,abc')
+  })
+
+  it('falls back to the app icon as og:image when no photo is set', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(new Response(JSON.stringify({ name: 'Joana Silva', niche: null }), { status: 200 })),
+    )
+    const { default: middleware } = await import('./middleware')
+
+    const res = await middleware(makeRequest('/joana-psicologa', GOOGLEBOT_UA))
+    const body = await res.text()
+
+    expect(body).toContain('property="og:image" content="https://agendamento.example.com/android-chrome-512x512.png"')
+  })
+
+  it('includes ProfessionalService JSON-LD with the profile name and niche', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(JSON.stringify({ name: 'Joana Silva', niche: 'Psicologia' }), { status: 200 }),
+        ),
+    )
+    const { default: middleware } = await import('./middleware')
+
+    const res = await middleware(makeRequest('/joana-psicologa', GOOGLEBOT_UA))
+    const body = await res.text()
+
+    const match = body.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)
+    expect(match).not.toBeNull()
+    const json = JSON.parse(match![1])
+    expect(json).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'ProfessionalService',
+      name: 'Joana Silva',
+      serviceType: 'Psicologia',
+      url: 'https://agendamento.example.com/joana-psicologa',
+    })
   })
 
   it('sets a canonical URL stripped of query params, even when the request has tracking params', async () => {

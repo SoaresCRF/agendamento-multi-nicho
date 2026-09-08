@@ -20,17 +20,38 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;')
 }
 
-function renderProfileHtml(profile: { name: string; niche: string | null }, url: string): string {
+function renderProfileHtml(
+  profile: { name: string; niche: string | null; profilePhotoUrl?: string | null },
+  url: string,
+  origin: string,
+): string {
   const name = escapeHtml(profile.name)
   const title = `${name} · Agendamento`
   const description = profile.niche
     ? `Agende um horário com ${name} — ${escapeHtml(profile.niche)}. Confirmação na hora.`
     : `Agende um horário com ${name}. Confirmação na hora.`
+  // Open Graph requires a fetchable URL — social crawlers don't resolve `data:` URIs
+  // (the shape a profile photo takes when uploaded/cropped client-side, see
+  // ProfilePage.tsx's cropImageToSquareDataUrl). No dedicated 1200x630 OG banner
+  // exists yet either, so the app icon is the fallback for both cases.
+  const image = escapeHtml(
+    profile.profilePhotoUrl?.startsWith('https://') ? profile.profilePhotoUrl : `${origin}/android-chrome-512x512.png`,
+  )
+  // JSON.stringify doesn't escape "<", so an attacker-controlled name containing
+  // "</script>" could break out of this script tag — escape it same as escapeHtml does.
+  const jsonLd = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'ProfessionalService',
+    name: profile.name,
+    ...(profile.niche ? { serviceType: profile.niche } : {}),
+    url,
+  }).replace(/</g, '\\u003c')
 
   return `<!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>${title}</title>
 <meta name="description" content="${description}" />
 <link rel="canonical" href="${escapeHtml(url)}" />
@@ -38,7 +59,10 @@ function renderProfileHtml(profile: { name: string; niche: string | null }, url:
 <meta property="og:description" content="${description}" />
 <meta property="og:type" content="profile" />
 <meta property="og:url" content="${escapeHtml(url)}" />
-<meta name="twitter:card" content="summary" />
+<meta property="og:image" content="${image}" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="${image}" />
+<script type="application/ld+json">${jsonLd}</script>
 </head>
 <body>
 <h1>${name}</h1>
@@ -91,9 +115,9 @@ export default async function middleware(request: Request): Promise<Response> {
   try {
     const res = await fetch(`${apiUrl}/api/public/${encodeURIComponent(slug)}`)
     if (!res.ok) return new Response('Not found', { status: 404 })
-    const profile = (await res.json()) as { name: string; niche: string | null }
+    const profile = (await res.json()) as { name: string; niche: string | null; profilePhotoUrl?: string | null }
     const canonicalUrl = `${url.origin}${url.pathname}`
-    return new Response(renderProfileHtml(profile, canonicalUrl), {
+    return new Response(renderProfileHtml(profile, canonicalUrl, url.origin), {
       headers: { 'content-type': 'text/html; charset=utf-8' },
     })
   } catch {
