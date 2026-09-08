@@ -1,5 +1,6 @@
 import type { RequestHandler } from 'express'
 import { env } from '../lib/env'
+import { logger } from '../lib/logger'
 
 // Defense-in-depth against CSRF: the refresh cookie must use SameSite=None because
 // the frontend (Vercel) and backend (Render) live on different domains, which
@@ -10,6 +11,7 @@ import { env } from '../lib/env'
 export const requireSameOrigin: RequestHandler = (req, res, next) => {
   const origin = req.headers.origin
   if (origin && origin !== env.CLIENT_ORIGIN) {
+    logger.warn('Request rejected: origin mismatch (possible CSRF attempt)', { origin, path: req.path })
     res.status(403).json({ error: 'Origem não permitida' })
     return
   }

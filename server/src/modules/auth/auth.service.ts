@@ -3,6 +3,7 @@ import { hashPassword, verifyPassword } from '../../lib/password'
 import { signAccessToken } from '../../lib/jwt'
 import { generateRefreshToken, hashToken, REFRESH_TOKEN_TTL_MS } from '../../lib/refreshToken'
 import { AppError } from '../../lib/errors'
+import { logger } from '../../lib/logger'
 import type { z } from 'zod'
 import type { registerSchema } from './auth.schemas'
 
@@ -44,6 +45,9 @@ export async function issueTokens(userId: string, user: AuthResult['user']): Pro
 export async function loginUser(email: string, password: string): Promise<AuthResult> {
   const user = await prisma.user.findUnique({ where: { email } })
   if (!user || !(await verifyPassword(password, user.passwordHash))) {
+    // Never log the attempted password — email alone is enough to spot brute-force/
+    // credential-stuffing patterns without putting a real credential in the logs.
+    logger.warn('Login failed', { email })
     throw new AppError(401, 'Credenciais inválidas')
   }
   return issueTokens(user.id, { id: user.id, name: user.name, email: user.email, slug: user.slug })
