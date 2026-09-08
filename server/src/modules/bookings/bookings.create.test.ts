@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '../../lib/prisma'
 import { createPublicBooking } from './bookings.service'
 import { cleanDatabase, createTestUser } from '../../../test/helpers'
+import { decryptJson } from '../../lib/fieldEncryption'
 import type { Mailer, SendMailInput } from '../../lib/email'
 
 function fakeMailer(): { mailer: Mailer; sent: SendMailInput[] } {
@@ -57,6 +58,43 @@ describe('createPublicBooking', () => {
     expect(booking.status).toBe('CONFIRMED')
     expect(sent).toHaveLength(2)
     expect(sent.map((s) => s.to).sort()).toEqual(['cliente@example.com', 'prof@example.com'].sort())
+  })
+
+  it('stores formResponses encrypted at rest, not as plaintext JSON', async () => {
+    const { user } = await createTestUser({ email: 'crypto-prof@example.com', slug: 'crypto-prof' })
+    await prisma.availability.create({
+      data: { userId: user.id, dayOfWeek: THURSDAY, startTime: '10:00', endTime: '18:00' },
+    })
+    const serviceType = await prisma.serviceType.create({
+      data: {
+        userId: user.id,
+        name: 'Primeira consulta',
+        durationMinutes: 60,
+        requiresCustomForm: true,
+        customFields: {
+          create: [{ label: 'Está em uso de medicação?', fieldType: 'TEXT', required: true, order: 0 }],
+        },
+      },
+      include: { customFields: true },
+    })
+    const { mailer } = fakeMailer()
+
+    const booking = await createPublicBooking(
+      'crypto-prof',
+      {
+        serviceTypeId: serviceType.id,
+        startsAt: '2026-09-10T13:00:00.000Z',
+        clientName: 'Cliente Teste',
+        clientEmail: 'cliente@example.com',
+        formResponses: { [serviceType.customFields[0].id]: 'Sim, sertralina' },
+      },
+      mailer,
+    )
+
+    const stored = await prisma.booking.findUniqueOrThrow({ where: { id: booking.id } })
+    expect(stored.formResponses).not.toContain('sertralina')
+    expect(stored.formResponses).not.toContain('medicação')
+    expect(decryptJson(stored.formResponses!)).toEqual({ [serviceType.customFields[0].id]: 'Sim, sertralina' })
   })
 
   it('rejects a booking missing a required custom field', async () => {

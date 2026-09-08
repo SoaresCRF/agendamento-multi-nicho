@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireAuth } from '../../middleware/requireAuth'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
+import { decryptJson } from '../../lib/fieldEncryption'
 
 export const bookingsRouter = Router()
 bookingsRouter.use(requireAuth)
@@ -40,8 +41,12 @@ bookingsRouter.get('/', async (req, res, next) => {
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     })
     const hasMore = bookings.length > limit
-    const items = hasMore ? bookings.slice(0, limit) : bookings
-    res.json({ items, nextCursor: hasMore ? items[items.length - 1].id : null })
+    const sliced = hasMore ? bookings.slice(0, limit) : bookings
+    const items = sliced.map((b) => ({
+      ...b,
+      formResponses: b.formResponses ? decryptJson(b.formResponses) : null,
+    }))
+    res.json({ items, nextCursor: hasMore ? sliced[sliced.length - 1].id : null })
   } catch (err) {
     next(err)
   }

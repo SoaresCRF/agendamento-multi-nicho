@@ -151,6 +151,7 @@ Pra logar no painel deles, use a página de login com o e-mail
 | `NODE_ENV`                                            | não         | `development`           | `development`, `test` ou `production`. Controla `secure`/`sameSite` do cookie de refresh.                                                |
 | `DATABASE_URL`                                        | **sim**     | —                       | Connection string do Postgres.                                                                                                           |
 | `JWT_SECRET`                                          | **sim**     | —                       | 32+ caracteres aleatórios. Assina/verifica o access token. Nunca reaproveitar entre ambientes.                                           |
+| `FORM_RESPONSES_ENCRYPTION_KEY`                       | **sim**     | —                       | 32+ caracteres aleatórios. Criptografa os campos de intake customizados (podem carregar resposta de saúde) em repouso. Trocar em produção torna as respostas já salvas ilegíveis — não é uma rotação trivial. |
 | `PORT`                                                | não         | `3000`                  | Porta em que a API escuta.                                                                                                               |
 | `CLIENT_ORIGIN`                                       | não         | `http://localhost:5173` | Origin liberada no CORS — precisa ser a URL pública do frontend em produção.                                                             |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | não         | —                       | Se as 4 estiverem setadas, e-mail de confirmação sai por SMTP real; senão cai numa conta de teste Ethereal (dev).                        |
@@ -244,9 +245,10 @@ nele quando tiver.
 **Backend (Render ou Railway):** conectar o repositório, _root directory_
 `server/`, build command `npm install && npx prisma migrate deploy && npm run build`,
 start command `npm start`. Provisionar um banco Postgres gerenciado na
-mesma plataforma e apontar `DATABASE_URL` para ele. Definir `JWT_SECRET`
-(gerado, nunca reaproveitado de dev) e `CLIENT_ORIGIN` com a URL pública do
-frontend na Vercel. Definir também `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`
+mesma plataforma e apontar `DATABASE_URL` para ele. Definir `JWT_SECRET` e
+`FORM_RESPONSES_ENCRYPTION_KEY` (ambos gerados, nunca reaproveitados de dev)
+e `CLIENT_ORIGIN` com a URL pública do frontend na Vercel. Definir também
+`SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`
 com as credenciais do provedor de e-mail — sem elas o e-mail de confirmação
 de agendamento não sai de verdade (cai numa conta de teste Ethereal).
 

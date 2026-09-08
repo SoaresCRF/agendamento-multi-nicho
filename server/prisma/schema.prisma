@@ -103,7 +103,9 @@ model Booking {
   startsAt      DateTime
   endsAt        DateTime
   status        BookingStatus @default(CONFIRMED)
-  formResponses Json?
+  // AES-256-GCM ciphertext (see server/src/lib/fieldEncryption.ts), not plaintext JSON —
+  // custom intake fields can carry health-adjacent answers (e.g. "on medication?").
+  formResponses String?
   createdAt     DateTime      @default(now())
 
   @@index([userId, startsAt])

@@ -1,10 +1,10 @@
-import { Prisma } from '@prisma/client'
 import { addMinutes } from 'date-fns'
 import { formatInTimeZone } from 'date-fns-tz'
 import { prisma } from '../../lib/prisma'
 import { AppError } from '../../lib/errors'
 import { escapeHtml } from '../../lib/escapeHtml'
 import { logger } from '../../lib/logger'
+import { encryptJson } from '../../lib/fieldEncryption'
 import type { Mailer } from '../../lib/email'
 import { nodemailerMailer } from '../../lib/email/nodemailer'
 import { validateFormResponses } from './form-validation'
@@ -61,7 +61,7 @@ export async function createPublicBooking(slug: string, input: CreateBookingInpu
         clientEmail: input.clientEmail,
         startsAt,
         endsAt,
-        formResponses: validatedResponses as Prisma.InputJsonValue,
+        formResponses: validatedResponses ? encryptJson(validatedResponses) : undefined,
       },
     })
   } catch (err) {

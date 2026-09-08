@@ -3,6 +3,7 @@ import request from 'supertest'
 import { createApp } from '../../app'
 import { cleanDatabase, createTestUser } from '../../../test/helpers'
 import { prisma } from '../../lib/prisma'
+import { encryptJson } from '../../lib/fieldEncryption'
 
 describe('professional agenda', () => {
   beforeEach(cleanDatabase)
@@ -38,6 +39,30 @@ describe('professional agenda', () => {
       .patch(`/api/bookings/${booking.id}/cancel`)
       .set('Authorization', `Bearer ${other.accessToken}`)
     expect(forbiddenRes.status).toBe(404)
+  })
+
+  it('decrypts formResponses back to its original shape when listing the agenda', async () => {
+    const { user, accessToken } = await createTestUser({ email: 'decrypt-agenda@example.com', slug: 'decrypt-agenda' })
+    const serviceType = await prisma.serviceType.create({
+      data: { userId: user.id, name: 'Sessão', durationMinutes: 50 },
+    })
+    const original = { queixaPrincipal: 'Ansiedade' }
+    await prisma.booking.create({
+      data: {
+        userId: user.id,
+        serviceTypeId: serviceType.id,
+        clientName: 'Cliente',
+        clientEmail: 'c@example.com',
+        startsAt: new Date('2026-09-10T13:00:00Z'),
+        endsAt: new Date('2026-09-10T13:50:00Z'),
+        formResponses: encryptJson(original),
+      },
+    })
+
+    const res = await request(createApp()).get('/api/bookings').set('Authorization', `Bearer ${accessToken}`)
+
+    expect(res.body.items).toHaveLength(1)
+    expect(res.body.items[0].formResponses).toEqual(original)
   })
 
   it('paginates results with limit and cursor instead of returning everything at once', async () => {
