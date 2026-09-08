@@ -55,18 +55,16 @@ describe('bot-only dynamic rendering middleware', () => {
   it('uses the professional photo as og:image/twitter:image when one is set', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response(
-            JSON.stringify({
-              name: 'Joana Silva',
-              niche: 'Psicologia',
-              profilePhotoUrl: 'https://cdn.example.com/joana.jpg',
-            }),
-            { status: 200 },
-          ),
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            name: 'Joana Silva',
+            niche: 'Psicologia',
+            profilePhotoUrl: 'https://cdn.example.com/joana.jpg',
+          }),
+          { status: 200 },
         ),
+      ),
     )
     const { default: middleware } = await import('./middleware')
 
