@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -11,18 +11,22 @@ import { useMe } from '../../../lib/useMe'
 import { useToast } from '../../../components/toast/useToast'
 import { api, ApiError } from '../../../lib/api'
 import { useDocumentTitle } from '../../../lib/useDocumentTitle'
+import { cropImageToSquareDataUrl } from '../../../lib/image-crop'
 import type { MeResponse } from '../../../lib/types'
 
 const BIO_MAX_LENGTH = 280
 // The avatar never renders larger than 96px (public hero) anywhere in the
 // product; anything well beyond that is needlessly large to download.
 const PHOTO_MAX_DIMENSION_PX = 1000
+const PHOTO_MAX_UPLOAD_MB = 2
+const PHOTO_MAX_UPLOAD_BYTES = PHOTO_MAX_UPLOAD_MB * 1024 * 1024
 
 // Mirrors server/src/modules/users/users.schemas.ts exactly.
 const profileFormSchema = z.object({
   profilePhotoUrl: z.union([
     z.literal(''),
     z.string().url('URL inválida').startsWith('https://', 'A URL da foto deve começar com https://'),
+    z.string().startsWith('data:image/', 'Formato de imagem não suportado'),
   ]),
   bio: z.string().max(BIO_MAX_LENGTH, `Biografia deve ter no máximo ${BIO_MAX_LENGTH} caracteres`),
 })
@@ -42,12 +46,40 @@ export function ProfilePage() {
     handleSubmit,
     reset,
     watch,
+    setValue,
+    setError,
+    clearErrors,
     formState: { errors, isDirty },
   } = useForm<ProfileFormValues>({ resolver: zodResolver(profileFormSchema), defaultValues: EMPTY_FORM })
 
   const profilePhotoUrl = watch('profilePhotoUrl')
   const bio = watch('bio')
   const [oversizedPhoto, setOversizedPhoto] = useState<{ width: number; height: number } | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  async function onPhotoFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (!file) return
+
+    clearErrors('profilePhotoUrl')
+    if (!file.type.startsWith('image/')) {
+      setError('profilePhotoUrl', { message: 'Selecione um arquivo de imagem' })
+      return
+    }
+    if (file.size > PHOTO_MAX_UPLOAD_BYTES) {
+      setError('profilePhotoUrl', { message: `Imagem deve ter no máximo ${PHOTO_MAX_UPLOAD_MB}MB` })
+      return
+    }
+
+    try {
+      const dataUrl = await cropImageToSquareDataUrl(file, PHOTO_MAX_DIMENSION_PX)
+      setValue('profilePhotoUrl', dataUrl, { shouldDirty: true, shouldValidate: true })
+      setOversizedPhoto(null)
+    } catch {
+      setError('profilePhotoUrl', { message: 'Não foi possível processar a imagem' })
+    }
+  }
 
   // Only re-seed from the server while the user hasn't started editing —
   // otherwise a background refetch silently discards an in-progress edit.
@@ -97,14 +129,34 @@ export function ProfilePage() {
               }}
             />
           )}
-          <div className="flex-1">
+          <div className="flex flex-1 flex-col gap-sm">
             <Input
               label="URL da foto (opcional)"
               id="profilePhotoUrl"
               type="url"
-              error={errors.profilePhotoUrl?.message}
+              aria-invalid={errors.profilePhotoUrl?.message ? 'true' : undefined}
+              aria-describedby={errors.profilePhotoUrl?.message ? 'profilePhotoUrl-error' : undefined}
               {...register('profilePhotoUrl')}
             />
+            <div className="flex flex-col gap-xxs">
+              <label htmlFor="profilePhotoFile" className="font-sans text-body-sm text-body">
+                Ou envie um arquivo (máx. {PHOTO_MAX_UPLOAD_MB}MB, recomendado)
+              </label>
+              <input
+                ref={fileInputRef}
+                id="profilePhotoFile"
+                type="file"
+                accept="image/*"
+                aria-describedby={errors.profilePhotoUrl?.message ? 'profilePhotoUrl-error' : undefined}
+                onChange={onPhotoFileChange}
+                className="font-sans text-body-sm text-body file:mr-sm file:rounded-md file:border file:border-hairline file:bg-surface file:px-sm file:py-xxs file:font-sans file:text-body-sm"
+              />
+            </div>
+            {errors.profilePhotoUrl?.message && (
+              <span id="profilePhotoUrl-error" className="font-sans text-body-sm text-error">
+                {errors.profilePhotoUrl.message}
+              </span>
+            )}
           </div>
         </div>
         {oversizedPhoto && (

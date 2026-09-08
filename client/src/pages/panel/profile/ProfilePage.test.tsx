@@ -145,6 +145,40 @@ describe('ProfilePage', () => {
     expect(screen.queryByText(/imagem grande/i)).not.toBeInTheDocument()
   })
 
+  it('rejects an uploaded photo file larger than the recommended limit', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+
+    renderPage()
+
+    await screen.findByLabelText('Biografia (opcional)')
+    const fileInput = screen.getByLabelText(/ou envie um arquivo/i)
+    const oversizedFile = new File([new Uint8Array(3 * 1024 * 1024)], 'foto.jpg', { type: 'image/jpeg' })
+    await userEvent.upload(fileInput, oversizedFile)
+
+    expect(await screen.findByText('Imagem deve ter no máximo 2MB')).toBeInTheDocument()
+  })
+
+  it('rejects an uploaded file that is not an image', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+
+    renderPage()
+
+    await screen.findByLabelText('Biografia (opcional)')
+    const fileInput = screen.getByLabelText(/ou envie um arquivo/i)
+    const notAnImage = new File(['not an image'], 'doc.pdf', { type: 'application/pdf' })
+    // The default userEvent instance silently drops files that don't match the
+    // input's `accept` filter (as a real file picker dialog would); disable that
+    // here so this code-level MIME check can be exercised directly.
+    const user = userEvent.setup({ applyAccept: false })
+    await user.upload(fileInput, notAnImage)
+
+    expect(await screen.findByText('Selecione um arquivo de imagem')).toBeInTheDocument()
+  })
+
   it('rejects a non-https photo URL client-side', async () => {
     global.fetch = vi
       .fn()

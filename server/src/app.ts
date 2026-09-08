@@ -29,7 +29,9 @@ export function createApp() {
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
   app.use(compression())
   app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }))
-  app.use(express.json())
+  // Raised from Express's 100kb default to fit an uploaded profile photo as a base64
+  // data URI (see MAX_PHOTO_DATA_URI_LENGTH in users.schemas.ts) plus JSON overhead.
+  app.use(express.json({ limit: '5mb' }))
   app.use(cookieParser())
 
   app.get('/health', (_req, res) => res.json({ ok: true }))

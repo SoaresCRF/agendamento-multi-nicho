@@ -68,6 +68,39 @@ describe('PATCH /api/me', () => {
     expect(res.status).toBe(400)
   })
 
+  it('accepts an uploaded profilePhotoUrl as a base64 data URI', async () => {
+    const { accessToken } = await createTestUser({ email: 'upload@example.com', slug: 'upload-slug' })
+    const dataUri = `data:image/jpeg;base64,${Buffer.from('fake-image-bytes').toString('base64')}`
+    const res = await request(createApp())
+      .patch('/api/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ profilePhotoUrl: dataUri })
+
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ profilePhotoUrl: dataUri })
+  })
+
+  it('rejects an uploaded photo that exceeds the max data URI size', async () => {
+    const { accessToken } = await createTestUser({ email: 'toobig@example.com', slug: 'toobig-slug' })
+    const dataUri = `data:image/jpeg;base64,${'A'.repeat(4_000_001)}`
+    const res = await request(createApp())
+      .patch('/api/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ profilePhotoUrl: dataUri })
+
+    expect(res.status).toBe(400)
+  })
+
+  it('rejects a data URI with an unsupported image format', async () => {
+    const { accessToken } = await createTestUser({ email: 'badformat@example.com', slug: 'badformat-slug' })
+    const res = await request(createApp())
+      .patch('/api/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ profilePhotoUrl: 'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=' })
+
+    expect(res.status).toBe(400)
+  })
+
   it('rejects a bio longer than 280 characters', async () => {
     const { accessToken } = await createTestUser({ email: 'longbio@example.com', slug: 'longbio-slug' })
     const res = await request(createApp())
