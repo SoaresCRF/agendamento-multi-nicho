@@ -56,7 +56,7 @@ describe('RegisterPage', () => {
     await waitFor(() => screen.getByLabelText('Nome'))
     await userEvent.type(screen.getByLabelText('Nome'), 'Joana Silva')
     await userEvent.type(screen.getByLabelText('E-mail'), 'joana@example.com')
-    await userEvent.type(screen.getByLabelText('Senha'), 'senha1234')
+    await userEvent.type(screen.getByLabelText('Senha'), 'senha12345')
     await userEvent.type(screen.getByLabelText('Slug (URL pública)'), 'joana-psicologa')
     await userEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
 

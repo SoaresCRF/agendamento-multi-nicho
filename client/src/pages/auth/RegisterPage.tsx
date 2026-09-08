@@ -27,7 +27,7 @@ const BRAZIL_TIMEZONE_VALUES = BRAZIL_TIMEZONES.map((tz) => tz.value) as [string
 const registerSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('E-mail inválido'),
-  password: z.string().min(8, 'A senha precisa ter ao menos 8 caracteres'),
+  password: z.string().min(10, 'A senha precisa ter ao menos 10 caracteres'),
   slug: z
     .string()
     .min(3, 'O slug precisa ter ao menos 3 caracteres')
