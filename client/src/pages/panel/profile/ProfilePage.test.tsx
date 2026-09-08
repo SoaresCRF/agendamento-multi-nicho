@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { ProfilePage } from './ProfilePage'
 import { ToastProvider } from '../../../components/toast/ToastProvider'
+import * as imageCrop from '../../../lib/image-crop'
 
 const ME_RESPONSE = {
   id: 'u1',
@@ -31,6 +32,21 @@ function renderPage(queryClient = new QueryClient({ defaultOptions: { queries: {
 
 describe('ProfilePage', () => {
   afterEach(() => vi.restoreAllMocks())
+
+  it('crops an uploaded photo to the actual display size, not the pasted-URL warning threshold', async () => {
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify(ME_RESPONSE), { status: 200 })) as unknown as typeof fetch
+    const cropSpy = vi.spyOn(imageCrop, 'cropImageToSquareDataUrl').mockResolvedValue('data:image/jpeg;base64,abc')
+
+    renderPage()
+
+    const fileInput = (await screen.findByLabelText(/Ou envie um arquivo/)) as HTMLInputElement
+    const file = new File(['x'], 'foto.png', { type: 'image/png' })
+    await userEvent.upload(fileInput, file)
+
+    await waitFor(() => expect(cropSpy).toHaveBeenCalledWith(file, 192))
+  })
 
   it('pre-fills the form with the current profile', async () => {
     global.fetch = vi

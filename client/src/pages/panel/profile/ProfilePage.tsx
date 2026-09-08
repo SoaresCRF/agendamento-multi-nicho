@@ -16,7 +16,11 @@ import type { MeResponse } from '../../../lib/types'
 
 const BIO_MAX_LENGTH = 280
 // The avatar never renders larger than 96px (public hero) anywhere in the
-// product; anything well beyond that is needlessly large to download.
+// product; a direct upload is cropped to 2x that for retina screens — no
+// reason to ship/store anything bigger since we control this path end to end.
+const PHOTO_CROP_TARGET_PX = 192
+// Threshold for the non-blocking size warning on a *pasted external URL*, where
+// we don't control the source image and can't resize it ourselves.
 const PHOTO_MAX_DIMENSION_PX = 1000
 const PHOTO_MAX_UPLOAD_MB = 2
 const PHOTO_MAX_UPLOAD_BYTES = PHOTO_MAX_UPLOAD_MB * 1024 * 1024
@@ -73,7 +77,7 @@ export function ProfilePage() {
     }
 
     try {
-      const dataUrl = await cropImageToSquareDataUrl(file, PHOTO_MAX_DIMENSION_PX)
+      const dataUrl = await cropImageToSquareDataUrl(file, PHOTO_CROP_TARGET_PX)
       setValue('profilePhotoUrl', dataUrl, { shouldDirty: true, shouldValidate: true })
       setOversizedPhoto(null)
     } catch {
