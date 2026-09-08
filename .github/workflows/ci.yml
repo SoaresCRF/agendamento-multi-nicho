@@ -25,6 +25,7 @@ jobs:
     env:
       DATABASE_URL: postgresql://agendamento:agendamento@localhost:5432/agendamento
       JWT_SECRET: ci-only-secret-not-used-anywhere-else-32chars
+      FORM_RESPONSES_ENCRYPTION_KEY: ci-only-encryption-key-not-used-anywhere-else-32chars
       PORT: 3000
       CLIENT_ORIGIN: http://localhost:5173
     steps:
