@@ -10,19 +10,20 @@ import { useAuth } from '../../lib/auth-context'
 import { useDocumentTitle } from '../../lib/useDocumentTitle'
 import type { AuthUser } from '../../lib/types'
 
-function isValidTimeZone(tz: string): boolean {
-  try {
-    Intl.DateTimeFormat(undefined, { timeZone: tz })
-    return true
-  } catch {
-    return false
-  }
-}
+// Brazil currently has 4 distinct UTC offsets; one canonical IANA zone per
+// offset is enough — no need to list all ~16 Brazilian tzdata entries that
+// share identical rules since DST was abolished nationwide in 2019.
+const BRAZIL_TIMEZONES = [
+  { value: 'America/Sao_Paulo', label: 'Brasília, São Paulo, Rio de Janeiro (UTC-3)' },
+  { value: 'America/Manaus', label: 'Amazonas, Mato Grosso (UTC-4)' },
+  { value: 'America/Rio_Branco', label: 'Acre (UTC-5)' },
+  { value: 'America/Noronha', label: 'Fernando de Noronha (UTC-2)' },
+] as const
+const BRAZIL_TIMEZONE_VALUES = BRAZIL_TIMEZONES.map((tz) => tz.value) as [string, ...string[]]
 
-// Mirrors server/src/modules/auth/auth.schemas.ts's registerSchema, plus a
-// client-only IANA check: the server accepts any non-empty string, and an
-// invalid zone (e.g. "Brasilia") crashes every formatInTimeZone call in the
-// app with no ErrorBoundary to catch it downstream.
+// Mirrors server/src/modules/auth/auth.schemas.ts's registerSchema; the server
+// still accepts any non-empty string, but the client only ever offers one of
+// the pre-defined zones above, so a fixed enum is enough here.
 const registerSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   email: z.string().email('E-mail inválido'),
@@ -31,10 +32,7 @@ const registerSchema = z.object({
     .string()
     .min(3, 'O slug precisa ter ao menos 3 caracteres')
     .regex(/^[a-z0-9-]+$/, 'Use apenas letras minúsculas, números e hífen'),
-  timezone: z
-    .string()
-    .min(1, 'Fuso horário é obrigatório')
-    .refine(isValidTimeZone, 'Fuso horário inválido (ex: America/Sao_Paulo)'),
+  timezone: z.enum(BRAZIL_TIMEZONE_VALUES, { errorMap: () => ({ message: 'Selecione um fuso horário' }) }),
   niche: z.string().optional(),
 })
 
@@ -53,6 +51,7 @@ export function RegisterPage() {
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { timezone: 'America/Sao_Paulo' },
   })
   const { login } = useAuth()
   const navigate = useNavigate()
@@ -84,13 +83,29 @@ export function RegisterPage() {
             {...register('password')}
           />
           <Input label="Slug (URL pública)" id="slug" error={errors.slug?.message} {...register('slug')} />
-          <Input
-            label="Fuso horário"
-            id="timezone"
-            placeholder="America/Sao_Paulo"
-            error={errors.timezone?.message}
-            {...register('timezone')}
-          />
+          <div className="flex flex-col gap-xxs">
+            <label htmlFor="timezone" className="font-sans text-body-sm text-body">
+              Fuso horário
+            </label>
+            <select
+              id="timezone"
+              aria-invalid={errors.timezone ? 'true' : undefined}
+              aria-describedby={errors.timezone ? 'timezone-error' : undefined}
+              className="h-11 rounded-md border border-hairline bg-surface px-[14px] font-sans text-body-md text-ink focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1"
+              {...register('timezone')}
+            >
+              {BRAZIL_TIMEZONES.map((tz) => (
+                <option key={tz.value} value={tz.value}>
+                  {tz.label}
+                </option>
+              ))}
+            </select>
+            {errors.timezone?.message && (
+              <span id="timezone-error" className="font-sans text-body-sm text-error">
+                {errors.timezone.message}
+              </span>
+            )}
+          </div>
           <Input label="Nicho (opcional)" id="niche" {...register('niche')} />
           {serverError && <p className="font-sans text-body-sm text-error">{serverError}</p>}
           <Button type="submit">Criar conta</Button>

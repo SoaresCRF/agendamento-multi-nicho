@@ -30,13 +30,18 @@ describe('RegisterPage', () => {
     expect(await screen.findByText('Use apenas letras minúsculas, números e hífen')).toBeInTheDocument()
   })
 
-  it('rejects an invalid IANA timezone before hitting the server', async () => {
+  it('offers only the pre-defined Brazilian timezones, defaulting to Brasília', async () => {
     global.fetch = vi.fn().mockResolvedValue(new Response('{}', { status: 401 })) as unknown as typeof fetch
     renderPage()
-    await waitFor(() => screen.getByLabelText('Fuso horário'))
-    await userEvent.type(screen.getByLabelText('Fuso horário'), 'Brasilia')
-    await userEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
-    expect(await screen.findByText('Fuso horário inválido (ex: America/Sao_Paulo)')).toBeInTheDocument()
+    const select = await screen.findByLabelText<HTMLSelectElement>('Fuso horário')
+
+    expect(select.value).toBe('America/Sao_Paulo')
+    expect(screen.getAllByRole('option').map((o) => (o as HTMLOptionElement).value)).toEqual([
+      'America/Sao_Paulo',
+      'America/Manaus',
+      'America/Rio_Branco',
+      'America/Noronha',
+    ])
   })
 
   it('submits a valid registration and shows the server 409 on a duplicate', async () => {
@@ -53,7 +58,6 @@ describe('RegisterPage', () => {
     await userEvent.type(screen.getByLabelText('E-mail'), 'joana@example.com')
     await userEvent.type(screen.getByLabelText('Senha'), 'senha1234')
     await userEvent.type(screen.getByLabelText('Slug (URL pública)'), 'joana-psicologa')
-    await userEvent.type(screen.getByLabelText('Fuso horário'), 'America/Sao_Paulo')
     await userEvent.click(screen.getByRole('button', { name: 'Criar conta' }))
 
     expect(await screen.findByText('E-mail ou slug já em uso')).toBeInTheDocument()
