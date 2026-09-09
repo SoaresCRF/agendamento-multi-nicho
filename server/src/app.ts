@@ -21,7 +21,7 @@ export function createApp() {
   // address — express-rate-limit would then bucket every visitor together (or, on
   // v8+, throw when it sees a forwarded header it wasn't told to trust).
   // TODO(post-deploy): unverified against the actual chosen platform/topology —
-  // see "Checklist pós-deploy" in README.md before going live.
+  // see "Checklist pós-deploy" in DEPLOY.md before going live.
   app.set('trust proxy', 1)
   // crossOriginResourcePolicy defaults to 'same-origin', which blocks the browser from
   // reading responses even when CORS allows it — this API is deliberately served

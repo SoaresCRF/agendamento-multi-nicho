@@ -13,5 +13,6 @@ client/.tsc-out/
 
 # Meta/planning docs — not needed to run, build, or deploy the app
 DESIGN.md
+DEPLOY.md
 prompt-claude-code-agendamento.md
 docs/superpowers/
