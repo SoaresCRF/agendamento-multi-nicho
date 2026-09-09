@@ -9,6 +9,8 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { LoadingScreen } from './components/LoadingScreen'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
+import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage'
 import { PublicBookingPage } from './pages/public-booking/PublicBookingPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
@@ -42,6 +44,8 @@ export function App() {
                 <Routes>
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/registro" element={<RegisterPage />} />
+                  <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
+                  <Route path="/redefinir-senha" element={<ResetPasswordPage />} />
                   <Route
                     path="/painel"
                     element={

@@ -20,11 +20,12 @@ model User {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  serviceTypes  ServiceType[]
-  availability  Availability[]
-  blockedSlots  BlockedSlot[]
-  bookings      Booking[]
-  refreshTokens RefreshToken[]
+  serviceTypes        ServiceType[]
+  availability        Availability[]
+  blockedSlots        BlockedSlot[]
+  bookings            Booking[]
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model ServiceType {
@@ -129,6 +130,17 @@ model RefreshToken {
   tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
 
   @@index([userId])
 }

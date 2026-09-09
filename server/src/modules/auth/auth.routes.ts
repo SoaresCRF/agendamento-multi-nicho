@@ -2,8 +2,15 @@ import { Router } from 'express'
 import { env } from '../../lib/env'
 import { strictLimiter } from '../../middleware/rateLimit'
 import { requireSameOrigin } from '../../middleware/requireSameOrigin'
-import { registerSchema, loginSchema } from './auth.schemas'
-import { registerUser, loginUser, refreshSession, logoutUser } from './auth.service'
+import { registerSchema, loginSchema, requestPasswordResetSchema, resetPasswordSchema } from './auth.schemas'
+import {
+  registerUser,
+  loginUser,
+  refreshSession,
+  logoutUser,
+  requestPasswordReset,
+  resetPassword,
+} from './auth.service'
 
 export const authRouter = Router()
 
@@ -60,6 +67,26 @@ authRouter.post('/logout', requireSameOrigin, async (req, res, next) => {
     const token = req.cookies[REFRESH_COOKIE]
     if (token) await logoutUser(token)
     res.clearCookie(REFRESH_COOKIE)
+    res.status(204).send()
+  } catch (err) {
+    next(err)
+  }
+})
+
+authRouter.post('/forgot-password', strictLimiter, async (req, res, next) => {
+  try {
+    const { email } = requestPasswordResetSchema.parse(req.body)
+    await requestPasswordReset(email)
+    res.json({ message: 'Se o e-mail existir, enviamos um link de redefinição de senha.' })
+  } catch (err) {
+    next(err)
+  }
+})
+
+authRouter.post('/reset-password', strictLimiter, async (req, res, next) => {
+  try {
+    const { token, password } = resetPasswordSchema.parse(req.body)
+    await resetPassword(token, password)
     res.status(204).send()
   } catch (err) {
     next(err)

@@ -25,5 +25,6 @@ export async function cleanDatabase() {
   await prisma.serviceType.deleteMany()
   await prisma.availability.deleteMany()
   await prisma.refreshToken.deleteMany()
+  await prisma.passwordResetToken.deleteMany()
   await prisma.user.deleteMany()
 }

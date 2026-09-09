@@ -59,6 +59,9 @@ export function LoginPage() {
             error={errors.password?.message}
             {...register('password')}
           />
+          <Link to="/esqueci-senha" className="self-end text-body-sm text-primary">
+            Esqueci minha senha
+          </Link>
           {serverError && <p className="font-sans text-body-sm text-error">{serverError}</p>}
           <Button type="submit">Entrar</Button>
         </form>

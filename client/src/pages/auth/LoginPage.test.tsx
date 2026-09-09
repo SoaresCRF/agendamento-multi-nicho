@@ -50,4 +50,10 @@ describe('LoginPage', () => {
 
     expect(await screen.findByText('Credenciais inválidas')).toBeInTheDocument()
   })
+
+  it('links to the forgot-password page', async () => {
+    renderPage()
+    const link = await screen.findByRole('link', { name: 'Esqueci minha senha' })
+    expect(link).toHaveAttribute('href', '/esqueci-senha')
+  })
 })
