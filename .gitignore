@@ -17,3 +17,6 @@ DEPLOY.md
 CLAUDE.md
 prompt-claude-code-agendamento.md
 docs/superpowers/
+
+# Local restore guide: kept in the Drive backup, not versioned
+/RESTORE.md
